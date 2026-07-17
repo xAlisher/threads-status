@@ -139,6 +139,27 @@ function renderReviewBanner() {
   document.body.appendChild(el)
 }
 
+// --- Saved states (the "additional menu") ---
+// Every state we walk through + sign off gets a persistent deep-link here, one click to reach + share.
+// Grows as we build: base states now, thread states (indicator / thread view / index / …) as they land.
+const USE_CASES = [
+  { group: 'Base — Community channel (Current)', items: [
+    { id: 'cc-dark',    label: 'Community channel · Dark · Desktop',  screen: 'chat', params: 'version=current&theme=dark&view=desktop' },
+    { id: 'cc-light',   label: 'Community channel · Light · Desktop', screen: 'chat', params: 'version=current&theme=light&view=desktop' },
+    { id: 'cc-mobile',  label: 'Community channel · Dark · Mobile',   screen: 'chat', params: 'version=current&theme=dark&view=mobile' },
+    { id: 'cc-mobile-l',label: 'Community channel · Light · Mobile',  screen: 'chat', params: 'version=current&theme=light&view=mobile' },
+  ]},
+]
+function findUseCase(id) { for (const g of USE_CASES) { const u = g.items.find(i => i.id === id); if (u) return u } }
+function useCaseMenu() {
+  const opts = USE_CASES.map(g => {
+    const items = g.items.map(u => `<option value="${u.id}">${u.label}</option>`).join('')
+    return `<optgroup label="${g.group}">${items}</optgroup>`
+  }).join('')
+  if (!opts) return ''
+  return `<select class="presentation__toolbar-select" data-set-usecase title="Saved states — jump to any signed-off state"><option value="">Saved states…</option>${opts}</select>`
+}
+
 function renderToolbar() {
   const themeOptions = Object.entries(themes).map(([key, { label }]) =>
     `<option value="${key}" ${currentTheme === key ? 'selected' : ''}>${label}</option>`).join('')
@@ -157,6 +178,7 @@ function renderToolbar() {
         <option value="desktop" ${currentView === 'desktop' ? 'selected' : ''}>Desktop</option>
         <option value="mobile" ${currentView === 'mobile' ? 'selected' : ''}>Mobile</option>
       </select>
+      ${useCaseMenu()}
       ${reviewMenu()}
       <div class="presentation__toolbar-reason">Base = faithful Community Channel recreation (version=Current, ported from status-redesign). Threads UI lands under version=Threads.</div>
     </div>
@@ -172,6 +194,16 @@ function bindToolbarEvents() {
 
   const versionSelect = document.querySelector('[data-set-version]')
   if (versionSelect) versionSelect.addEventListener('change', (e) => { currentVersion = e.target.value; render() })
+
+  // Saved states — deep-link to a signed-off state (full reload with its params)
+  const ucSelect = document.querySelector('[data-set-usecase]')
+  if (ucSelect) ucSelect.addEventListener('change', (e) => {
+    const uc = findUseCase(e.target.value); if (!uc) return
+    const p = new URLSearchParams()
+    p.set('screen', uc.screen)
+    if (uc.params) uc.params.split('&').forEach(kv => { const [k, v] = kv.split('='); if (k) p.set(k, v) })
+    location.search = p.toString()
+  })
 
   const reviewSelect = document.querySelector('[data-set-review]')
   if (reviewSelect) reviewSelect.addEventListener('change', (e) => {
