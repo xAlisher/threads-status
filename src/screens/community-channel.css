@@ -390,7 +390,41 @@
   position: relative;
 }
 
+.message { position: relative; }   /* anchor for the floating quick-actions toolbar */
 .message:hover { background: var(--base-color-2); }
+
+/* Hover quick-actions toolbar — StatusMessageQuickActions.qml (container) + StatusFlatRoundButton Tertiary.
+   Anchored top-right, verticalCenter on the message's top edge (StatusMessage.qml:411-419); desktop only. */
+.message__quick-actions {
+  position: absolute;
+  top: -18px;                     /* verticalCenter:parent.top → h36/2 above the top edge */
+  right: 16px;                    /* anchors.rightMargin: Theme.padding = 16 */
+  display: none;                  /* hover-only */
+  align-items: center;
+  gap: 2px;                       /* Row.spacing = containerMargin 2 */
+  height: 36px;                   /* implicitHeight 36 */
+  padding: 0 2px;                 /* Row leftMargin 2 */
+  border-radius: 8px;             /* radius 8 */
+  background: var(--select-menu-item-bg, var(--menu-bg));   /* statusSelect.menuItemBackgroundColor */
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.32);             /* DropShadow vOffset2/radius10 (Theme.palette.dropShadow) */
+  z-index: 5;
+}
+.message:hover .message__quick-actions,
+.message--peek .message__quick-actions { display: flex; }   /* --peek forces it visible (screenshot/deep-link) */
+
+.message__qa-btn {                /* StatusFlatRoundButton, chatButtonSize 32, Tertiary */
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; border-radius: 8px;
+  background: transparent; cursor: pointer;
+  color: var(--base-color-1);     /* Tertiary rest: baseColor1 */
+}
+.message__qa-btn:hover {
+  color: var(--primary-color-1);  /* Tertiary hover: primaryColor1 */
+  background: var(--menu-hover-bg, var(--base-color-2));
+}
+.message__qa-btn svg { width: 20px; height: 20px; display: block; }
+.shell--mobile .message__quick-actions { display: none !important; }   /* !isMobile (StatusMessage.qml:412) */
 .message--pinned { background: var(--pin-color-3); }
 .message--pinned:hover { background: var(--pin-color-2); }
 .message--mention { background: var(--mention-color-4); }

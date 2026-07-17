@@ -46,6 +46,16 @@ export function renderCommunityChannel() {
   return { nav, left, center, right: null }
 }
 
+// ?actions=1 → force-show the hover quick-actions toolbar on a couple of messages (screenshot/deep-link demo).
+// Shows both variants: a non-own message (react/reply/pin/more) and an own "You" message (+edit).
+export function bindCommunityChannel() {
+  const p = new URLSearchParams(location.search)
+  if (p.get('actions') === '1') {
+    const msgs = document.querySelectorAll('.shell__center .message, .shell__mobile-content .message')
+    ;[1, 2].forEach(i => msgs[i] && msgs[i].classList.add('message--peek'))
+  }
+}
+
 function renderNav() {
   // Uses ICONS from main nav — same as community-channel nav from earlier fix
   return `
@@ -211,6 +221,23 @@ function renderCenterPanel() {
   `
 }
 
+// Hover quick-actions icons — lifted verbatim from StatusQ/src/assets/img/icons/ (recolored → currentColor)
+// react=emoji.svg, reply=reply.svg, edit=edit_pencil.svg, pin=pin.svg, more=more.svg
+const QUICK_ICONS = {
+  react: `<svg viewBox="0 0 21 21" fill="none"><g fill="currentColor"><path d="m17.3761 0c.3797 0 .6875.307804.6875.6875v1.74167c0 .30375.2462.55.55.55h1.699c.3797 0 .6875.3078.6875.6875 0 .37969-.3078.6875-.6875.6875h-1.699c-.3038 0-.55.24624-.55.55v1.74166c0 .3797-.3078.6875-.6875.6875s-.6875-.3078-.6875-.6875v-1.74166c0-.30376-.2463-.55-.55-.55h-1.7866c-.3797 0-.6875-.30781-.6875-.6875 0-.3797.3078-.6875.6875-.6875h1.7866c.3037 0 .55-.24625.55-.55v-1.74167c0-.379696.3078-.6875.6875-.6875z"/><path d="m12.0914 2.7009c.0949-.29396-.0409-.64273-.3442-.70126-.5656-.10915-1.1497-.16631-1.7472-.16631-5.06257 0-9.166626 4.10406-9.166626 9.16667 0 5.0626 4.104056 9.1667 9.166626 9.1667 5.0627 0 9.1667-4.1041 9.1667-9.1667 0-.5222-.0437-1.03419-.1275-1.53254-.0534-.31706-.4233-.45705-.7263-.34951-.0583.0207-.1176.03932-.1778.05576-.275.07506-.4796.3405-.4359.62214.0609.39245.0925.79465.0925 1.20415 0 4.3032-3.4884 7.7917-7.7917 7.7917-4.30318 0-7.79163-3.4885-7.79163-7.7917 0-4.30322 3.48845-7.79167 7.79163-7.79167.4762 0 .9423.04271 1.3949.1245.294.05315.5761-.16642.6469-.45674.0145-.05925.031-.11767.0496-.17519z"/><g clip-rule="evenodd" fill-rule="evenodd"><path d="m4.40336 12.2118c.25049-.2876.64338-.441 1.0512-.3768.82016.1291 2.36622.3079 4.63854.3079 2.2723 0 3.8183-.1788 4.6385-.3079.4078-.0642.8007.0892 1.0512.3768.2591.2975.3603.7389.1701 1.1609-.581 1.2892-2.2 3.8119-5.8598 3.8119-3.65985 0-5.27886-2.5227-5.85983-3.8119-.19019-.422-.08907-.8634.17009-1.1609zm2.22016 1.153c-.3755-.0359-.63543.3609-.39978.6555.72377.9047 1.92583 1.7893 3.86936 1.7893 1.9435 0 3.1455-.8846 3.8693-1.7893.2357-.2946-.0243-.6914-.3998-.6555-.8878.085-2.0443.1531-3.4695.1531-1.42525 0-2.58179-.0681-3.46958-.1531z"/><path d="m5.5036 6.45233c.25793-.30952.71793-.35133 1.02744-.09341l2.50118 2.08432c.23595.19663.32348.51998.21892.80877s-.3788.48117-.68594.48117c-1.15664 0-2.84143.37452-3.78188.96252-.34162.2136-.79171.1098-1.00531-.2318-.21359-.3416-.10981-.79173.23181-1.00533.64263-.40179 1.4853-.70602 2.33527-.90549.1711-.04016.22708-.26066.09206-.37318l-.84015-.70013c-.30951-.25792-.35133-.71793-.0934-1.02744z"/><path d="m14.4965 6.45233c-.2579-.30952-.7179-.35133-1.0275-.09341l-2.5011 2.08432c-.236.19663-.3235.51998-.219.80877.1046.28879.3788.48117.686.48117 1.1566 0 2.8414.37452 3.7819.96252.3416.2136.7917.1098 1.0053-.2318s.1098-.79173-.2318-1.00533c-.6427-.40179-1.4853-.70602-2.3353-.90549-.1711-.04016-.2271-.26066-.0921-.37318l.8402-.70013c.3095-.25792.3513-.71793.0934-1.02744z"/></g></g></svg>`,
+  reply: `<svg viewBox="0 0 24 24" fill="none"><path d="m15.5303 12.4697c-.2929-.2929-.7677-.2929-1.0606 0s-.2929.7677 0 1.0606l1.8661 1.8661c.315.315.0919.8536-.3536.8536h-3.9822c-3.45178 0-6.25-2.7982-6.25-6.25 0-3.45178 2.79822-6.25 6.25-6.25.4142 0 .75-.33579.75-.75s-.3358-.75-.75-.75c-4.28021 0-7.75 3.46979-7.75 7.75 0 4.2802 3.46979 7.75 7.75 7.75h3.9822c.4455 0 .6686.5386.3536.8536l-1.8661 1.8661c-.2929.2929-.2929.7677 0 1.0606s.7677.2929 1.0606 0l4-4c.2929-.2929.2929-.7677 0-1.0606z" fill="currentColor"/></svg>`,
+  edit: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m16.187 3.24584c1.2612-1.26112 3.3058-1.26112 4.567.00001 1.2611 1.26112 1.2611 3.3058 0 4.56692l-11.75175 11.75173c-.42718.4272-.95618.7384-1.53706.9044l-4.20764 1.2022c-.26236.0749-.54473.0018-.73767-.1912-.19294-.1929-.26611-.4753-.19115-.7376l1.20219-4.2077c.16596-.5809.47723-1.1099.90441-1.5371zm3.5044 1.06253c-.6743-.6743-1.7675-.6743-2.4418 0l-11.75175 11.75173c-.24661.2466-.4263.552-.52211.8873-.36205 1.2672.80948 2.4387 2.07664 2.0767.33534-.0958.64073-.2755.88734-.5222l11.75168-11.75166c.6743-.6743.6743-1.76756 0-2.44187z" fill="currentColor" fill-rule="evenodd"/></svg>`,
+  pin: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m14.8956 7.28455c0-.82843-.6482-1.67563-1.4478-1.89228-.7996-.21664-1.4478.2793-1.4478 1.10773s.6482 1.67563 1.4478 1.89227c.7996.21665 1.4478-.2793 1.4478-1.10772z"/><path clip-rule="evenodd" d="m12 2c-3.31371 0-6 2.68629-6 6 0 2.9077 2.06835 5.3323 4.814 5.8828.2473.0496.436.2601.436.5123v6.6049c0 .4142.3358.75.75.75s.75-.3358.75-.75v-6.6049c0-.2522.1887-.4627.436-.5123 2.7457-.5505 4.814-2.9751 4.814-5.8828 0-3.31371-2.6863-6-6-6zm-4.5 6c0 2.4853 2.01472 4.5 4.5 4.5 2.4853 0 4.5-2.0147 4.5-4.5 0-2.48528-2.0147-4.5-4.5-4.5-2.48528 0-4.5 2.01472-4.5 4.5z" fill-rule="evenodd"/></g></svg>`,
+  more: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m7 12c0 1.1046-.89543 2-2 2s-2-.8954-2-2 .89543-2 2-2 2 .8954 2 2z"/><path d="m14 12c0 1.1046-.8954 2-2 2s-2-.8954-2-2 .8954-2 2-2 2 .8954 2 2z"/><path d="m19 14c1.1046 0 2-.8954 2-2s-.8954-2-2-2-2 .8954-2 2 .8954 2 2 2z"/></g></svg>`,
+}
+// Hover quick-actions toolbar (StatusMessageQuickActions.qml — container h36/radius8/menu-bg+shadow;
+// buttons = StatusFlatRoundButton chatButtonSize 32, Tertiary; MessageView.qml:1111 button set + gating).
+// Order: react · reply · edit(own only) · pin · more. Desktop only (mobile uses the context menu).
+function quickActions(isSelf, pinned) {
+  const qa = (icon, title) => `<button class="message__qa-btn" title="${title}" aria-label="${title}">${icon}</button>`
+  return `<div class="message__quick-actions">${qa(QUICK_ICONS.react, 'Add reaction')}${qa(QUICK_ICONS.reply, 'Reply')}${isSelf ? qa(QUICK_ICONS.edit, 'Edit') : ''}${qa(QUICK_ICONS.pin, pinned ? 'Unpin' : 'Pin')}${qa(QUICK_ICONS.more, 'More')}</div>`
+}
+
 /* Message builder — supports all included StatusMessage sub-components:
    reply, pinned indicator, full header (name + delivery), text, reactions
    Options: { reactions, pinned, pinnedBy, reply, replyTo, replyText, delivery, edited, continued } */
@@ -281,6 +308,7 @@ function msg(name, initial, color, time, text, opts = {}) {
           <div class="message__text">${text}${editedHtml}</div>
           ${reactionsHtml}
         </div>
+        ${quickActions(isSelf, pinned)}
       </div>
     `
   }
@@ -301,6 +329,7 @@ function msg(name, initial, color, time, text, opts = {}) {
           ${reactionsHtml}
         </div>
       </div>
+      ${quickActions(isSelf, pinned)}
     </div>
   `
 }

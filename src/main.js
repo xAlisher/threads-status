@@ -13,7 +13,7 @@ import './shell/shell.css'
 
 // Screens
 import './screens/community-channel.css'
-import { renderCommunityChannel } from './screens/community-channel.js'
+import { renderCommunityChannel, bindCommunityChannel } from './screens/community-channel.js'
 
 // --- Theme registry (original Status light/dark only) ---
 const themes = {
@@ -29,7 +29,7 @@ const versions = {
 
 // --- Screen registry ---
 const screens = {
-  'chat': { label: 'Community channel', render: renderCommunityChannel },
+  'chat': { label: 'Community channel', render: renderCommunityChannel, bind: bindCommunityChannel },
 }
 
 // --- State (overridable via URL: ?screen=chat&theme=light&view=mobile&version=revamp) ---
@@ -148,6 +148,7 @@ const USE_CASES = [
     { id: 'cc-light',   label: 'Community channel · Light · Desktop', screen: 'chat', params: 'version=current&theme=light&view=desktop' },
     { id: 'cc-mobile',  label: 'Community channel · Dark · Mobile',   screen: 'chat', params: 'version=current&theme=dark&view=mobile' },
     { id: 'cc-mobile-l',label: 'Community channel · Light · Mobile',  screen: 'chat', params: 'version=current&theme=light&view=mobile' },
+    { id: 'cc-actions', label: 'Message hover quick-actions',         screen: 'chat', params: 'version=current&theme=dark&actions=1' },
   ]},
 ]
 function findUseCase(id) { for (const g of USE_CASES) { const u = g.items.find(i => i.id === id); if (u) return u } }
