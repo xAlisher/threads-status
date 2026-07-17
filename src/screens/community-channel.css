@@ -893,3 +893,21 @@
 .chat-input--formatting .chat-input__format { display: inline-flex; }
 .chat-input__style-btn, .chat-input__fmt-btn { border-radius: 8px; }   /* ChatIcon radius = Theme.radius */
 .chat-input__style-btn.checked { background: var(--base-color-5); color: var(--primary-color-1); }   /* checked → baseColor5 + primary */
+
+/* Members sidebar — UserListPanel.qml (title + onlineStatus sections) + StatusMemberListItem.qml (32px avatar + online dot + name) */
+.member-list { display: flex; flex-direction: column; padding: 8px 0; }
+.member-list__header { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; }   /* Layout.margins: Theme.padding */
+.member-list__title { font-size: var(--font-size-primary); font-weight: 500; color: var(--direct-color-1); }       /* Font.Medium */
+.member-list__search { width: 32px; height: 32px; border: none; border-radius: 8px; background: transparent; color: var(--direct-color-1); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.member-list__search:hover { color: var(--primary-color-1); background: var(--background-hover); }
+.member-list__search svg { width: 20px; height: 20px; }
+.member-list__section { padding: 10px 16px 4px; font-size: var(--font-size-secondary); color: var(--base-color-1); }  /* secondaryTextFontSize, baseColor1 */
+.member-item { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; cursor: pointer; }
+.member-item:hover { background: var(--base-color-2); }                                                            /* hovered → baseColor2 */
+.member-item__avatar { position: relative; flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; }  /* icon.width/height 32 */
+.member-item__status { position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--base-color-4); }   /* online badge; ring = panel bg */
+.member-item__status--online { background: var(--success-color-1); }
+.member-item__status--offline { background: var(--base-color-1); }
+.member-item__name { flex: 1; min-width: 0; font-size: var(--font-size-primary); font-weight: 500; color: var(--direct-color-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }  /* Font.Medium, directColor4 */
+.member-item__crown { flex-shrink: 0; display: inline-flex; color: var(--direct-color-1); }
+.member-item__crown svg { width: 16px; height: 16px; }

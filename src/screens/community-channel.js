@@ -43,7 +43,48 @@ export function renderCommunityChannel() {
   const nav = renderNav()
   const left = renderLeftPanel()
   const center = renderCenterPanel()
-  return { nav, left, center, right: null }
+  const right = renderRightPanel()
+  return { nav, left, center, right }
+}
+
+// Members sidebar — UserListPanel.qml (title + onlineStatus sections + StatusMemberListItem rows).
+// Member row: 32px avatar (colorId bg + online-status dot), name Font.Medium primaryTextFontSize / directColor4,
+// owner → crown; section header secondaryTextFontSize / baseColor1.
+function member({ name, initial, color, online, owner }) {
+  return `
+    <div class="member-item">
+      <div class="member-item__avatar" style="background:${color}">${initial}<span class="member-item__status member-item__status--${online ? 'online' : 'offline'}"></span></div>
+      <span class="member-item__name">${name}</span>
+      ${owner ? `<span class="member-item__crown" title="Owner">${MEMBER_ICONS.crown}</span>` : ''}
+    </div>`
+}
+function renderRightPanel() {
+  const online = [
+    { name: 'You', initial: 'A', color: '#4360DF', online: true, owner: true },
+    { name: 'Elena', initial: 'E', color: '#D37EF4', online: true },
+    { name: 'Marcus', initial: 'M', color: '#26A69A', online: true },
+    { name: 'carmen.eth', initial: 'C', color: '#887AF9', online: true },
+  ]
+  const offline = [
+    { name: 'Kai', initial: 'K', color: '#FE8F59', online: false },
+    { name: 'Dana', initial: 'D', color: '#2A799B', online: false },
+    { name: 'Sam', initial: 'S', color: '#C4A052', online: false },
+  ]
+  return `
+    <div class="member-list">
+      <div class="member-list__header">
+        <span class="member-list__title">Members</span>
+        <button class="member-list__search" title="Search members">${CHANNEL_ICONS.search}</button>
+      </div>
+      <div class="member-list__section">Online — ${online.length}</div>
+      ${online.map(member).join('')}
+      <div class="member-list__section">Offline — ${offline.length}</div>
+      ${offline.map(member).join('')}
+    </div>`
+}
+const MEMBER_ICONS = {
+  // crown.svg — owner badge (lifted verbatim from StatusQ assets, recoloured → currentColor)
+  crown: `<svg viewBox="0 0 20 20" fill="none"><g stroke="currentColor"><path d="m15 13 1-6.5-1.1272.75147c-1.6774 1.11826-3.9583.29684-4.5376-1.6341l-.3352-1.11737-.33521 1.11737c-.57928 1.93094-2.8602 2.75236-4.53758 1.6341l-1.12721-.75147 1 6.5m10 0h-10m10 0v3h-10v-3" stroke-linejoin="round"/><g fill="currentColor"><circle cx="10" cy="4.5" r="1.5"/><circle cx="16" cy="6.5" r="1.5"/><circle cx="4" cy="6.5" r="1.5"/></g></g></svg>`,
 }
 
 // ?actions=1 → force-show the hover quick-actions toolbar on a couple of messages (screenshot/deep-link demo).
