@@ -863,3 +863,33 @@
 .chat-input__btn svg { width: 20px; height: 20px; }
 .chat-input__btn:hover { background: var(--background-hover); }
 .chat-input__btn--send { color: var(--primary-color-1); }
+
+/* Composer reply-preview — StatusChatInputReplyArea.qml (radius 16, baseColor3; ↪user Medium 13 + elided quote + 20px close) */
+.chat-input__reply {
+  display: none;
+  position: relative;
+  margin-bottom: 8px;
+  padding: 8px 40px 8px 10px;     /* topMargin halfPadding, leftMargin smallPadding, close on the right */
+  min-height: 50px;               /* implicitHeight 50 (text case) */
+  box-sizing: border-box;
+  border-radius: 16px;            /* radius 16 */
+  background: var(--base-color-3); /* baseColor3 */
+}
+.chat-input--replying .chat-input__reply { display: block; }
+.chat-input__reply-user { display: block; font-size: var(--font-size-additional); font-weight: 500; color: var(--text-color); }  /* additionalTextSize, Font.Medium */
+.chat-input__reply-text { display: block; margin-top: 1px; font-size: var(--font-size-additional); color: var(--direct-color-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-input__reply-close {
+  position: absolute; top: 4px; right: 4px;   /* topMargin/rightMargin 4 */
+  width: 20px; height: 20px; padding: 0;      /* implicitWidth/Height 20, radius 10 */
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; border-radius: 10px; background: transparent;
+  color: var(--text-color); cursor: pointer;
+}
+.chat-input__reply-close svg { width: 16px; height: 16px; }
+.chat-input__reply-close:hover { background: var(--background-hover); }
+
+/* Composer formatting group — StatusChatInputToolBar.qml (style toggle → bold/italic/strikethrough/quote/code) */
+.chat-input__format { display: none; align-items: center; gap: 2px; }
+.chat-input--formatting .chat-input__format { display: inline-flex; }
+.chat-input__style-btn, .chat-input__fmt-btn { border-radius: 8px; }   /* ChatIcon radius = Theme.radius */
+.chat-input__style-btn.checked { background: var(--base-color-5); color: var(--primary-color-1); }   /* checked → baseColor5 + primary */

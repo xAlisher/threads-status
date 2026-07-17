@@ -54,6 +54,16 @@ export function bindCommunityChannel() {
     const msgs = document.querySelectorAll('.shell__center .message, .shell__mobile-content .message')
     ;[1, 2].forEach(i => msgs[i] && msgs[i].classList.add('message--peek'))
   }
+  // composer: the style button toggles the formatting group (StatusChatInputToolBar state machine)
+  const ci = document.querySelector('.chat-input')
+  const styleBtn = document.querySelector('[data-style-toggle]')
+  if (styleBtn && ci) styleBtn.addEventListener('click', () => {
+    const on = ci.classList.toggle('chat-input--formatting')
+    styleBtn.classList.toggle('checked', on)
+  })
+  // deep-links: ?fmt=1 opens the formatting group, ?reply=1 shows the reply preview
+  if (ci && p.get('fmt') === '1') { ci.classList.add('chat-input--formatting'); styleBtn && styleBtn.classList.add('checked') }
+  if (ci && p.get('reply') === '1') ci.classList.add('chat-input--replying')
 }
 
 function renderNav() {
@@ -203,12 +213,14 @@ function renderCenterPanel() {
       ${msg('You', 'A', '#4360DF', '10:38', 'Font schemes too — switch between Inter, IBM Plex, Serif, Monospace from a dropdown. Layout holds across all of them.', { delivery: 'sent' })}
     </div>
     <div class="chat-input">
+      ${replyPreview()}
       <div class="chat-input__row">
         <button class="chat-input__cmd-btn" title="Commands">${CHANNEL_ICONS.chatCommands}</button>
         <div class="chat-input__box">
           <div class="chat-input__input-row">
             <textarea class="chat-input__field" placeholder="Type a message..." rows="1" readonly></textarea>
             <div class="chat-input__actions">
+              ${formatGroup()}
               <button class="chat-input__btn" title="Emoji">${CHANNEL_ICONS.emojis}</button>
               <button class="chat-input__btn" title="GIF">${CHANNEL_ICONS.gif}</button>
               <button class="chat-input__btn" title="Stickers">${CHANNEL_ICONS.stickers}</button>
@@ -236,6 +248,33 @@ const QUICK_ICONS = {
 function quickActions(isSelf, pinned) {
   const qa = (icon, title) => `<button class="message__qa-btn" title="${title}" aria-label="${title}">${icon}</button>`
   return `<div class="message__quick-actions">${qa(QUICK_ICONS.react, 'Add reaction')}${qa(QUICK_ICONS.reply, 'Reply')}${isSelf ? qa(QUICK_ICONS.edit, 'Edit') : ''}${qa(QUICK_ICONS.pin, pinned ? 'Unpin' : 'Pin')}${qa(QUICK_ICONS.more, 'More')}</div>`
+}
+
+// Composer formatting icons — lifted verbatim from StatusQ assets (chat/style + bold/italic/strikethrough/quote/code), recoloured
+const FMT_ICONS = {
+  style: `<svg viewBox="0 0 24 24" fill="none"><path d="M12.0005 1.7998C14.127 1.7998 15.8372 1.86151 17.1919 2.09961C18.5525 2.33875 19.6344 2.76866 20.4331 3.56738C21.2318 4.3661 21.6617 5.44799 21.9009 6.80859C22.139 8.16333 22.2007 9.87349 22.2007 12C22.2007 14.1265 22.139 15.8367 21.9009 17.1914C21.6617 18.552 21.2318 19.6339 20.4331 20.4326C19.6344 21.2313 18.5525 21.6613 17.1919 21.9004C15.8372 22.1385 14.127 22.2002 12.0005 22.2002C9.87397 22.2002 8.16382 22.1385 6.80908 21.9004C5.44848 21.6613 4.36659 21.2313 3.56787 20.4326C2.76915 19.6339 2.33923 18.552 2.1001 17.1914C1.862 15.8367 1.80029 14.1265 1.80029 12C1.80029 9.87349 1.862 8.16333 2.1001 6.80859C2.33923 5.44799 2.76915 4.3661 3.56787 3.56738C4.36659 2.76866 5.44848 2.33875 6.80908 2.09961C8.16382 1.86151 9.87397 1.7998 12.0005 1.7998Z" stroke="currentColor" stroke-width="1.4"/><path d="M15.9268 10.1377H14.5264V8.90137H12.7002V14.5996H13.9365V16H10.0645V14.5996H11.2998V8.90137H9.47363V10.1377H8.07324V7.50098H15.9268V10.1377Z" fill="currentColor"/></svg>`,
+  italic: `<svg viewBox="0 0 20 20" fill="none"><path clip-rule="evenodd" d="m9.85207 4.10002h-2.35207v-1.2h6v1.2h-2.4444l-.9077 11.79998h2.3521v1.2h-6v-1.2h2.44438z" fill="currentColor" fill-rule="evenodd"/></svg>`,
+  strikethrough: `<svg viewBox="0 0 20 20" fill="none"><path clip-rule="evenodd" d="m9.16648 2.97119c.82808-.14275 1.68712-.07 2.47132.21151.7842.28154 1.4678.76294 1.9554 1.39537.4886.63382.7568 1.38969.7568 2.17195h-1.2c0-.50331-.1717-1.00415-.5072-1.43925-.3365-.43649-.8243-.78821-1.4105-.99864-.5862-.21046-1.23518-.26643-1.86196-.15838-.62681.10806-1.19253.37329-1.62903.75159-.4357.3776-.72036.84773-.83446 1.34486-.11379.49581-.05654 1.01093.16995 1.48481.22734.47567.61937.89629 1.14049 1.19807.5215.30199 1.14213.46694 1.78271.46694h5v1.19998h-1.8425c.3537.3302.6428.7174.8484 1.1476.3412.7138.4324 1.5056.2568 2.2707-.1752.7637-.6049 1.4518-1.2181 1.9832-.6124.5308-1.383.8846-2.2111 1.0274-.8281.1427-1.6871.07-2.47129-.2116-.78426-.2815-1.4678-.7629-1.95539-1.3953-.48866-.6338-.75682-1.3897-.75682-2.172h1.2c0 .5033.17171 1.0042.50716 1.4393.33652.4365.82431.7882 1.4105.9986.58626.2105 1.23524.2664 1.86204.1584.6268-.1081 1.1925-.3733 1.629-.7516.4357-.3776.7204-.8477.8344-1.3449.1138-.4958.0566-1.0109-.1699-1.4848-.2273-.4756-.6194-.8963-1.1405-1.198-.5215-.302-1.1421-.467-1.7827-.467h-5v-1.19998h1.84255c-.35373-.33014-.64286-.7174-.84845-1.14754-.34117-.71384-.43243-1.50565-.25684-2.27072.17529-.76374.60493-1.45181 1.21813-1.98325.61239-.53073 1.38304-.88457 2.21109-1.02732z" fill="currentColor" fill-rule="evenodd"/></svg>`,
+  quote: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m5 10.75c0-2.62335 2.12665-4.75 4.75-4.75h1c.4142 0 .75.33579.75.75s-.3358.75-.75.75h-1c-1.79492 0-3.25 1.45507-3.25 3.25v.75c0 .2761.22386.5.5.5h3.5c.2761 0 .5.2239.5.5v4c0 .2761-.2239.5-.5.5h-5c-.27614 0-.5-.2239-.5-.5z"/><path d="m13 10.75c0-2.62335 2.1266-4.75 4.75-4.75h1c.4142 0 .75.33579.75.75s-.3358.75-.75.75h-1c-1.7949 0-3.25 1.45507-3.25 3.25v.75c0 .2761.2239.5.5.5h3.5c.2761 0 .5.2239.5.5v4c0 .2761-.2239.5-.5.5h-5c-.2761 0-.5-.2239-.5-.5z"/></g></svg>`,
+  code: `<svg viewBox="0 0 20 20" fill="none"><path clip-rule="evenodd" d="m8.40549 17.4208 2.00001-15.00002 1.1895.15859-2.00004 15.00003zm-1.82951-12.34499-4.5003 4.49992-.42431.42427.4243.4243 4.50024 4.5.84851-.8485-4.07594-4.0758 4.07599-4.07563zm11.34882 4.49992-4.5003-4.49992-.8485.84856 4.076 4.07563-4.076 4.0758.8485.8485 4.5003-4.5.4243-.4243z" fill="currentColor" fill-rule="evenodd"/></svg>`,
+  bold: `<svg viewBox="0 0 20 20" fill="none"><path clip-rule="evenodd" d="m8 2.9h.048c-.876 0-1.489.001-1.955.064-.339.046-.677.15-.953.427-.277.276-.381.615-.427.954-.042.313-.042.7-.042 1.139v9.033c0 .439 0 .826.042 1.139.046.339.15.678.427.954.276.277.614.381.953.427.313.042.7.042 1.139.042h2.508c2.326 0 3.67-.558 4.399-1.435.702-.845.701-1.846.701-2.381v-.033c0-.536.001-1.537-.701-2.381-.363-.437-.878-.795-1.59-1.044.271-.191.494-.41.674-.654.618-.837.618-1.821.617-2.353v-.07c0-.532.001-1.516-.617-2.353-.659-.892-1.885-1.462-3.983-1.462zm2.04 1.4h-2.002c-.493 0-.783.002-.989.03-.083.011-.127.023-.148.031-.008.021-.02.065-.032.148-.028.207-.029.497-.029.991v3.7h3.2c1.87 0 2.568-.503 2.857-.894.323-.438.343-.989.343-1.556 0-.567-.02-1.118-.343-1.556-.289-.391-.987-.894-2.857-.894zm-3.649 6.435h3.7v3.7c0 .494.002.784.03.991.011.083.023.127.031.148.021.008.065.02.148.031.206.028.495.03.988.03h2.502c2.149 0 2.982-.52 3.323-.93.357-.43.378-.958.378-1.52s-.021-1.09-.378-1.52c-.341-.41-1.174-.93-3.323-.93z" fill="currentColor" fill-rule="evenodd"/></svg>`,
+}
+const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+
+// StatusChatInputReplyArea.qml — reply preview above the composer (radius 16, baseColor3, "↪ user" Medium 13 + elided quote + 20px close)
+function replyPreview() {
+  return `
+    <div class="chat-input__reply">
+      <span class="chat-input__reply-user">↪ Marcus</span>
+      <span class="chat-input__reply-text">11 themes built in one session — Nord, Dracula, Solarized, even a hacker green-on-black one. All live-swappable.</span>
+      <button class="chat-input__reply-close" title="Cancel reply" aria-label="Cancel reply">${CLOSE_ICON}</button>
+    </div>`
+}
+// StatusChatInputToolBar.qml — style toggle → formatting group (bold/italic/strikethrough/quote/code)
+function formatGroup() {
+  const fb = (icon, title) => `<button class="chat-input__btn chat-input__fmt-btn" title="${title}" aria-label="${title}">${icon}</button>`
+  return `<button class="chat-input__btn chat-input__style-btn" data-style-toggle title="Formatting">${FMT_ICONS.style}</button>` +
+    `<span class="chat-input__format">${fb(FMT_ICONS.bold, 'Bold')}${fb(FMT_ICONS.italic, 'Italic')}${fb(FMT_ICONS.strikethrough, 'Strikethrough')}${fb(FMT_ICONS.quote, 'Quote')}${fb(FMT_ICONS.code, 'Code')}</span>`
 }
 
 /* Message builder — supports all included StatusMessage sub-components:

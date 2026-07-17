@@ -149,6 +149,8 @@ const USE_CASES = [
     { id: 'cc-mobile',  label: 'Community channel · Dark · Mobile',   screen: 'chat', params: 'version=current&theme=dark&view=mobile' },
     { id: 'cc-mobile-l',label: 'Community channel · Light · Mobile',  screen: 'chat', params: 'version=current&theme=light&view=mobile' },
     { id: 'cc-actions', label: 'Message hover quick-actions',         screen: 'chat', params: 'version=current&theme=dark&actions=1' },
+    { id: 'cc-reply',   label: 'Composer · replying (reply preview)', screen: 'chat', params: 'version=current&theme=dark&reply=1' },
+    { id: 'cc-fmt',     label: 'Composer · formatting toolbar',       screen: 'chat', params: 'version=current&theme=dark&fmt=1' },
   ]},
 ]
 function findUseCase(id) { for (const g of USE_CASES) { const u = g.items.find(i => i.id === id); if (u) return u } }
