@@ -1,0 +1,831 @@
+/* Community Channel — pixel-perfect from QML source
+   Left: CommunityColumnView (304px) with ColumnHeaderPanel + StatusChatListAndCategories
+   Center: ChatColumnView with ChatContentView (header + messages + input)
+
+   SCOPE: Text messages with reply, pinned, header (full), reactions.
+   EXCLUDED (not needed for static styling mockup):
+   - Image/sticker/audio messages (contentType branches)
+   - Link previews, community invitations
+   - Edit mode UI
+   - Hover toolbar (quick actions)
+   - System messages (mutual events, pin events)
+   Exclusions documented per Layer 0 complexity audit. */
+
+/* ============================================================
+   LEFT PANEL: Community Header (ColumnHeaderPanel.qml)
+   padding: halfPadding=8, rightPadding: padding=16, topPadding: smallPadding=10
+   ============================================================ */
+.community-header {
+  padding: 10px 16px 8px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.community-header__info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* StatusChatInfoButton asset: width=36, height=36 */
+.community-header__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--misc-color-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--indirect-color-1);
+  font-weight: 700;
+  font-size: var(--font-size-primary);
+  flex-shrink: 0;
+}
+
+.community-header__name {
+  font-weight: 500;
+  font-size: var(--font-size-primary);
+  color: var(--direct-color-1);
+}
+
+.community-header__members {
+  font-size: var(--font-size-tertiary);
+  color: var(--base-color-1);
+}
+
+/* StatusIconTabButton: invite contacts (ColumnHeaderPanel.qml:44-56)
+   icon "add-contact", directColor1, checkable false */
+.community-header__invite-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--direct-color-1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.community-header__invite-btn svg { width: 20px; height: 20px; }
+.community-header__invite-btn:hover { background: var(--background-hover); }
+
+/* ============================================================
+   LEFT PANEL: Channel List
+   StatusChatListItem: 288x40, radius 8
+   StatusChatListCategoryItem: 288x34
+   ============================================================ */
+.channel-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.channel-category {
+  padding: 0 8px;
+}
+
+/* Category: 288x34, horizontalPadding 8, chevron 18px always visible */
+.channel-category__title {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: var(--font-size-additional);
+  font-weight: 500;
+  color: var(--direct-color-4);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.channel-category__title:hover {
+  background: var(--base-color-2);
+  color: var(--direct-color-1);
+}
+
+.channel-category__title-text { flex: 1; }
+
+.channel-category__chevron {
+  width: 18px;
+  height: 18px;
+  color: inherit;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.channel-category__chevron svg { width: 18px; height: 18px; }
+
+/* Channel item: 288x40, Layout: [identicon 24x24 ml:8][icon 16px ml:8 gap:1][name][badge 32px mr:8] */
+.channel-item {
+  width: 288px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 8px;
+  background: var(--base-color-4);
+  transition: background 0.1s;
+}
+
+.channel-item:hover { background: var(--chat-list-item-hover-bg); }
+.channel-item.active { background: var(--chat-list-item-selected-bg); }
+
+/* Identicon: 24x24, miscColor5 bg */
+.channel-item__identicon {
+  width: 24px;
+  height: 24px;
+  margin-left: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--indirect-color-1);
+  background: var(--misc-color-5);
+}
+
+/* Channel type icon: 16px, tiny/channel.svg */
+.channel-item__icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--direct-color-4);
+}
+
+.channel-item__icon svg { width: 16px; height: 16px; }
+
+.channel-item__name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 1px;
+  margin-right: 8px;
+  font-size: var(--font-size-primary);
+  font-weight: 500;
+  color: var(--direct-color-4);
+}
+
+.channel-item:hover .channel-item__name,
+.channel-item.active .channel-item__name { color: var(--direct-color-1); }
+.channel-item.unread .channel-item__name { font-weight: 700; color: var(--direct-color-1); }
+.channel-item:hover .channel-item__icon,
+.channel-item.active .channel-item__icon { color: var(--direct-color-1); }
+
+.channel-item__badge {
+  width: 32px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.channel-item__badge-dot {
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--primary-color-1);
+  color: var(--indirect-color-1);
+  font-size: var(--font-size-aside);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+.channel-item__badge-dot--unread {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--base-color-1);
+}
+
+/* ============================================================
+   CENTER: Chat Header — 56px, ChatHeaderContentView
+   StatusChatInfoButton: identicon + [icon + title] + [desc + sep + pin]
+   Action buttons: 32x32 StatusFlatRoundButton
+   ============================================================ */
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* StatusChatInfoButton: horizontalPadding 4, verticalPadding 2, spacing 4 */
+.chat-header__info {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* root.spacing = 4 (StatusChatInfoButton.qml:47) */
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px; /* verticalPadding 2, horizontalPadding 4 (line 45-46) */
+  border-radius: 8px; /* Theme.radius */
+}
+
+.chat-header__info:hover {
+  background: var(--base-color-2); /* background hover (line 56) */
+}
+
+/* StatusSmartIdenticon: 36×36 (StatusChatInfoButton.qml:83-87, asset width/height 36) */
+.chat-header__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+/* Text column: ColumnLayout spacing 2 (line 92) */
+.chat-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Title row: RowLayout spacing 1 (line 98) */
+.chat-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.chat-header__channel-icon {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--direct-color-1); /* directColor1 when not muted (line 104) */
+  flex-shrink: 0;
+}
+
+.chat-header__channel-icon svg { width: 14px; height: 14px; }
+
+.chat-header__title {
+  font-weight: 500; /* Font.Medium (line 129) */
+  font-size: var(--font-size-primary);
+  color: var(--direct-color-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Subtitle row: RowLayout spacing 0 (line 163) */
+.chat-header__subtitle-row {
+  display: flex;
+  align-items: center;
+}
+
+.chat-header__description {
+  font-size: var(--font-size-tertiary); /* tertiaryTextFontSize (line 171) */
+  color: var(--base-color-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Rectangle separator: 1×12, directColor7, leftMargin 4, rightMargin 2 (line 175-181) */
+.chat-header__separator {
+  width: 1px;
+  height: 12px;
+  margin-left: 4px;
+  margin-right: 2px;
+  background: var(--direct-color-7);
+  flex-shrink: 0;
+}
+
+/* Pin icon: 14×14, baseColor1 (line 184-190) */
+.chat-header__pin-icon {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--base-color-1);
+  flex-shrink: 0;
+}
+
+.chat-header__pin-icon svg { width: 14px; height: 14px; }
+
+/* Pin count text: tertiaryTextFontSize, baseColor1, clickable (line 192-206) */
+.chat-header__pin-text {
+  font-size: var(--font-size-tertiary);
+  color: var(--base-color-1);
+  cursor: pointer;
+}
+
+.chat-header__pin-text:hover {
+  text-decoration: underline;
+  color: var(--direct-color-1);
+}
+
+.chat-header__spacer { flex: 1; }
+
+.chat-header__actions { display: flex; gap: 8px; }
+
+.chat-header__action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--base-color-1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.chat-header__action-btn svg { width: 20px; height: 20px; }
+.chat-header__action-btn:hover { background: var(--background-hover); }
+
+/* ============================================================
+   CENTER: Messages — StatusMessage.qml
+   ListView spacing: 0
+   StatusMessage ColumnLayout spacing: 2
+   Margin: left/right Theme.padding(16)
+   ============================================================ */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* StatusMessage background states:
+   transparent default
+   mentionColor4 if hasMention
+   pinColor3 if isPinned
+   baseColor2 on hover (or mentionColor3/pinColor2 if mention/pinned) */
+.message {
+  padding: 4px 16px;
+  transition: background 0.1s;
+  position: relative;
+}
+
+.message:hover { background: var(--base-color-2); }
+.message--pinned { background: var(--pin-color-3); }
+.message--pinned:hover { background: var(--pin-color-2); }
+.message--mention { background: var(--mention-color-4); }
+.message--mention:hover { background: var(--mention-color-3); }
+
+/* Left border indicator: 2px, pinColor1 or mentionColor1 */
+.message--pinned::before,
+.message--mention::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+}
+
+.message--pinned::before { background: var(--pin-color-1); }
+.message--mention::before { background: var(--mention-color-1); }
+
+/* Pinned indicator: StatusPinMessageDetails
+   icon tiny/pin 16x16, pinColor1
+   text: secondaryTextFontSize(14), directColor1 */
+.message__pinned-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+  margin-left: 44px; /* align with text (avatar width 36 + gap 8) */
+}
+
+.message__pinned-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--pin-color-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message__pinned-icon svg { width: 16px; height: 16px; }
+
+.message__pinned-text {
+  font-size: var(--font-size-secondary);
+  color: var(--direct-color-1);
+}
+
+.message__pinned-by {
+  font-size: var(--font-size-secondary);
+  font-weight: 500;
+  color: var(--direct-color-1);
+}
+
+/* Reply/quote: StatusMessageReply
+   L-shaped connector: 3px stroke, baseColor1 @ 40%
+   Reply avatar + name in secondaryTextFontSize, baseColor1
+   Reply text: secondaryTextFontSize, baseColor1
+   Layout.leftMargin: 35 */
+.message__reply {
+  display: flex;
+  margin-bottom: 2px;
+}
+
+.message__reply-connector {
+  width: 20px;
+  margin-left: 35px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* L-shaped corner: 3px stroke, baseColor1 @ 40% alpha
+   StatusMessageReply.qml:36 — Layout.topMargin: profileImage.height/2
+   Reply profileImage is 20×20 (MessageView.qml:993), so topMargin = 10px
+   PathArc radiusX/Y: 13 (line 58-59), capStyle: RoundCap (line 51) */
+.message__reply-connector::before {
+  content: '';
+  position: absolute;
+  top: 10px; /* profileImage.height/2 = 20/2 = 10px (StatusMessageReply.qml:36) */
+  left: 50%;
+  right: 0;
+  bottom: 0;
+  border-left: 3px solid color-mix(in srgb, var(--base-color-1) 40%, transparent); /* baseColor1 @ 40% alpha (StatusMessageReply.qml:43-47) */
+  border-bottom: 3px solid color-mix(in srgb, var(--base-color-1) 40%, transparent);
+  border-bottom-left-radius: 13px; /* PathArc radiusX/Y: 13 (StatusMessageReply.qml:58-59) */
+}
+
+.message__reply-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.message__reply-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Reply avatar: 20×20 StatusSmartIdenticon (MessageView.qml:993, StatusMessageReply.qml:80-91) */
+.message__reply-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--indirect-color-1);
+}
+
+.message__reply-sender {
+  font-size: var(--font-size-secondary);
+  font-weight: 500;
+  color: var(--base-color-1);
+}
+
+.message__reply-text {
+  font-size: var(--font-size-secondary);
+  color: var(--base-color-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Main message row: RowLayout spacing halfPadding(8) */
+.message__row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Avatar: 36x36 (StatusChatInfoButton default asset) */
+.message__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--indirect-color-1);
+  font-size: var(--font-size-tertiary);
+  font-weight: 600;
+}
+
+/* Content column: spacing 2, leftMargin when no avatar = avatar width + gap */
+.message__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* When showHeader is false, indent to align with text of previous message */
+.message__body--continued {
+  margin-left: 44px; /* 36 avatar + 8 gap */
+}
+
+/* Header: StatusMessageHeader — RowLayout spacing 4
+   QML uses verticalAlignment: Text.AlignVCenter on all children (not baseline)
+   display name: primaryColor1, Font.Medium, primaryTextFontSize
+   leftPadding: 4, Layout.leftMargin: -4 */
+.message__header {
+  display: flex;
+  align-items: center; /* AlignVCenter in QML (StatusMessageHeader.qml:52,89,145,153,162) */
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* Display name: primaryColor1, Medium, primaryTextFontSize(15)
+   Layout.bottomMargin: 2 — offsets underline to stay vertically centered (StatusMessageHeader.qml:55) */
+.message__sender {
+  font-weight: 500;
+  font-size: var(--font-size-primary);
+  color: var(--primary-color-1); /* primaryColor1, NOT directColor1 */
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: -4px;
+  margin-right: -4px;
+  margin-bottom: 2px; /* Layout.bottomMargin: 2 (StatusMessageHeader.qml:55) */
+}
+
+.message__sender:hover {
+  text-decoration: underline;
+}
+
+/* "You" sender — same styling */
+.message__sender--self {
+  color: var(--primary-color-1);
+}
+
+/* Verification badge icons: 10px tiny */
+.message__verification {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.message__verification-icon {
+  width: 10px;
+  height: 10px;
+}
+
+/* Secondary name (ENS): asideTextFontSize(10), baseColor1, in parens */
+.message__secondary-name {
+  font-size: var(--font-size-aside);
+  color: var(--base-color-1);
+}
+
+/* Separator dot between header elements (StatusMessageHeader.qml:150-158) */
+.message__header-dot {
+  font-size: var(--font-size-aside);
+  color: var(--base-color-1);
+}
+
+/* Tertiary detail: compressed sender ID, Utils.elideText(id, 3, 6)
+   asideTextFontSize, baseColor1, elide middle (StatusMessageHeader.qml:123-135) */
+.message__tertiary-detail {
+  font-size: var(--font-size-aside);
+  color: var(--base-color-1);
+}
+
+/* Timestamp: asideTextFontSize(10), baseColor1
+   Always visible — QML StatusTimeStampLabel has no visibility condition (StatusMessageHeader.qml:143-148) */
+.message__time {
+  font-size: var(--font-size-aside);
+  color: var(--base-color-1);
+}
+
+/* Delivery status: 15x15 icon, asideTextFontSize, baseColor1
+   Label only shown on hover */
+.message__delivery {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.message__delivery-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--base-color-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message__delivery-icon svg { width: 15px; height: 15px; }
+
+/* Delivery label: only shown on hover (showOutgointStatusLabel: root.hovered, StatusMessageHeader.qml:189) */
+.message__delivery-label {
+  font-size: var(--font-size-aside);
+  color: var(--base-color-1);
+  display: none;
+}
+
+.message:hover .message__delivery-label { display: inline; }
+
+/* Message text */
+.message__text {
+  font-size: var(--font-size-primary);
+  color: var(--direct-color-1);
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* Edited indicator */
+.message__edited {
+  font-size: var(--font-size-additional);
+  color: var(--base-color-1);
+  font-style: italic;
+}
+
+/* Emoji reactions: StatusMessageEmojiReactions
+   Flow spacing: halfPadding/2 = 4px
+   Chip: 36x32, cornerRadius 12 (topLeft 0)
+   Emoji icon: 22x22, count text: fontSize(13)
+   Own reaction: border 1px primaryColor1, bg primaryColor2
+   Hover: bg emojiReactionBackgroundHovered, border emojiReactionBorderHovered */
+.message__reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px; /* halfPadding/2 */
+  margin-top: 4px;
+}
+
+.message__reaction {
+  min-width: 36px;
+  height: 32px;
+  border-radius: 0 12px 12px 12px; /* topLeft:0 */
+  background: var(--message-emoji-reaction-bg);
+  font-size: 13px; /* Theme.fontSize(13) */
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.message__reaction:hover {
+  background: var(--message-emoji-reaction-bg-hovered);
+  border-color: var(--message-emoji-reaction-border-hovered);
+}
+
+/* Own reaction: border primaryColor1, bg primaryColor2 */
+.message__reaction--own {
+  background: var(--primary-color-2);
+  border-color: var(--primary-color-1);
+}
+
+/* Add reaction button: 36x32, icon reaction-b 22x22 */
+.message__reaction--add {
+  background: transparent;
+  color: var(--base-color-1);
+  border: none;
+  cursor: pointer;
+}
+
+.message__reaction--add:hover { color: var(--primary-color-1); }
+.message__reaction--add svg { width: 22px; height: 22px; }
+
+/* Day separator */
+.messages__day-separator {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  color: var(--base-color-1);
+  font-size: var(--font-size-tertiary);
+}
+
+.messages__day-separator::before,
+.messages__day-separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--separator);
+}
+
+/* ============================================================
+   CENTER: Chat Input — StatusChatInput.qml
+   bg=baseColor2, radius=20 (bottomRight=8)
+   Command btn: 32x32, bottomMargin 4
+   Input: padding 9px 12px
+   Actions: 32x32, spacing 2, bottomMargin 3
+   ============================================================ */
+.chat-input {
+  padding: 8px 10px;
+  flex-shrink: 0;
+}
+
+.chat-input__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.chat-input__cmd-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--base-color-1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.chat-input__cmd-btn svg { width: 20px; height: 20px; }
+.chat-input__cmd-btn:hover { background: var(--background-hover); }
+
+.chat-input__box {
+  flex: 1;
+  background: var(--base-color-2);
+  border-radius: 20px 20px 8px 20px; /* bottomRight: Theme.radius(8) */
+  display: flex;
+  flex-direction: column;
+  min-height: 40px;
+}
+
+.chat-input__input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  flex: 1;
+}
+
+.chat-input__field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-primary);
+  color: var(--text-color);
+  resize: none;
+  outline: none;
+  padding: 9px 12px;
+  min-height: 20px;
+  max-height: 200px;
+  line-height: 1.4;
+}
+
+.chat-input__field::placeholder { color: var(--base-color-1); }
+
+.chat-input__actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-bottom: 3px;
+  margin-right: 4px;
+}
+
+.chat-input__btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--base-color-1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.chat-input__btn svg { width: 20px; height: 20px; }
+.chat-input__btn:hover { background: var(--background-hover); }
+.chat-input__btn--send { color: var(--primary-color-1); }
