@@ -1,0 +1,36 @@
+/* Font schemes — override --font-family-base and --font-family-mono
+   All fonts chosen for similar x-height to Inter to prevent layout shifts.
+   Applied via [data-fonts="scheme-name"] on <html>.
+   Uses [data-fonts] combined with [data-tokens] for specificity parity. */
+
+/* Default: Inter + Roboto Mono (no override needed, set in theme files) */
+
+/* System: native OS fonts — fastest load, familiar feel */
+[data-tokens][data-fonts="system"] {
+  --font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
+}
+
+/* IBM Plex: humanist, warm, slightly wider than Inter — technical but friendly */
+[data-tokens][data-fonts="plex"] {
+  --font-family-base: 'IBM Plex Sans', 'Inter', sans-serif;
+  --font-family-mono: 'IBM Plex Mono', 'Roboto Mono', monospace;
+}
+
+/* JetBrains Mono: developer-focused mono for both base and code */
+[data-tokens][data-fonts="jetbrains"] {
+  --font-family-base: 'JetBrains Mono', 'Roboto Mono', monospace;
+  --font-family-mono: 'JetBrains Mono', 'Roboto Mono', monospace;
+}
+
+/* Editorial: serif body for a publishing/newspaper feel — pairs with mono accents */
+[data-tokens][data-fonts="editorial"] {
+  --font-family-base: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-family-mono: 'Roboto Mono', monospace;
+}
+
+/* Terminal: all monospace — developer/hacker aesthetic */
+[data-tokens][data-fonts="terminal"] {
+  --font-family-base: 'JetBrains Mono', 'Roboto Mono', 'Fira Code', monospace;
+  --font-family-mono: 'JetBrains Mono', 'Roboto Mono', monospace;
+}
