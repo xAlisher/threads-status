@@ -1,7 +1,7 @@
 // All SVG icons sourced from /home/alisher/status-desktop/ui/StatusQ/src/assets/img/icons/
 // Hardcoded fill/stroke colors replaced with currentColor
 
-const CHANNEL_ICONS = {
+export const CHANNEL_ICONS = {
   // tiny/channel.svg (viewBox="0 0 16 17") — community channel type icon
   channel: `<svg viewBox="0 0 16 17" fill="none"><path clip-rule="evenodd" d="m6.61568 2.47557c-.40782-.0725-.79719.19933-.86969.60715l-.32807 1.84548c-.05515.31023-.32487.53623-.63997.53623h-1.69725c-.41421 0-.75.33579-.75.75s.33579.75.75.75h1.1995c.4045 0 .71076.36551.63996.76376l-.29635 1.66706c-.05515.31024-.32487.53624-.63997.53624h-1.63474c-.41422 0-.75.33581-.75.75001s.33578.75.75.75h1.13698c.40451 0 .71077.3655.63997.7638l-.25617 1.441c-.0725.4078.19933.7972.60715.8697s.7972-.1994.8697-.6072l.34329-1.9311c.05515-.3102.32487-.5362.63996-.5362h1.975c.4045 0 .71077.3655.63997.7638l-.25617 1.441c-.0725.4078.19933.7972.60715.8697s.79717-.1994.86967-.6072l.3433-1.9311c.0552-.3102.3249-.5362.64-.5362h1.7677c.4142 0 .75-.3358.75-.75s-.3358-.75001-.75-.75001h-1.27c-.4045 0-.7107-.36551-.6399-.76377l.2963-1.66706c.0552-.31023.3249-.53623.64-.53623h1.7079c.4142 0 .75-.33579.75-.75s-.3358-.75-.75-.75h-1.2101c-.4046 0-.7108-.36551-.64-.76377l.2409-1.3554c.0725-.40782-.1993-.79719-.6071-.86969s-.7972.19933-.8697.60715l-.3281 1.84548c-.0551.31023-.32485.53623-.63995.53623h-1.975c-.4045 0-.71076-.36551-.63996-.76377l.24095-1.3554c.07249-.40782-.19934-.79719-.60716-.86969zm2.18706 7.45592c.3151 0 .58482-.226.63997-.53624l.29635-1.66705c.0708-.39826-.23546-.76377-.63997-.76377h-1.975c-.31509 0-.58481.226-.63996.53623l-.29636 1.66706c-.0708.39826.23547.76377.63997.76377z" fill="currentColor" fill-rule="evenodd"/></svg>`,
 
@@ -105,6 +105,81 @@ export function bindCommunityChannel() {
   // deep-links: ?fmt=1 opens the formatting group, ?reply=1 shows the reply preview
   if (ci && p.get('fmt') === '1') { ci.classList.add('chat-input--formatting'); styleBtn && styleBtn.classList.add('checked') }
   if (ci && p.get('reply') === '1') ci.classList.add('chat-input--replying')
+
+  // ---- Threads (epic #21090) in-chat affordances — revamp; deep-link driven demo ----
+  bindThreadAffordances(p)
+}
+
+// Thread glyph — reply-in-thread bubble (net-new; Status line style)
+const THREAD_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 9.5 11 12l2.5 2.5M11 12h3.2a2.3 2.3 0 0 1 0 4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+// extra menu icons (no dependency on QUICK_ICONS, which is defined later in the file)
+const MENU_EXTRA = {
+  unread: `<svg viewBox="0 0 24 24" fill="none"><circle cx="18" cy="6" r="3" fill="currentColor"/><path d="M4 7a2 2 0 0 1 2-2h6M20 12v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7l7.5 5a1 1 0 0 0 1 0L16 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  copy: `<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15V5a2 2 0 0 1 2-2h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  del: `<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+}
+
+// message context menu (Figma) — "Reply in thread" is the highlighted entry point (epic 1.1).
+// QUICK_ICONS resolved inside the function body (call-time), so its later definition is fine.
+function msgContextMenu() {
+  const item = (icon, label, cls = '') => `<button class="msg-cmenu__item${cls}">${icon}<span>${label}</span></button>`
+  return `
+    <div class="msg-cmenu">
+      ${item(QUICK_ICONS.reply, 'Reply')}
+      ${item(THREAD_GLYPH, 'Reply in thread', ' msg-cmenu__item--accent')}
+      ${item(QUICK_ICONS.edit, 'Edit')}
+      ${item(MENU_EXTRA.unread, 'Mark as unread')}
+      ${item(MENU_EXTRA.copy, 'Copy message')}
+      ${item(QUICK_ICONS.pin, 'Pin')}
+      ${item(MENU_EXTRA.del, 'Delete', ' msg-cmenu__item--danger')}
+    </div>`
+}
+
+// in-chat thread card under a root message (epic 4): title · N replies · avatars · last activity · new dot
+function threadCard(closed) {
+  const people = [{ i: 'V', c: '#D37EF4' }, { i: 'A', c: '#4360DF' }, { i: 'K', c: '#FE8F59' }]
+  const stack = `<span class="thread-ava-stack">${people.map((p, i) => `<span class="thread-ava" style="background:${p.c};z-index:${people.length - i}">${p.i}</span>`).join('')}</span>`
+  return `
+    <button class="thread-card${closed ? ' thread-card--closed' : ''}" data-open-thread>
+      <span class="thread-card__icon">${THREAD_GLYPH}</span>
+      <span class="thread-card__main">
+        <span class="thread-card__title">Threads MVP${closed ? ' <span class="thread-card__closed">· closed</span>' : ''}</span>
+        <span class="thread-card__meta">${stack}<span class="thread-card__replies">3 replies</span><span class="thread-card__when">· last reply 2m ago</span></span>
+      </span>
+      ${closed ? '' : '<span class="thread-card__dot" title="New messages"></span>'}
+    </button>`
+}
+
+function bindThreadAffordances(p) {
+  const scope = document.querySelector('.shell__center, .shell__mobile-content')
+  if (!scope) return
+  const msgs = scope.querySelectorAll('.message')
+  // context menu over the first message (epic 1.1 entry)
+  if (p.get('menu') === 'thread' && msgs[0]) {
+    msgs[0].classList.add('message--peek', 'message--menu-open')
+    msgs[0].insertAdjacentHTML('beforeend', msgContextMenu())
+  }
+  // in-chat thread card under the first message (epic 4)
+  const card = p.get('thread')
+  if ((card === 'card' || card === 'card-closed') && msgs[0]) {
+    msgs[0].insertAdjacentHTML('afterend', threadCard(card === 'card-closed'))
+  }
+  // composer thread icon (epic 1.2) — add a thread button to the chat-input actions; highlight on ?qa=thread
+  const actions = scope.querySelector('.chat-input__actions')
+  if (actions && (p.get('qa') === 'thread' || card || p.get('menu') === 'thread')) {
+    const btn = document.createElement('button')
+    btn.className = 'chat-input__btn chat-input__thread-btn' + (p.get('qa') === 'thread' ? ' checked' : '')
+    btn.title = 'New thread'; btn.innerHTML = THREAD_GLYPH
+    actions.insertBefore(btn, actions.firstChild)
+  }
+  // open the thread view from a card / composer thread button
+  scope.querySelectorAll('[data-open-thread], .chat-input__thread-btn').forEach(el => el.addEventListener('click', () => {
+    const q = new URLSearchParams(location.search); q.set('screen', 'threads'); q.set('tview', 'thread'); q.delete('thread'); q.delete('menu'); location.search = q.toString()
+  }))
+  // "Reply in thread" in the context menu → Creating Thread
+  scope.querySelectorAll('.msg-cmenu__item--accent').forEach(el => el.addEventListener('click', () => {
+    const q = new URLSearchParams(location.search); q.set('screen', 'threads'); q.set('tview', 'create'); q.delete('menu'); location.search = q.toString()
+  }))
 }
 
 function renderNav() {
@@ -286,7 +361,7 @@ const QUICK_ICONS = {
 // Hover quick-actions toolbar (StatusMessageQuickActions.qml — container h36/radius8/menu-bg+shadow;
 // buttons = StatusFlatRoundButton chatButtonSize 32, Tertiary; MessageView.qml:1111 button set + gating).
 // Order: react · reply · edit(own only) · pin · more. Desktop only (mobile uses the context menu).
-function quickActions(isSelf, pinned) {
+export function quickActions(isSelf, pinned) {
   const qa = (icon, title) => `<button class="message__qa-btn" title="${title}" aria-label="${title}">${icon}</button>`
   return `<div class="message__quick-actions">${qa(QUICK_ICONS.react, 'Add reaction')}${qa(QUICK_ICONS.reply, 'Reply')}${isSelf ? qa(QUICK_ICONS.edit, 'Edit') : ''}${qa(QUICK_ICONS.pin, pinned ? 'Unpin' : 'Pin')}${qa(QUICK_ICONS.more, 'More')}</div>`
 }
@@ -303,7 +378,7 @@ const FMT_ICONS = {
 const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
 
 // StatusChatInputReplyArea.qml — reply preview above the composer (radius 16, baseColor3, "↪ user" Medium 13 + elided quote + 20px close)
-function replyPreview() {
+export function replyPreview() {
   return `
     <div class="chat-input__reply">
       <span class="chat-input__reply-user">↪ Marcus</span>
@@ -312,7 +387,7 @@ function replyPreview() {
     </div>`
 }
 // StatusChatInputToolBar.qml — style toggle → formatting group (bold/italic/strikethrough/quote/code)
-function formatGroup() {
+export function formatGroup() {
   const fb = (icon, title) => `<button class="chat-input__btn chat-input__fmt-btn" title="${title}" aria-label="${title}">${icon}</button>`
   return `<button class="chat-input__btn chat-input__style-btn" data-style-toggle title="Formatting">${FMT_ICONS.style}</button>` +
     `<span class="chat-input__format">${fb(FMT_ICONS.bold, 'Bold')}${fb(FMT_ICONS.italic, 'Italic')}${fb(FMT_ICONS.strikethrough, 'Strikethrough')}${fb(FMT_ICONS.quote, 'Quote')}${fb(FMT_ICONS.code, 'Code')}</span>`
@@ -321,7 +396,7 @@ function formatGroup() {
 /* Message builder — supports all included StatusMessage sub-components:
    reply, pinned indicator, full header (name + delivery), text, reactions
    Options: { reactions, pinned, pinnedBy, reply, replyTo, replyText, delivery, edited, continued } */
-function msg(name, initial, color, time, text, opts = {}) {
+export function msg(name, initial, color, time, text, opts = {}) {
   const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '' } = opts
   const stateClass = pinned ? ' message--pinned' : ''
 
@@ -415,7 +490,7 @@ function msg(name, initial, color, time, text, opts = {}) {
 }
 
 // Message-specific icons from StatusQ/src/assets/img/icons/
-const MSG_ICONS = {
+export const MSG_ICONS = {
   pin: `<svg viewBox="0 0 16 17" fill="none"><g fill="currentColor"><path clip-rule="evenodd" d="m8.75003 10.9168c0-.4858.3553-.8897.80836-1.06492 1.61621-.6252 2.76241-2.19433 2.76241-4.03116 0-2.38627-1.9345-4.32072-4.32076-4.32072-2.38627 0-4.32072 1.93445-4.32072 4.32072 0 1.83683 1.14619 3.40595 2.76236 4.03115.45306.17523.80835.57913.80835 1.06493v4.1487c0 .4276.33579.7743.75.7743s.75-.3467.75-.7743zm2.07077-5.09608c0 1.55784-1.26292 2.82072-2.82076 2.82072s-2.82072-1.26288-2.82072-2.82072 1.26288-2.82072 2.82072-2.82072 2.82076 1.26288 2.82076 2.82072z" fill-rule="evenodd"/><path d="m9.78599 5.38285c0-.59277-.46381-1.19898-1.03596-1.354s-1.03596.19985-1.03596.79262c0 .59278.46381 1.19899 1.03596 1.35401.57215.15501 1.03596-.19986 1.03596-.79263z"/></g></svg>`,
   delivered: `<svg viewBox="0 0 16 17" fill="none"><g fill="currentColor"><path d="m13.7774 4.08403c.2297.15317.2918.46361.1386.69337l-4.99997 7.5c-.08682.1302-.22964.2123-.38588.2217-.15625.0095-.3079-.0548-.40977-.1737l-3-3.49995c-.17971-.20966-.15543-.52531.05423-.70503.20967-.17971.52532-.15543.70503.05424l2.39864 2.79844c.08625.1006.24475.091.31827-.0192l4.48745-6.7312c.1532-.22976.4636-.29185.6934-.13867z"/><path d="m8.54225 8.33804c-.18379.27568-.58003.29961-.79566.04805-.14578-.17008-.16065-.41637-.03639-.60275l2.3738-3.56064c.1531-.22976.4636-.29185.6933-.13867.2298.15317.2919.46361.1387.69337z"/><path d="m2.87964 8.17461c-.17971-.20966-.49536-.23394-.70503-.05423-.20966.17971-.23394.49536-.05423.70502l3 3.5c.17971.2097.49536.2339.70502.0542.20967-.1797.23395-.4953.05424-.705z"/></g></svg>`,
   sent: `<svg viewBox="0 0 16 17" fill="none"><path clip-rule="evenodd" d="m12.2774 4.08403c.2297.15317.2918.46361.1386.69337l-4.99997 7.5c-.08682.1302-.22964.2123-.38588.2217-.15625.0095-.3079-.0548-.40977-.1737l-3-3.49995c-.17971-.20966-.15543-.52531.05423-.70503.20967-.17971.52532-.15543.70503.05424l2.39864 2.79844c.08626.1006.24475.091.31827-.0192l4.48745-6.7312c.1532-.22976.4636-.29185.6934-.13867z" fill="currentColor" fill-rule="evenodd"/></svg>`,

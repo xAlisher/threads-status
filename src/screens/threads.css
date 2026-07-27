@@ -1,0 +1,115 @@
+/* Conversation Threads (epic #21090) — thread surfaces + in-chat affordances.
+   Reuses .message* / .chat-input* from community-channel.css; only thread-specific chrome here.
+   Net-new (needs-design, no QML source): built minimal-first from the Figma create→view frames + epic text. */
+
+.thread-screen { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; }
+.thread-view { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; background: var(--base-color-4); }
+
+/* ---- thread header (back · title/in-channel · follow · search · mute · more) ---- */
+.thread-view__header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--separator); flex-shrink: 0; }
+.thread-view__back { width: 32px; height: 32px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: none; background: transparent; color: var(--direct-color-1); border-radius: 8px; cursor: pointer; }
+.thread-view__back:hover { background: var(--base-color-2); }
+.thread-view__back svg { width: 22px; height: 22px; }
+.thread-view__titles { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.thread-view__title { font-family: var(--font-family-base); font-size: var(--font-size-primary); font-weight: 600; color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thread-view__sub { font-size: var(--font-size-aside); color: var(--base-color-1); }
+.thread-view__actions { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.thread-view__actions .chat-header__action-btn svg { width: 22px; height: 22px; }
+.thread-view__follow { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border: 1px solid var(--primary-color-1); border-radius: 8px; background: transparent; color: var(--primary-color-1); font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; cursor: pointer; }
+.thread-view__follow:hover { background: var(--primary-color-2); }
+.thread-view__follow.on { background: var(--primary-color-1); color: var(--indirect-color-1); border-color: var(--primary-color-1); }
+.thread-view__follow svg { width: 16px; height: 16px; }
+
+/* ---- messages area (reuses .message rows) ---- */
+.thread-view__messages { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 4px; display: flex; flex-direction: column; }
+.thread-view__parent-label, .thread-view__reply-sep { color: var(--base-color-1); font-size: var(--font-size-aside); text-align: center; margin: 4px 0 8px; position: relative; }
+.thread-view__reply-sep { display: flex; align-items: center; gap: 10px; padding: 0 16px; margin: 10px 0; }
+.thread-view__reply-sep::before, .thread-view__reply-sep::after { content: ''; flex: 1; height: 1px; background: var(--separator); }
+.thread-view__parent-label { padding: 0 16px; }
+
+/* ---- composer + "Send copy to #channel" toggle (epic 3.1) ---- */
+.thread-view__composer { flex-shrink: 0; }
+.thread-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px 14px; cursor: pointer; }
+.thread-copy__label { font-size: var(--font-size-additional); color: var(--primary-color-1); }
+.thread-copy__switch { width: 40px; height: 24px; border-radius: 12px; background: var(--base-color-2); flex-shrink: 0; position: relative; transition: background .15s; }
+.thread-copy__knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--indirect-color-1); transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.thread-copy.on .thread-copy__switch { background: var(--primary-color-1); }
+.thread-copy.on .thread-copy__knob { left: 19px; }
+
+/* ---- Creating Thread: name field ---- */
+.thread-create__foot { flex-shrink: 0; border-top: 1px solid var(--separator); }
+.thread-create__name { width: 100%; box-sizing: border-box; border: none; background: transparent; outline: none; padding: 14px 16px 6px; color: var(--direct-color-1); font-family: var(--font-family-base); font-size: var(--font-size-primary); }
+.thread-create__name::placeholder { color: var(--base-color-1); }
+
+/* ---- closed / deleted conditions (epic 4.1/4.2) ---- */
+.thread-closed-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--base-color-3); color: var(--base-color-1); font-size: var(--font-size-additional); flex-shrink: 0; }
+.thread-closed-bar svg { width: 18px; height: 18px; flex-shrink: 0; }
+.thread-view--empty, .thread-empty { flex: 1; }
+.thread-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 40px 24px; color: var(--base-color-1); }
+.thread-empty svg { width: 44px; height: 44px; opacity: .5; }
+.thread-empty__title { font-size: var(--font-size-primary); font-weight: 600; color: var(--direct-color-1); }
+.thread-empty__sub { font-size: var(--font-size-additional); }
+
+/* ---- Threads list / index (epic 5/6) ---- */
+.thread-list { display: flex; flex-direction: column; height: 100%; background: var(--base-color-4); overflow-y: auto; }
+.thread-list__header { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--separator); position: sticky; top: 0; background: var(--base-color-4); z-index: 1; }
+.thread-list__title { font-size: var(--font-size-secondary); font-weight: 600; color: var(--direct-color-1); }
+.thread-list__section { padding: 12px 16px 6px; font-size: var(--font-size-aside); color: var(--base-color-1); text-transform: uppercase; letter-spacing: .04em; }
+.thread-row { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 10px 16px; border: none; background: transparent; text-align: left; cursor: pointer; }
+.thread-row:hover { background: var(--chat-list-item-hover-bg, var(--base-color-2)); }
+.thread-row__icon { width: 28px; height: 28px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--base-color-1); }
+.thread-row__icon svg { width: 20px; height: 20px; }
+.thread-row.closed { opacity: .6; }
+.thread-row__body { flex: 1; min-width: 0; }
+.thread-row__top { display: flex; align-items: center; gap: 6px; }
+.thread-row__title { font-size: var(--font-size-primary); font-weight: 500; color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thread-row.unread .thread-row__title { font-weight: 700; }
+.thread-row__pin { font-size: 12px; }
+.thread-row__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color-1); flex-shrink: 0; }
+.thread-row__meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: var(--font-size-aside); color: var(--base-color-1); }
+.thread-row__meta svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 2px; }
+.thread-row__when { display: inline-flex; align-items: center; }
+.thread-row__sep { opacity: .6; }
+
+/* ---- avatar stack (card + list) ---- */
+.thread-ava-stack { display: inline-flex; flex-shrink: 0; }
+.thread-ava { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #fff; border: 2px solid var(--base-color-4); margin-left: -7px; position: relative; }
+.thread-ava:first-child { margin-left: 0; }
+
+/* ---- in-chat thread card under a message (epic 4) ---- */
+.thread-card { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px 68px; padding: 8px 12px; width: fit-content; max-width: calc(100% - 84px); border: 1px solid var(--separator); border-radius: 12px; background: var(--base-color-3); cursor: pointer; text-align: left; }
+.thread-card:hover { background: var(--base-color-2); }
+.thread-card__icon { width: 22px; height: 22px; flex-shrink: 0; color: var(--primary-color-1); }
+.thread-card__icon svg { width: 20px; height: 20px; }
+.thread-card__main { display: flex; flex-direction: column; min-width: 0; }
+.thread-card__title { font-size: var(--font-size-additional); font-weight: 600; color: var(--direct-color-1); }
+.thread-card__closed { color: var(--base-color-1); font-weight: 400; }
+.thread-card__meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: var(--font-size-aside); color: var(--base-color-1); }
+.thread-card__replies { color: var(--primary-color-1); font-weight: 600; }
+.thread-card__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color-1); flex-shrink: 0; margin-left: 4px; }
+.thread-card--closed { opacity: .7; }
+.thread-card--closed .thread-card__icon, .thread-card--closed .thread-card__replies { color: var(--base-color-1); }
+
+/* composer thread button */
+.chat-input__thread-btn.checked { color: var(--primary-color-1); }
+
+/* ---- message context menu (Figma; epic 1.1 entry) ---- */
+.message--menu-open { position: relative; z-index: 40; }
+.msg-cmenu { position: absolute; top: 100%; left: 60px; margin-top: 4px; z-index: 50; min-width: 240px; padding: 6px; border-radius: 12px; background: var(--menu-bg, var(--base-color-3)); border: 1px solid var(--separator); box-shadow: 0 8px 30px rgba(0,0,0,.35); display: flex; flex-direction: column; }
+.msg-cmenu__item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border: none; background: transparent; border-radius: 8px; color: var(--direct-color-1); font-family: var(--font-family-base); font-size: var(--font-size-additional); cursor: pointer; text-align: left; }
+.msg-cmenu__item svg { width: 20px; height: 20px; color: var(--base-color-1); flex-shrink: 0; }
+.msg-cmenu__item:hover { background: var(--base-color-2); }
+.msg-cmenu__item--accent { color: var(--primary-color-1); }
+.msg-cmenu__item--accent svg { color: var(--primary-color-1); }
+.msg-cmenu__item--danger { color: var(--danger-color-1); }
+.msg-cmenu__item--danger svg { color: var(--danger-color-1); }
+
+/* ---- toast ---- */
+.thread-toast { position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; background: var(--direct-color-1); color: var(--base-color-4); font-size: var(--font-size-additional); font-weight: 500; box-shadow: 0 6px 24px rgba(0,0,0,.4); z-index: 60; white-space: nowrap; }
+.thread-toast svg { width: 18px; height: 18px; }
+.thread-toast.hide { opacity: 0; transition: opacity .3s; }
+
+/* ---- mobile: full-screen thread surface ---- */
+.shell--mobile .thread-view, .shell--mobile .thread-list { border-radius: 0; }
+.shell--mobile .thread-card { margin-left: 48px; max-width: calc(100% - 60px); }
+.shell--mobile .msg-cmenu { left: 12px; right: 12px; min-width: 0; }

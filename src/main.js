@@ -13,7 +13,9 @@ import './shell/shell.css'
 
 // Screens
 import './screens/community-channel.css'
+import './screens/threads.css'
 import { renderCommunityChannel, bindCommunityChannel } from './screens/community-channel.js'
+import { renderThreads, bindThreads } from './screens/threads.js'
 
 // --- Theme registry (original Status light/dark only) ---
 const themes = {
@@ -29,7 +31,8 @@ const versions = {
 
 // --- Screen registry ---
 const screens = {
-  'chat': { label: 'Community channel', render: renderCommunityChannel, bind: bindCommunityChannel },
+  'chat':    { label: 'Community channel', render: renderCommunityChannel, bind: bindCommunityChannel },
+  'threads': { label: 'Threads',           render: renderThreads,          bind: bindThreads },
 }
 
 // --- State (overridable via URL: ?screen=chat&theme=light&view=mobile&version=revamp) ---
@@ -151,6 +154,25 @@ const USE_CASES = [
     { id: 'cc-actions', label: 'Message hover quick-actions',         screen: 'chat', params: 'version=current&theme=dark&actions=1' },
     { id: 'cc-reply',   label: 'Composer · replying (reply preview)', screen: 'chat', params: 'version=current&theme=dark&reply=1' },
     { id: 'cc-fmt',     label: 'Composer · formatting toolbar',       screen: 'chat', params: 'version=current&theme=dark&fmt=1' },
+  ]},
+  { group: 'Threads — in chat (Threads)', items: [
+    { id: 'th-menu',    label: 'Context menu · Reply in thread',      screen: 'chat', params: 'version=revamp&theme=dark&menu=thread' },
+    { id: 'th-qa',      label: 'Composer · new-thread icon',          screen: 'chat', params: 'version=revamp&theme=dark&qa=thread' },
+    { id: 'th-card',    label: 'In-chat thread card (indicator)',     screen: 'chat', params: 'version=revamp&theme=dark&thread=card' },
+    { id: 'th-cardc',   label: 'In-chat thread card · closed',        screen: 'chat', params: 'version=revamp&theme=dark&thread=card-closed' },
+  ]},
+  { group: 'Threads — surfaces (Threads)', items: [
+    { id: 'th-create',  label: 'Creating Thread · empty',             screen: 'threads', params: 'version=revamp&theme=dark&tview=create' },
+    { id: 'th-title',   label: 'Creating Thread · named',             screen: 'threads', params: 'version=revamp&theme=dark&tview=create&state=title' },
+    { id: 'th-created', label: 'Creating Thread · created toast',     screen: 'threads', params: 'version=revamp&theme=dark&tview=create&state=created' },
+    { id: 'th-view',    label: 'Thread view (parent + replies)',      screen: 'threads', params: 'version=revamp&theme=dark&tview=thread' },
+    { id: 'th-copy',    label: 'Thread view · Send copy ON',          screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&copy=1' },
+    { id: 'th-follow',  label: 'Thread view · Following',             screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&following=1' },
+    { id: 'th-closed',  label: 'Thread view · closed',                screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&state=closed' },
+    { id: 'th-deleted', label: 'Thread view · deleted',              screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&state=deleted' },
+    { id: 'th-group',   label: 'Thread view · group chat',            screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&surface=group' },
+    { id: 'th-dm',      label: 'Thread view · DM',                    screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&surface=dm' },
+    { id: 'th-list',    label: 'Threads list (active + past)',        screen: 'threads', params: 'version=revamp&theme=dark&tview=list' },
   ]},
 ]
 function findUseCase(id) { for (const g of USE_CASES) { const u = g.items.find(i => i.id === id); if (u) return u } }
