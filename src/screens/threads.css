@@ -8,8 +8,9 @@
 /* replaces the 250px Members panel; 150% of its width per spec. position:relative anchors the more-menu. */
 .shell__right:has(.thread-panel) { width: 375px; overflow: hidden; }
 .thread-panel { position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; }
-/* let the composer shrink to the narrower panel width (flex children default to min-width:auto) */
-.thread-panel .chat-input__row, .thread-panel .chat-input__box { min-width: 0; }
+/* let the thread composer shrink to a narrow width (desktop panel AND mobile full-screen thread) —
+   flex children default to min-width:auto and would otherwise overflow, clipping the format icons */
+.thread-view__composer .chat-input__row, .thread-view__composer .chat-input__box { min-width: 0; }
 /* thread glyph to the left of the title in the desktop panel header */
 .thread-view__lead-icon { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--base-color-1); }
 .thread-view__lead-icon svg { width: 20px; height: 20px; }
