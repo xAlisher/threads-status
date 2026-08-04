@@ -115,6 +115,8 @@ export function bindCommunityChannel(view, ver) {
 
 // Thread glyph — reply-in-thread bubble (net-new; Status line style)
 const THREAD_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 9.5 11 12l2.5 2.5M11 12h3.2a2.3 2.3 0 0 1 0 4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+// lock.svg (Status asset) — closed-thread glyph, so a closed card/row reads differently from an open one
+const LOCK_GLYPH = `<svg viewBox="0 0 10 12" fill="none"><path clip-rule="evenodd" d="m2 5.5v-1.74359c0-1.78315 1.32593-3.25641 3-3.25641s3 1.47326 3 3.25641v1.74359h.5c.82843 0 1.5.67157 1.5 1.5v3c0 .8284-.67157 1.5-1.5 1.5h-7c-.828427 0-1.5-.6716-1.5-1.5v-3c0-.82843.671573-1.5 1.5-1.5zm1.38462 0h3.23076v-1.74359c0-1.04908-.74044-1.87179-1.61538-1.87179s-1.61538.82271-1.61538 1.87179z" fill="currentColor" fill-rule="evenodd"/></svg>`
 // extra menu icons — real Status assets (hide.svg / copy.svg / delete.svg), recoloured → currentColor
 const MENU_EXTRA = {
   // hide.svg — used for "Mark as unread" (eye-off)
@@ -159,12 +161,12 @@ function threadCard(t) {
   const closed = t.closed
   return `
     <button class="thread-card${closed ? ' thread-card--closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}">
-      <span class="thread-card__icon">${closed ? THREAD_GLYPH : THREAD_GLYPH}</span>
+      <span class="thread-card__icon">${closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
       <span class="thread-card__main">
         <span class="thread-card__title">${t.title}${closed ? ' <span class="thread-card__closed">· closed</span>' : ''}</span>
         <span class="thread-card__meta">${stack}<span class="thread-card__replies">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></span>
       </span>
-      ${!closed && t.unread ? '<span class="thread-card__dot" title="New messages"></span>' : ''}
+      ${!closed && t.followed && t.unread ? '<span class="thread-card__dot" title="New messages"></span>' : ''}
     </button>`
 }
 
@@ -200,9 +202,11 @@ function openContextMenu(msgEl) {
     else goToCreate(parentMsgId, parentMsg, surface)
   })
   menu.querySelector('.msg-cmenu__item')?.focus()
+  const trigger = msgEl.querySelector('.message__qa-btn[aria-label="More"]')
   const close = () => { menu.remove(); msgEl.classList.remove('message--menu-open'); document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
   const onDown = (e) => { if (!menu.contains(e.target)) close() }
-  const onKey = (e) => { if (e.key === 'Escape') close() }
+  // Escape returns focus to the invoking More button (WAI-ARIA menu-button) — no keyboard trap
+  const onKey = (e) => { if (e.key === 'Escape') { close(); trigger?.focus() } }
   setTimeout(() => { document.addEventListener('mousedown', onDown); document.addEventListener('keydown', onKey) }, 0)
 }
 
@@ -308,13 +312,15 @@ function navBtn(title, iconSvg, active) {
 function renderLeftPanel(revamp) {
   // epic §6: active/followed channel threads surface under their parent channel in the left list,
   // with an unread indicator, honouring §6.1 disappear rules (closed / 1-week-inactive / keep-visible).
-  const genThreads = revamp ? store.channelListThreads('channel').filter(t => t.parentMsgId && String(t.parentMsgId).startsWith('cc-')) : []
+  // channelListThreads already applies §6.1 (surface/closed/1-week/keep-visible) + the #22 followed
+  // rule — trust it; a secondary parentMsgId filter here wrongly dropped kept-visible/active threads.
+  const genThreads = revamp ? store.channelListThreads('channel') : []
   const threadRows = genThreads.map(t => `
-    <button class="channel-thread${t.unread ? ' unread' : ''}" data-open-thread="${t.id}" data-surface="channel" title="Open thread">
-      <span class="channel-thread__glyph">${THREAD_GLYPH}</span>
+    <button class="channel-thread${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="channel" title="Open thread">
+      <span class="channel-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
       <span class="channel-thread__name">${t.title}</span>
-      ${t.keptVisible ? '<span class="channel-thread__pin" title="Kept visible">📌</span>' : ''}
-      ${t.unread ? '<span class="channel-thread__dot" title="New messages"></span>' : `<span class="channel-thread__count">${t.messages.length}</span>`}
+      ${t.keptVisible ? `<span class="channel-thread__pin" title="Kept visible">${CHANNEL_ICONS.pinHeader}</span>` : ''}
+      ${t.followed && t.unread ? '<span class="channel-thread__dot" title="New messages"></span>' : `<span class="channel-thread__count">${t.messages.length}</span>`}
     </button>`).join('')
   return `
     <div class="community-header">

@@ -130,7 +130,7 @@ function renderThread(t, { copy }) {
       ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true })}
       <div class="thread-view__messages">
         <div class="thread-view__parent-label">Started this thread</div>
-        <div class="thread-view__parent">${msg(...t.parent ? t.parent : t.parentMsg)}</div>
+        <div class="thread-view__parent">${msg(...t.parentMsg)}</div>
         ${reactionsBar()}
         <div class="thread-view__reply-sep"><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></div>
         ${replyRows || '<div class="thread-view__empty-replies">No replies yet — start the discussion.</div>'}
@@ -146,10 +146,10 @@ function threadRow(t) {
   const people = store.participants(t)
   const when = relTime(t.lastActivityTs)
   return `
-    <button class="thread-row${t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}">
+    <button class="thread-row${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}" aria-label="${t.title}, ${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.followed && t.unread ? ', unread' : ''}${t.closed ? ', closed' : ''}">
       <span class="thread-row__icon">${t.closed ? THREAD_ICONS.lock : THREAD_ICONS.thread}</span>
       <span class="thread-row__body">
-        <span class="thread-row__top"><span class="thread-row__title">${t.title}</span>${t.keptVisible ? `<span class="thread-row__pin" title="Kept visible">${THREAD_ICONS.pin}</span>` : ''}${t.followed ? '<span class="thread-row__followed" title="Following">·</span>' : ''}${t.unread ? '<span class="thread-row__dot" title="New messages"></span>' : ''}</span>
+        <span class="thread-row__top"><span class="thread-row__title">${t.title}</span>${t.keptVisible ? `<span class="thread-row__pin" title="Kept visible">${THREAD_ICONS.pin}</span>` : ''}${t.followed ? '<span class="thread-row__followed" title="Following">·</span>' : ''}${t.followed && t.unread ? '<span class="thread-row__dot" title="New messages"></span>' : ''}</span>
         <span class="thread-row__meta"><span class="thread-row__channel">${t.channelLabel}</span><span class="thread-row__sep">·</span><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span><span class="thread-row__sep">·</span><span class="thread-row__when">${THREAD_ICONS.clock}${when}</span></span>
       </span>
       ${avatarStack(people)}
@@ -205,10 +205,13 @@ export function bindThreads() {
   const queued = store.takeToast()
   if (queued) floatToast(root, queued)
 
-  // "Send copy to #channel" switch (epic §3.1) — real ARIA switch, keyboard-activatable
+  // "Send copy to #channel" switch (epic §3.1) — real ARIA switch, keyboard-activatable.
+  // Persist the choice into the `copy` URL param (which renderThread reads) so posting a reply
+  // — which triggers a re-render — doesn't silently snap the toggle back on/off.
   root.querySelector('[data-copy]')?.addEventListener('click', function () {
     const on = this.getAttribute('aria-checked') !== 'true'
     this.setAttribute('aria-checked', String(on)); this.classList.toggle('on', on)
+    try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
   })
 
   // ---- create flow: Send creates a thread in the model (epic §15/UC1) ----
@@ -233,7 +236,7 @@ export function bindThreads() {
   if (p.get('tview') === 'thread' && threadId) {
     // clear the unread badge on open (epic §5) — silent persist (no re-render; badge updates on next nav)
     const t0 = store.getThread(threadId)
-    if (t0 && t0.followed && t0.unread && !t0.muted) store.markRead(threadId, { silent: true })
+    if (t0 && t0.unread && !t0.muted) store.markRead(threadId, { silent: true })
     const send = () => {
       const inputEl = root.querySelector('[data-thread-input]')
       const text = (inputEl?.value || '').trim()

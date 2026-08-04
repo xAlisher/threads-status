@@ -23,6 +23,8 @@ function seed() {
   const now = Date.now()
   const min = 60 * 1000, hr = 60 * min, day = 24 * hr
   return {
+    // monotonic id counter — PERSISTED so ids never collide across the deep-link reloads
+    seq: 100,
     // messages the user copied from a thread into a parent conversation (keyed by surface)
     parentPosts: { channel: [], group: [], dm: [] },
     // toast queue drained by the renderer
@@ -47,7 +49,7 @@ function seed() {
           { id: 'd1', name: 'Elena', initial: 'E', color: '#D37EF4', time: '09:20', text: 'Base palette is done. Semantic layer next.', own: false, ts: now - 12 * hr, opts: {} },
           { id: 'd2', name: 'Marcus', initial: 'M', color: '#26A69A', time: '09:44', text: 'Nice — I can restyle a whole screen from one file now.', own: false, ts: now - 11 * hr, opts: {} },
         ],
-        followed: false, muted: false, closed: false, deleted: false, keptVisible: false,
+        followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
         unread: false, lastActivityTs: now - 1 * hr,
       },
       {
@@ -96,10 +98,11 @@ function seed() {
 
 function computeParticipants(t) {
   const seen = new Map()
-  const push = (i, c) => { const k = i + c; if (!seen.has(k)) seen.set(k, { i, c }) }
+  // dedup by stable identity (sender name), NOT initial+color — two people can share both
+  const push = (id, i, c) => { const k = id || (i + '·' + c); if (!seen.has(k)) seen.set(k, { i, c }) }
   // parent author first
-  push(t.parentMsg[1] || '?', t.parentMsg[2] || '#4360DF')
-  t.messages.forEach(m => push(m.initial || '?', m.color || '#4360DF'))
+  push(t.parentMsg[0], t.parentMsg[1] || '?', t.parentMsg[2] || '#4360DF')
+  t.messages.forEach(m => push(m.name, m.initial || '?', m.color || '#4360DF'))
   return [...seen.values()]
 }
 
@@ -113,6 +116,9 @@ function ensure() {
   const p = new URLSearchParams(location.search)
   const doReset = p.get('reset') === '1'
   state = (doReset ? null : load()) || seed()
+  // migrate/repair the id counter for states persisted before seq was tracked: never below the
+  // highest numeric id already in use, so a resumed session can't mint a colliding id
+  if (typeof state.seq !== 'number') state.seq = deriveSeq(state)
   // reset is one-shot: strip it from the URL so later navigations don't reseed and wipe live state
   if (doReset && typeof history !== 'undefined') {
     try { const u = new URL(location.href); u.searchParams.delete('reset'); history.replaceState(null, '', u) } catch {}
@@ -147,9 +153,10 @@ export function channelListThreads(surface = 'channel') {
   const now = Date.now()
   return ensure().threads.filter(t => {
     if (t.deleted || t.surface !== surface) return false
-    if (t.keptVisible) return true            // §6.1: kept permanently visible
+    if (t.keptVisible) return true            // §6.1: kept permanently visible (overrides all below)
     if (t.closed) return false                // §6.1: closes → disappears
     if (now - t.lastActivityTs > WEEK_MS) return false // §6.1: no new messages within 1 week
+    if (!t.followed) return false             // #22: the channel list shows followed threads
     return true
   })
 }
@@ -162,15 +169,23 @@ export function unreadCount() {
   return ensure().threads.filter(t => !t.deleted && t.followed && !t.muted && t.unread).length
 }
 
-export function takeToast() { const s = ensure(); const t = s.toast; s.toast = null; return t }
+export function takeToast() { const s = ensure(); const t = s.toast; if (t) { s.toast = null; persist() } return t }
 
 // pending parent-message snapshot for the create flow — persisted so it survives the reload
 export function setPendingParent(id, tuple) { const s = ensure(); (s.pendingParents = s.pendingParents || {})[id] = tuple; persist() }
 export function getPendingParent(id) { return (ensure().pendingParents || {})[id] || null }
 
 // ---- mutations ----
-let seq = 100
-const nid = (p) => `${p}${++seq}`
+// id counter lives IN state (persisted) so ids are unique across reloads within a tab
+const nid = (p) => `${p}${++ensure().seq}`
+// highest numeric id suffix across all stored ids — the floor for a repaired seq
+function deriveSeq(s) {
+  let max = 100
+  const scan = (id) => { const m = /(\d+)$/.exec(String(id || '')); if (m) max = Math.max(max, +m[1]) }
+  ;(s.threads || []).forEach(t => { scan(t.id); (t.messages || []).forEach(msg => scan(msg.id)) })
+  Object.values(s.parentPosts || {}).forEach(arr => (arr || []).forEach(pp => scan(pp.id)))
+  return max
+}
 
 export function createThread({ surface = 'channel', parentMsgId = null, parentMsg = null, title = '', firstMessage = '' }) {
   const s = ensure()
@@ -229,7 +244,8 @@ export function simulateActivity(threadId) {
 export function setFollowed(threadId, followed) {
   const t = getThread(threadId); if (!t) return
   t.followed = followed
-  if (!followed) ensure().toast = 'You unfollowed this thread'
+  // unfollowing clears any pending unread — an unfollowed thread must not keep a stale dot (#19)
+  if (!followed) { t.unread = false; ensure().toast = 'You unfollowed this thread' }
   emit()
 }
 export function setMuted(threadId, muted) {
@@ -247,7 +263,10 @@ export function closeThread(threadId) {
 }
 export function reopenThread(threadId) {
   const t = getThread(threadId); if (!t) return
-  t.closed = false; t.lastActivityTs = Date.now()
+  // reopen must NOT refresh activity — only a real reply does; otherwise a long-stale thread
+  // would jump back into the active channel list (§6.1) with no new message
+  t.closed = false
+  ensure().toast = 'Thread reopened'
   emit()
 }
 export function deleteThread(threadId) {
