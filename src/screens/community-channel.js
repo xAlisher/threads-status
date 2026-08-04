@@ -1,6 +1,8 @@
 // All SVG icons sourced from /home/alisher/status-desktop/ui/StatusQ/src/assets/img/icons/
 // Hardcoded fill/stroke colors replaced with currentColor
 
+import * as store from '../thread-store.js'
+
 export const CHANNEL_ICONS = {
   // tiny/channel.svg (viewBox="0 0 16 17") — community channel type icon
   channel: `<svg viewBox="0 0 16 17" fill="none"><path clip-rule="evenodd" d="m6.61568 2.47557c-.40782-.0725-.79719.19933-.86969.60715l-.32807 1.84548c-.05515.31023-.32487.53623-.63997.53623h-1.69725c-.41421 0-.75.33579-.75.75s.33579.75.75.75h1.1995c.4045 0 .71076.36551.63996.76376l-.29635 1.66706c-.05515.31024-.32487.53624-.63997.53624h-1.63474c-.41422 0-.75.33581-.75.75001s.33578.75.75.75h1.13698c.40451 0 .71077.3655.63997.7638l-.25617 1.441c-.0725.4078.19933.7972.60715.8697s.7972-.1994.8697-.6072l.34329-1.9311c.05515-.3102.32487-.5362.63996-.5362h1.975c.4045 0 .71077.3655.63997.7638l-.25617 1.441c-.0725.4078.19933.7972.60715.8697s.79717-.1994.86967-.6072l.3433-1.9311c.0552-.3102.3249-.5362.64-.5362h1.7677c.4142 0 .75-.3358.75-.75s-.3358-.75001-.75-.75001h-1.27c-.4045 0-.7107-.36551-.6399-.76377l.2963-1.66706c.0552-.31023.3249-.53623.64-.53623h1.7079c.4142 0 .75-.33579.75-.75s-.3358-.75-.75-.75h-1.2101c-.4046 0-.7108-.36551-.64-.76377l.2409-1.3554c.0725-.40782-.1993-.79719-.6071-.86969s-.7972.19933-.8697.60715l-.3281 1.84548c-.0551.31023-.32485.53623-.63995.53623h-1.975c-.4045 0-.71076-.36551-.63996-.76377l.24095-1.3554c.07249-.40782-.19934-.79719-.60716-.86969zm2.18706 7.45592c.3151 0 .58482-.226.63997-.53624l.29635-1.66705c.0708-.39826-.23546-.76377-.63997-.76377h-1.975c-.31509 0-.58481.226-.63996.53623l-.29636 1.66706c-.0708.39826.23547.76377.63997.76377z" fill="currentColor" fill-rule="evenodd"/></svg>`,
@@ -39,10 +41,11 @@ export const CHANNEL_ICONS = {
   pinHeader: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m14.8956 7.28455c0-.82843-.6482-1.67563-1.4478-1.89228-.7996-.21664-1.4478.2793-1.4478 1.10773s.6482 1.67563 1.4478 1.89227c.7996.21665 1.4478-.2793 1.4478-1.10772z"/><path clip-rule="evenodd" d="m12 2c-3.31371 0-6 2.68629-6 6 0 2.9077 2.06835 5.3323 4.814 5.8828.2473.0496.436.2601.436.5123v6.6049c0 .4142.3358.75.75.75s.75-.3358.75-.75v-6.6049c0-.2522.1887-.4627.436-.5123 2.7457-.5505 4.814-2.9751 4.814-5.8828 0-3.31371-2.6863-6-6-6zm-4.5 6c0 2.4853 2.01472 4.5 4.5 4.5 2.4853 0 4.5-2.0147 4.5-4.5 0-2.48528-2.0147-4.5-4.5-4.5-2.48528 0-4.5 2.01472-4.5 4.5z" fill-rule="evenodd"/></g></svg>`,
 }
 
-export function renderCommunityChannel() {
-  const nav = renderNav()
-  const left = renderLeftPanel()
-  const center = renderCenterPanel()
+export function renderCommunityChannel(view, ver) {
+  const revamp = ver === 'revamp'
+  const nav = renderNav(revamp)
+  const left = renderLeftPanel(revamp)
+  const center = renderCenterPanel(revamp)
   const right = renderRightPanel()
   return { nav, left, center, right }
 }
@@ -89,7 +92,7 @@ const MEMBER_ICONS = {
 
 // ?actions=1 → force-show the hover quick-actions toolbar on a couple of messages (screenshot/deep-link demo).
 // Shows both variants: a non-own message (react/reply/pin/more) and an own "You" message (+edit).
-export function bindCommunityChannel() {
+export function bindCommunityChannel(view, ver) {
   const p = new URLSearchParams(location.search)
   if (p.get('actions') === '1') {
     const msgs = document.querySelectorAll('.shell__center .message, .shell__mobile-content .message')
@@ -106,83 +109,160 @@ export function bindCommunityChannel() {
   if (ci && p.get('fmt') === '1') { ci.classList.add('chat-input--formatting'); styleBtn && styleBtn.classList.add('checked') }
   if (ci && p.get('reply') === '1') ci.classList.add('chat-input--replying')
 
-  // ---- Threads (epic #21090) in-chat affordances — revamp; deep-link driven demo ----
-  bindThreadAffordances(p)
+  // ---- Threads (epic #21090) in-chat affordances — revamp only; version=current untouched ----
+  if (ver === 'revamp') bindThreadAffordances(p)
 }
 
 // Thread glyph — reply-in-thread bubble (net-new; Status line style)
 const THREAD_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 9.5 11 12l2.5 2.5M11 12h3.2a2.3 2.3 0 0 1 0 4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-// extra menu icons (no dependency on QUICK_ICONS, which is defined later in the file)
+// extra menu icons — real Status assets (hide.svg / copy.svg / delete.svg), recoloured → currentColor
 const MENU_EXTRA = {
-  unread: `<svg viewBox="0 0 24 24" fill="none"><circle cx="18" cy="6" r="3" fill="currentColor"/><path d="M4 7a2 2 0 0 1 2-2h6M20 12v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7l7.5 5a1 1 0 0 0 1 0L16 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  copy: `<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15V5a2 2 0 0 1 2-2h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  del: `<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  // hide.svg — used for "Mark as unread" (eye-off)
+  unread: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path clip-rule="evenodd" d="m4.96615 7.47938c.24656.19177.25853.56004.03317.77634-1.31988 1.26686-2.25114 2.57658-2.6983 3.26098-.19368.2964-.19368.6701 0 .9665 1.03483 1.5838 4.66222 6.5168 9.69898 6.5168 1.9068 0 3.6116-.707 5.0502-1.6716.1836-.1231.426-.119.6005.0168l2.8889 2.2468c.3269.2544.7981.1954 1.0524-.1315.2544-.327.1955-.7982-.1315-1.0525l-18.00001-13.99998c-.32696-.2543-.79817-.1954-1.05247.13156s-.1954.79817.13156 1.05247zm10.59515 8.24062c.2708.2107.2536.6254-.0458.7928-1.0808.6044-2.2619.9872-3.5155.9872-2.01721 0-3.84676-.9912-5.37269-2.3022-.80303-.69-1.48262-1.4354-2.0153-2.0927-.5236-.6461-.5236-1.5642 0-2.2103.53268-.6573 1.21227-1.40271 2.0153-2.09264.01094-.0094.02699-.00978.03837-.00092l1.44501 1.1239c.18957.14746.24422.40776.15755.63166-.17323.4477-.26824.9344-.26824 1.4432 0 2.2091 1.79086 4 4 4 .8635 0 1.6631-.2736 2.3168-.7389.1956-.1392.4613-.1502.6508-.0028zm-6.05263-3.9298c.02795-.3365.41902-.4518.68553-.2445l2.6906 2.0927c.2665.2072.2512.6148-.0678.725-.256.0885-.5309.1366-.817.1366-1.3807 0-2.5-1.1193-2.5-2.5 0-.0707.00293-.1406.00867-.2098z" fill-rule="evenodd"/><path d="m8.85704 6.41675c-.29108-.2264-.24414-.67767.09853-.81391.94161-.37438 1.96033-.60284 3.04423-.60284 5.0368 0 8.6642 4.93293 9.699 6.5167.1937.2965.1937.6701 0 .9666-.3096.4738-.8512 1.2474-1.5932 2.0989-.1712.1965-.4659.221-.6717.061l-.3932-.3058c-.2315-.1801-.2585-.5195-.0658-.7407.146-.1677.2838-.3322.4129-.4915.5236-.6462.5236-1.5642 0-2.2104-.5326-.6573-1.2122-1.40268-2.0153-2.09261-1.5259-1.31103-3.3554-2.30219-5.3727-2.30219-.7486 0-1.4713.13648-2.16224.37515-.16605.05736-.35074.03143-.48942-.07643z"/><path d="m15.8613 10.9529c.1091.4032-.346.6425-.6756.3861l-1.4018-1.0903c-.1565-.1593-.3341-.29781-.5283-.41087l-1.4504-1.12808c-.3093-.24052-.1972-.70975.1946-.70975 1.8468 0 3.4013 1.25163 3.8615 2.9529z"/></g></svg>`,
+  // copy.svg
+  copy: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m6.25 10.5c.41421 0 .75-.3358.75-.75 0-.41421-.33579-.75-.75-.75h-.25c-2.20914 0-4 1.7909-4 4v5c0 2.2091 1.79086 4 4 4h5c2.2091 0 4-1.7909 4-4v-.25c0-.4142-.3358-.75-.75-.75s-.75.3358-.75.75v.25c0 1.3807-1.1193 2.5-2.5 2.5h-5c-1.38071 0-2.5-1.1193-2.5-2.5v-5c0-1.3807 1.11929-2.5 2.5-2.5z"/><path clip-rule="evenodd" d="m9 6c0-2.20914 1.7909-4 4-4h5c2.2091 0 4 1.79086 4 4v5c0 2.2091-1.7909 4-4 4h-5c-2.2091 0-4-1.7909-4-4zm4-2.5h5c1.3807 0 2.5 1.11929 2.5 2.5v5c0 1.3807-1.1193 2.5-2.5 2.5h-5c-1.3807 0-2.5-1.1193-2.5-2.5v-5c0-1.38071 1.1193-2.5 2.5-2.5z" fill-rule="evenodd"/></g></svg>`,
+  // delete.svg
+  del: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m9.39286 2.25c-1.18347 0-2.14286.95939-2.14286 2.14286 0 .61145-.49568 1.10714-1.10714 1.10714h-3.14286c-.41421 0-.75.33579-.75.75s.33579.75.75.75h.73876c.25288 0 .46594.1888.49637.43983l1.33836 11.04147c.24343 2.0083 1.94796 3.5187 3.97094 3.5187h4.91117c2.023 0 3.7275-1.5104 3.9709-3.5187l1.3384-11.04147c.0304-.25103.2435-.43983.4963-.43983h.7388c.4142 0 .75-.33579.75-.75s-.3358-.75-.75-.75h-3.1429c-.6114 0-1.1071-.49568-1.1071-1.10714 0-1.18347-.9594-2.14286-2.1429-2.14286zm5.31594 3.25c.3663 0 .6146-.38913.5652-.75214-.0158-.11608-.024-.23459-.024-.355 0-.35504-.2878-.64286-.6429-.64286h-5.21424c-.35504 0-.64286.28782-.64286.64286 0 .12041-.00816.23892-.02397.355-.04942.36301.19882.75214.56518.75214zm3.1483 1.5c.2393 0 .4247.20925.3959.44679l-1.3156 10.85401c-.1521 1.2552-1.2175 2.1992-2.4818 2.1992h-4.91117c-1.26436 0-2.32969-.944-2.48184-2.1992l-1.31564-10.85401c-.02879-.23754.15663-.44679.39591-.44679z" fill="currentColor" fill-rule="evenodd"/></svg>`,
 }
 
-// message context menu (Figma) — "Reply in thread" is the highlighted entry point (epic 1.1).
-// QUICK_ICONS resolved inside the function body (call-time), so its later definition is fine.
-function msgContextMenu() {
-  const item = (icon, label, cls = '') => `<button class="msg-cmenu__item${cls}">${icon}<span>${label}</span></button>`
+// quick-emoji-reactions bar atop the context menu (Figma frame 1)
+function reactionsBar() {
+  const emojis = ['👋', '🔨', '🚀', '🎃', '🎯', '🚗', '😀']
+  return `<div class="msg-cmenu__reactions" role="group" aria-label="Quick reactions">${emojis.map(e => `<button class="msg-cmenu__react" aria-label="React ${e}">${e}</button>`).join('')}<button class="msg-cmenu__react msg-cmenu__react--more" aria-label="More reactions">+</button></div>`
+}
+
+// message context menu (Figma frame 1) — reactions bar + item list. Gated to source
+// conventions (MessageContextMenuView.qml): Edit/Delete only on own messages; source order
+// Reply → Edit → Copy → Pin → Mark-unread → Delete, with "Reply in thread" as the epic entry point.
+function msgContextMenu(isSelf) {
+  const item = (icon, label, cls = '', extra = '') => `<button class="msg-cmenu__item${cls}" role="menuitem" ${extra}>${icon}<span>${label}</span></button>`
   return `
-    <div class="msg-cmenu">
-      ${item(QUICK_ICONS.reply, 'Reply')}
-      ${item(THREAD_GLYPH, 'Reply in thread', ' msg-cmenu__item--accent')}
-      ${item(QUICK_ICONS.edit, 'Edit')}
-      ${item(MENU_EXTRA.unread, 'Mark as unread')}
-      ${item(MENU_EXTRA.copy, 'Copy message')}
-      ${item(QUICK_ICONS.pin, 'Pin')}
-      ${item(MENU_EXTRA.del, 'Delete', ' msg-cmenu__item--danger')}
+    <div class="msg-cmenu" role="menu" aria-label="Message actions">
+      ${reactionsBar()}
+      <div class="msg-cmenu__items">
+        ${item(QUICK_ICONS.reply, 'Reply')}
+        ${item(THREAD_GLYPH, 'Reply in thread', ' msg-cmenu__item--accent', 'data-reply-in-thread')}
+        ${isSelf ? item(QUICK_ICONS.edit, 'Edit') : ''}
+        ${item(MENU_EXTRA.copy, 'Copy message')}
+        ${item(QUICK_ICONS.pin, 'Pin')}
+        ${item(MENU_EXTRA.unread, 'Mark as unread')}
+        ${isSelf ? item(MENU_EXTRA.del, 'Delete', ' msg-cmenu__item--danger') : ''}
+      </div>
     </div>`
 }
 
-// in-chat thread card under a root message (epic 4): title · N replies · avatars · last activity · new dot
-function threadCard(closed) {
-  const people = [{ i: 'V', c: '#D37EF4' }, { i: 'A', c: '#4360DF' }, { i: 'K', c: '#FE8F59' }]
-  const stack = `<span class="thread-ava-stack">${people.map((p, i) => `<span class="thread-ava" style="background:${p.c};z-index:${people.length - i}">${p.i}</span>`).join('')}</span>`
+// in-chat thread card under a root message (epic §4) — data-driven from the store:
+// title · N replies · participant avatars · new/unread dot · closed variant.
+function threadCard(t) {
+  const people = store.participants(t)
+  const stack = `<span class="thread-ava-stack">${people.slice(0, 4).map((p, i) => `<span class="thread-ava" style="background:${p.c};z-index:${people.length - i}">${p.i}</span>`).join('')}${people.length > 4 ? `<span class="thread-ava thread-ava--more">+${people.length - 4}</span>` : ''}</span>`
+  const closed = t.closed
   return `
-    <button class="thread-card${closed ? ' thread-card--closed' : ''}" data-open-thread>
-      <span class="thread-card__icon">${THREAD_GLYPH}</span>
+    <button class="thread-card${closed ? ' thread-card--closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}">
+      <span class="thread-card__icon">${closed ? THREAD_GLYPH : THREAD_GLYPH}</span>
       <span class="thread-card__main">
-        <span class="thread-card__title">Threads MVP${closed ? ' <span class="thread-card__closed">· closed</span>' : ''}</span>
-        <span class="thread-card__meta">${stack}<span class="thread-card__replies">3 replies</span><span class="thread-card__when">· last reply 2m ago</span></span>
+        <span class="thread-card__title">${t.title}${closed ? ' <span class="thread-card__closed">· closed</span>' : ''}</span>
+        <span class="thread-card__meta">${stack}<span class="thread-card__replies">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></span>
       </span>
-      ${closed ? '' : '<span class="thread-card__dot" title="New messages"></span>'}
+      ${!closed && t.unread ? '<span class="thread-card__dot" title="New messages"></span>' : ''}
     </button>`
+}
+
+function goToThread(id, surface) {
+  const q = new URLSearchParams(location.search)
+  q.set('screen', 'threads'); q.set('tview', 'thread'); q.set('t', id); q.set('surface', surface || 'channel'); q.set('from', 'chat')
+  q.delete('thread'); q.delete('menu'); q.delete('qa')
+  location.search = q.toString()
+}
+function goToCreate(parentMsgId, parentMsg, surface) {
+  if (parentMsgId && parentMsg) store.setPendingParent(parentMsgId, parentMsg)
+  const q = new URLSearchParams(location.search)
+  q.set('screen', 'threads'); q.set('tview', 'create'); q.set('surface', surface || 'channel'); q.set('from', 'chat')
+  if (parentMsgId) q.set('parent', parentMsgId)
+  q.delete('menu'); q.delete('qa'); q.delete('thread')
+  location.search = q.toString()
+}
+
+// open the message context menu on a specific message (real trigger — from the hover "More"
+// quick-action or the deep-link). Gates Edit/Delete on message ownership.
+function openContextMenu(msgEl) {
+  document.querySelectorAll('.message--menu-open').forEach(m => { m.classList.remove('message--menu-open'); m.querySelector('.msg-cmenu')?.remove() })
+  const isSelf = msgEl.querySelector('.message__sender')?.textContent === 'You'
+  msgEl.classList.add('message--menu-open')
+  msgEl.insertAdjacentHTML('beforeend', msgContextMenu(isSelf))
+  const menu = msgEl.querySelector('.msg-cmenu')
+  const surface = 'channel'
+  const parentMsgId = msgEl.dataset.msgId
+  const parentMsg = readMsg(msgEl)
+  menu.querySelector('[data-reply-in-thread]')?.addEventListener('click', () => {
+    const existing = parentMsgId ? store.threadForParent(parentMsgId, surface) : null
+    if (existing) goToThread(existing.id, surface)
+    else goToCreate(parentMsgId, parentMsg, surface)
+  })
+  menu.querySelector('.msg-cmenu__item')?.focus()
+  const close = () => { menu.remove(); msgEl.classList.remove('message--menu-open'); document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
+  const onDown = (e) => { if (!menu.contains(e.target)) close() }
+  const onKey = (e) => { if (e.key === 'Escape') close() }
+  setTimeout(() => { document.addEventListener('mousedown', onDown); document.addEventListener('keydown', onKey) }, 0)
+}
+
+// reconstruct a msg() arg tuple from a rendered message row (for the create flow's pinned parent)
+function readMsg(msgEl) {
+  const name = msgEl.querySelector('.message__sender')?.textContent || 'Someone'
+  const initial = msgEl.querySelector('.message__avatar')?.textContent || name.charAt(0)
+  const color = msgEl.querySelector('.message__avatar')?.style.background || '#4360DF'
+  const time = msgEl.querySelector('.message__time')?.textContent || ''
+  const text = msgEl.querySelector('.message__text')?.textContent || ''
+  return [name, initial, color, time, text, {}]
 }
 
 function bindThreadAffordances(p) {
   const scope = document.querySelector('.shell__center, .shell__mobile-content')
   if (!scope) return
-  const msgs = scope.querySelectorAll('.message')
-  // context menu over the first message (epic 1.1 entry)
-  if (p.get('menu') === 'thread' && msgs[0]) {
-    msgs[0].classList.add('message--peek', 'message--menu-open')
-    msgs[0].insertAdjacentHTML('beforeend', msgContextMenu())
-  }
-  // in-chat thread card under the first message (epic 4)
-  const card = p.get('thread')
-  if ((card === 'card' || card === 'card-closed') && msgs[0]) {
-    msgs[0].insertAdjacentHTML('afterend', threadCard(card === 'card-closed'))
-  }
-  // composer thread icon (epic 1.2) — add a thread button to the chat-input actions; highlight on ?qa=thread
-  const actions = scope.querySelector('.chat-input__actions')
-  if (actions && (p.get('qa') === 'thread' || card || p.get('menu') === 'thread')) {
+  const surface = 'channel'
+  const msgs = scope.querySelectorAll('.messages .message[data-msg-id]')
+
+  // in-chat thread cards — data-driven: a card under every message that has a thread (epic §4/§20)
+  msgs.forEach(mEl => {
+    const t = store.threadForParent(mEl.dataset.msgId, surface)
+    if (t) mEl.insertAdjacentHTML('afterend', threadCard(t))
+  })
+
+  // real trigger: the hover quick-actions "More" opens the context menu for THAT message (epic §1.1)
+  scope.querySelectorAll('.messages .message').forEach(mEl => {
+    const moreBtn = mEl.querySelector('.message__qa-btn[aria-label="More"]')
+    moreBtn?.addEventListener('click', (e) => { e.stopPropagation(); openContextMenu(mEl) })
+  })
+
+  // deep-link: ?menu=thread auto-opens the context menu on the first message (saved-state)
+  if (p.get('menu') === 'thread' && msgs[0]) { msgs[0].classList.add('message--peek'); openContextMenu(msgs[0]) }
+  // deep-link: ?thread=card[-closed] highlights the seeded card (already rendered from the store)
+
+  // composer thread icon (epic §1.2) — starts a NEW thread (→ create flow). Highlight on ?qa=thread
+  const actions = scope.querySelector('.chat-input .chat-input__actions')
+  if (actions) {
     const btn = document.createElement('button')
     btn.className = 'chat-input__btn chat-input__thread-btn' + (p.get('qa') === 'thread' ? ' checked' : '')
-    btn.title = 'New thread'; btn.innerHTML = THREAD_GLYPH
+    btn.title = 'New thread'; btn.setAttribute('aria-label', 'Start a new thread'); btn.innerHTML = THREAD_GLYPH
     actions.insertBefore(btn, actions.firstChild)
+    btn.addEventListener('click', () => goToCreate(null, null, surface))
   }
-  // open the thread view from a card / composer thread button
-  scope.querySelectorAll('[data-open-thread], .chat-input__thread-btn').forEach(el => el.addEventListener('click', () => {
-    const q = new URLSearchParams(location.search); q.set('screen', 'threads'); q.set('tview', 'thread'); q.delete('thread'); q.delete('menu'); location.search = q.toString()
-  }))
-  // "Reply in thread" in the context menu → Creating Thread
-  scope.querySelectorAll('.msg-cmenu__item--accent').forEach(el => el.addEventListener('click', () => {
-    const q = new URLSearchParams(location.search); q.set('screen', 'threads'); q.set('tview', 'create'); q.delete('menu'); location.search = q.toString()
+
+  // open a thread from its in-chat card
+  scope.querySelectorAll('[data-open-thread]').forEach(el => el.addEventListener('click', () => goToThread(el.dataset.openThread, el.dataset.surface || surface)))
+
+  // channel-list thread rows → open the thread (epic §22); already rendered in renderLeftPanel
+  document.querySelectorAll('.channel-thread[data-open-thread]').forEach(el => el.addEventListener('click', (e) => {
+    e.stopPropagation(); goToThread(el.dataset.openThread, el.dataset.surface || surface)
   }))
 }
 
-function renderNav() {
+function renderNav(revamp) {
+  // Activity Center badge — thread notifications (epic §5): count of followed, non-muted, unread threads
+  const unread = revamp ? store.unreadCount() : 0
+  const acBadge = revamp
+    ? (unread > 0 ? `<span class="badge badge--count" title="${unread} thread notifications">${unread}</span>` : '')
+    : '<span class="badge"></span>'
   // Uses ICONS from main nav — same as community-channel nav from earlier fix
   return `
     <div class="shell__nav">
@@ -214,7 +294,7 @@ function renderNav() {
       <div class="shell__nav-ac">
         <button class="shell__nav-btn" title="Activity Center">
           ${ICONS.notification}
-          <span class="badge"></span>
+          ${acBadge}
         </button>
       </div>
     </div>
@@ -225,7 +305,17 @@ function navBtn(title, iconSvg, active) {
   return `<button class="shell__nav-btn${active ? ' active' : ''}" title="${title}">${iconSvg}</button>`
 }
 
-function renderLeftPanel() {
+function renderLeftPanel(revamp) {
+  // epic §6: active/followed channel threads surface under their parent channel in the left list,
+  // with an unread indicator, honouring §6.1 disappear rules (closed / 1-week-inactive / keep-visible).
+  const genThreads = revamp ? store.channelListThreads('channel').filter(t => t.parentMsgId && String(t.parentMsgId).startsWith('cc-')) : []
+  const threadRows = genThreads.map(t => `
+    <button class="channel-thread${t.unread ? ' unread' : ''}" data-open-thread="${t.id}" data-surface="channel" title="Open thread">
+      <span class="channel-thread__glyph">${THREAD_GLYPH}</span>
+      <span class="channel-thread__name">${t.title}</span>
+      ${t.keptVisible ? '<span class="channel-thread__pin" title="Kept visible">📌</span>' : ''}
+      ${t.unread ? '<span class="channel-thread__dot" title="New messages"></span>' : `<span class="channel-thread__count">${t.messages.length}</span>`}
+    </button>`).join('')
   return `
     <div class="community-header">
       <div class="community-header__info">
@@ -240,6 +330,7 @@ function renderLeftPanel() {
     <div class="channel-list">
       ${category('General', [
         channelItem('general', { active: true, badge: 3 }),
+        threadRows ? `<div class="channel-threads">${threadRows}</div>` : '',
         channelItem('introductions', {}),
         channelItem('announcements', {}),
       ])}
@@ -293,7 +384,10 @@ function channelItem(name, { active = false, badge = 0, unread = false }) {
   `
 }
 
-function renderCenterPanel() {
+function renderCenterPanel(revamp) {
+  // copied-to-parent posts from threads (epic §3.1) — appended live to the channel stream (revamp only)
+  const copied = revamp ? store.parentPosts('channel') : []
+  const copiedHtml = copied.map(pp => msg(pp.name, pp.initial, pp.color, pp.time, pp.text, { id: pp.id, threadRef: pp.threadTitle })).join('')
   return `
     <div class="chat-header">
       <div class="chat-header__info">
@@ -319,14 +413,15 @@ function renderCenterPanel() {
     </div>
     <div class="messages">
       <div class="messages__day-separator">Today</div>
-      ${msg('Elena', 'E', '#D37EF4', '10:23', 'Just switched the whole design system to CSS tokens. Agents can now restyle screens by editing one file.', { delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}
-      ${msg('Marcus', 'M', '#26A69A', '10:25', '11 themes built in one session — Nord, Dracula, Solarized, even a hacker green-on-black one. All live-swappable.', { reactions: ['👍 3', '🔥 1'], delivery: 'delivered', senderId: '0x04d7e1...a92b05' })}
-      ${msg('You', 'A', '#4360DF', '10:28', 'The best part is the auditor agent catches pixel mismatches before merge. No more "does this match the spec?" debates.', { delivery: 'delivered', reply: true, replyTo: 'Elena', replyInitial: 'E', replyColor: '#D37EF4', replyText: 'Just switched the whole design system to CSS tokens. Agents can now restyle screens by editing one file.' })}
-      ${msg('Elena', 'E', '#D37EF4', '10:30', 'Exactly. The design system lives in the browser now, not in Figma. Agent-readable and human-visible at the same time.', { delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}
-      ${msg('Elena', '', '', '', 'No export pipeline, no handoff docs. Change a token, see it everywhere instantly.', { continued: true })}
-      ${msg('Kai', 'K', '#FE8F59', '10:34', 'How long did the full pipeline take? QML source to browser-ready with audited components?', { pinned: true, pinnedBy: 'Marcus', senderId: '0x04f3c8...7d1e02' })}
-      ${msg('Marcus', 'M', '#26A69A', '10:36', 'About 3 hours with two agents running — builder writes code, auditor verifies against QML. Cost maybe $25 in API tokens.', { reactions: ['✅ 2*', '🎉 1'], delivery: 'delivered', edited: true, senderId: '0x04d7e1...a92b05' })}
-      ${msg('You', 'A', '#4360DF', '10:38', 'Font schemes too — switch between Inter, IBM Plex, Serif, Monospace from a dropdown. Layout holds across all of them.', { delivery: 'sent' })}
+      ${msg('Elena', 'E', '#D37EF4', '10:23', 'Just switched the whole design system to CSS tokens. Agents can now restyle screens by editing one file.', { id: 'cc-0', delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}
+      ${msg('Marcus', 'M', '#26A69A', '10:25', '11 themes built in one session — Nord, Dracula, Solarized, even a hacker green-on-black one. All live-swappable.', { id: 'cc-1', reactions: ['👍 3', '🔥 1'], delivery: 'delivered', senderId: '0x04d7e1...a92b05' })}
+      ${msg('You', 'A', '#4360DF', '10:28', 'The best part is the auditor agent catches pixel mismatches before merge. No more "does this match the spec?" debates.', { id: 'cc-2', delivery: 'delivered', reply: true, replyTo: 'Elena', replyInitial: 'E', replyColor: '#D37EF4', replyText: 'Just switched the whole design system to CSS tokens. Agents can now restyle screens by editing one file.' })}
+      ${msg('Elena', 'E', '#D37EF4', '10:30', 'Exactly. The design system lives in the browser now, not in Figma. Agent-readable and human-visible at the same time.', { id: 'cc-3', delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}
+      ${msg('Elena', '', '', '', 'No export pipeline, no handoff docs. Change a token, see it everywhere instantly.', { id: 'cc-4', continued: true })}
+      ${msg('Kai', 'K', '#FE8F59', '10:34', 'How long did the full pipeline take? QML source to browser-ready with audited components?', { id: 'cc-5', pinned: true, pinnedBy: 'Marcus', senderId: '0x04f3c8...7d1e02' })}
+      ${msg('Marcus', 'M', '#26A69A', '10:36', 'About 3 hours with two agents running — builder writes code, auditor verifies against QML. Cost maybe $25 in API tokens.', { id: 'cc-6', reactions: ['✅ 2*', '🎉 1'], delivery: 'delivered', edited: true, senderId: '0x04d7e1...a92b05' })}
+      ${msg('You', 'A', '#4360DF', '10:38', 'Font schemes too — switch between Inter, IBM Plex, Serif, Monospace from a dropdown. Layout holds across all of them.', { id: 'cc-7', delivery: 'sent' })}
+      ${copiedHtml}
     </div>
     <div class="chat-input">
       ${replyPreview()}
@@ -397,8 +492,11 @@ export function formatGroup() {
    reply, pinned indicator, full header (name + delivery), text, reactions
    Options: { reactions, pinned, pinnedBy, reply, replyTo, replyText, delivery, edited, continued } */
 export function msg(name, initial, color, time, text, opts = {}) {
-  const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '' } = opts
-  const stateClass = pinned ? ' message--pinned' : ''
+  const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '', id = '', threadRef = '', sending = false, mention = false } = opts
+  const stateClass = `${pinned ? ' message--pinned' : ''}${sending ? ' message--sending' : ''}${mention ? ' message--mention' : ''}`
+  const idAttr = id ? ` data-msg-id="${id}"` : ''
+  // copied-from-thread tag (epic §3.1) — shows a copied parent post came from a thread
+  const threadRefHtml = threadRef ? `<span class="message__thread-ref">${THREAD_GLYPH}<span>from thread “${threadRef}”</span></span>` : ''
 
   // Pinned indicator
   const pinnedHtml = pinned ? `
@@ -457,10 +555,11 @@ export function msg(name, initial, color, time, text, opts = {}) {
   // Avatar + header (or continued message without avatar)
   if (continued) {
     return `
-      <div class="message${stateClass}">
+      <div class="message${stateClass}"${idAttr}>
         ${pinnedHtml}${replyHtml}
         <div class="message__body message__body--continued">
           <div class="message__text">${text}${editedHtml}</div>
+          ${threadRefHtml}
           ${reactionsHtml}
         </div>
         ${quickActions(isSelf, pinned)}
@@ -469,7 +568,7 @@ export function msg(name, initial, color, time, text, opts = {}) {
   }
 
   return `
-    <div class="message${stateClass}">
+    <div class="message${stateClass}"${idAttr}>
       ${pinnedHtml}${replyHtml}
       <div class="message__row">
         <div class="message__avatar" style="background:${color}">${initial}</div>
@@ -481,6 +580,7 @@ export function msg(name, initial, color, time, text, opts = {}) {
             ${deliveryHtml}
           </div>
           <div class="message__text">${text}${editedHtml}</div>
+          ${threadRefHtml}
           ${reactionsHtml}
         </div>
       </div>

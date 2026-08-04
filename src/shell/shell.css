@@ -534,6 +534,8 @@ html, body, #app {
   justify-content: center;
 }
 
+.shell__nav-btn .badge--count { min-width: 16px; height: 16px; border-radius: 8px; padding: 0 4px; font-weight: 700; }
+
 /* Profile button: 32x32 circular with status dot
    QML ProfileButton: implicitWidth/Height: 32
    badge: 12x12, 2px border, successColor1 (online) or baseColor1 (offline) */
