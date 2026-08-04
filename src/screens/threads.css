@@ -49,7 +49,8 @@
 .thread-copy__switch.on .thread-copy__knob { left: 19px; }
 
 /* ---- mobile composer (Figma DS 13030-108833): borderless text on top, outlined icon toolbar + blue send ---- */
-.mcomposer { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 6px; flex-shrink: 0; }
+.mcomposer { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 6px; flex-shrink: 0; }
+.mcomposer__handle { width: 32px; height: 5px; border-radius: 2.5px; background: var(--direct-color-7); margin: 6px auto 2px; flex-shrink: 0; } /* input-drawer grab handle (Figma) */
 .mcomposer__field { width: 100%; box-sizing: border-box; padding: 4px 16px; min-height: 24px; max-height: 120px; background: transparent; border: none; resize: none; outline: none; color: var(--direct-color-1); font-family: var(--font-family-base); font-size: 15px; line-height: 1.45; letter-spacing: -0.9px; }
 .mcomposer__field::placeholder { color: var(--base-color-1); }
 .mcomposer__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; }
@@ -58,7 +59,7 @@
 .mcomposer__btn:hover { background: var(--base-color-2); }
 .mcomposer__btn svg { width: 20px; height: 20px; }
 .mcomposer__btn--text { font-family: var(--font-family-base); font-size: 15px; font-weight: 600; line-height: 1; }
-.mcomposer__send { width: 40px; height: 32px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: var(--primary-color-1); color: #fff; cursor: pointer; padding: 0; }
+.mcomposer__send { width: 40px; height: 40px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: var(--primary-color-1); color: #fff; cursor: pointer; padding: 0; }
 .mcomposer__send svg { width: 20px; height: 20px; }
 
 /* ---- Creating Thread: name field ---- */
@@ -147,7 +148,7 @@
 .msg-edit__cancel { background: var(--base-color-2); color: var(--direct-color-1); }
 
 /* ---- thread parent marker + empty replies ---- */
-.thread-view__parent { background: var(--base-color-3); border-radius: 12px; margin: 0 4px; }
+.thread-view__parent { border-radius: 12px; margin: 0 4px; } /* no highlight bg on the thread's first (parent) message */
 .thread-view__empty-replies { text-align: center; color: var(--base-color-1); font-size: var(--font-size-additional); padding: 20px; }
 .thread-empty__back { margin-top: 12px; padding: 8px 16px; border: 1px solid var(--primary-color-1); border-radius: 8px; background: transparent; color: var(--primary-color-1); font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; cursor: pointer; }
 .thread-ava--more { background: var(--base-color-2) !important; color: var(--base-color-1); }

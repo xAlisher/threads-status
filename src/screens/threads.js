@@ -56,6 +56,7 @@ function threadComposer(placeholder, mobile = false) {
   if (mobile) {
     return `
     <div class="chat-input thread-view__composer mcomposer">
+      <div class="mcomposer__handle" aria-hidden="true"></div>
       <textarea class="chat-input__field mcomposer__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
       <div class="mcomposer__bar">
         <div class="mcomposer__actions">
