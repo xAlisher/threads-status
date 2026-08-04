@@ -70,6 +70,7 @@ function threadHeader({ title, sub, muted, back = true, menu = false, close = fa
   return `
     <div class="thread-view__header">
       ${back && !close ? `<button class="thread-view__back" data-back title="Back" aria-label="Back to conversation">${THREAD_ICONS.back}</button>` : ''}
+      ${close ? `<span class="thread-view__lead-icon" aria-hidden="true">${THREAD_ICONS.thread}</span>` : ''}
       <div class="thread-view__titles">
         <span class="thread-view__title">${title}</span>
         <span class="thread-view__sub">${sub}</span>

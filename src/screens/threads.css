@@ -10,6 +10,9 @@
 .thread-panel { position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; }
 /* let the composer shrink to the narrower panel width (flex children default to min-width:auto) */
 .thread-panel .chat-input__row, .thread-panel .chat-input__box { min-width: 0; }
+/* thread glyph to the left of the title in the desktop panel header */
+.thread-view__lead-icon { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--base-color-1); }
+.thread-view__lead-icon svg { width: 20px; height: 20px; }
 .thread-view { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; background: var(--base-color-4); }
 
 /* ---- thread header (back · title/in-channel · follow · search · mute · more) ---- */
