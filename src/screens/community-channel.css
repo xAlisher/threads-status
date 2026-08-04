@@ -405,6 +405,10 @@
 .chat-header--mobile .chat-header__subtitle-row { flex-wrap: nowrap; overflow: hidden; }
 .chat-header--mobile .chat-header__pin-text { white-space: nowrap; }
 
+/* mobile channel + thread list (back from a channel) — the left panel shown full-screen */
+.mobile-list { width: 100%; height: 100%; overflow-y: auto; background: var(--base-color-4); display: flex; flex-direction: column; }
+.mobile-list .channel-item { cursor: pointer; }
+
 /* ============================================================
    CENTER: Messages — StatusMessage.qml
    ListView spacing: 0

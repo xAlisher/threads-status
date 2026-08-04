@@ -278,6 +278,7 @@ function goBack() {
   const q = new URLSearchParams()
   q.set('version', p.get('version') || 'revamp'); q.set('theme', p.get('theme') || 'dark'); if (p.get('view')) q.set('view', p.get('view'))
   if (from === 'list') { q.set('screen', 'threads'); q.set('tview', 'list'); if (p.get('surface')) q.set('surface', p.get('surface')) }
+  else if (from === 'mlist') { q.set('screen', 'chat'); q.set('mlist', '1') } // opened from the mobile channel/thread list → back to that list
   else { q.set('screen', 'chat') } // channel / group / dm origin all return to the community channel surface in this prototype
   location.search = q.toString()
 }

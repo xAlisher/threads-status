@@ -49,9 +49,14 @@ export function renderCommunityChannel(view, ver) {
   const p = new URLSearchParams(location.search)
   // desktop only (epic §1): reply-in-thread opens the thread as a side panel replacing Members
   const tpanel = revamp && view === 'desktop' ? p.get('tpanel') : null
+  const mobile = view === 'mobile'
   const nav = renderNav(revamp)
   const left = renderLeftPanel(revamp)
-  const center = renderCenterPanel(revamp, !!tpanel, view === 'mobile')
+  // mobile portrait: back from a channel shows the channel + thread list full-screen (StatusSectionLayoutPortrait)
+  if (mobile && p.get('mlist') === '1') {
+    return { nav, left, center: `<div class="mobile-list">${left}</div>`, right: null }
+  }
+  const center = renderCenterPanel(revamp, !!tpanel, mobile)
   const right = tpanel ? renderThreadPanel(p) : renderRightPanel()
   return { nav, left, center, right }
 }
@@ -130,6 +135,21 @@ export function bindCommunityChannel(view, ver) {
 
   // ---- Threads (epic #21090) in-chat affordances — revamp only; version=current untouched ----
   if (ver === 'revamp') bindThreadAffordances(p, view)
+
+  // ---- mobile portrait nav: channel ⇄ channel/thread list (StatusSectionLayoutPortrait) ----
+  if (view === 'mobile') {
+    if (p.get('mlist') === '1') {
+      // in the list: tapping a channel opens its chat (thread rows are wired in bindThreadAffordances)
+      document.querySelectorAll('.shell__mobile-content .channel-item').forEach(el => el.addEventListener('click', () => {
+        const q = new URLSearchParams(location.search); q.delete('mlist'); location.search = q.toString()
+      }))
+    } else {
+      // in a channel: the header back arrow → the channel + thread list
+      document.querySelector('.chat-header__back')?.addEventListener('click', () => {
+        const q = new URLSearchParams(location.search); q.set('mlist', '1'); q.delete('tpanel'); location.search = q.toString()
+      })
+    }
+  }
 }
 
 // Thread glyph — reply-in-thread bubble (net-new; Status line style)
@@ -189,10 +209,10 @@ function threadCard(t) {
     </button>`
 }
 
-function goToThread(id, surface) {
+function goToThread(id, surface, from = 'chat') {
   const q = new URLSearchParams(location.search)
-  q.set('screen', 'threads'); q.set('tview', 'thread'); q.set('t', id); q.set('surface', surface || 'channel'); q.set('from', 'chat')
-  q.delete('thread'); q.delete('menu'); q.delete('qa')
+  q.set('screen', 'threads'); q.set('tview', 'thread'); q.set('t', id); q.set('surface', surface || 'channel'); q.set('from', from)
+  q.delete('thread'); q.delete('menu'); q.delete('qa'); q.delete('mlist')
   location.search = q.toString()
 }
 function goToCreate(parentMsgId, parentMsg, surface) {
@@ -365,12 +385,15 @@ function bindThreadAffordances(p, view) {
     btn.addEventListener('click', () => desktop ? openThreadPanel({ create: true, surface }) : goToCreate(null, null, surface))
   }
 
-  // open a thread from its in-chat card
-  scope.querySelectorAll('[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
+  // open a thread from its in-chat card (in the chat → back returns to the chat)
+  scope.querySelectorAll('.thread-card[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
 
-  // channel-list thread rows → open the thread (epic §22); already rendered in renderLeftPanel
+  // channel-list thread rows (epic §22): desktop → side panel; mobile → full-screen thread that
+  // returns to the mobile channel+thread list (from=mlist)
   document.querySelectorAll('.channel-thread[data-open-thread]').forEach(el => el.addEventListener('click', (e) => {
-    e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface)
+    e.stopPropagation()
+    if (desktop) openThreadPanel({ threadId: el.dataset.openThread, surface: el.dataset.surface || surface })
+    else goToThread(el.dataset.openThread, el.dataset.surface || surface, 'mlist')
   }))
 
   // ---- desktop thread side-panel: Members button closes it; bind + focus the open panel ----
