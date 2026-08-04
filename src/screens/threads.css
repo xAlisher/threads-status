@@ -29,12 +29,13 @@
 
 /* ---- composer + "Send copy to #channel" toggle (epic 3.1) ---- */
 .thread-view__composer { flex-shrink: 0; }
-.thread-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px 14px; cursor: pointer; }
+.thread-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px 14px; }
 .thread-copy__label { font-size: var(--font-size-additional); color: var(--primary-color-1); }
-.thread-copy__switch { width: 40px; height: 24px; border-radius: 12px; background: var(--base-color-2); flex-shrink: 0; position: relative; transition: background .15s; }
+.thread-copy__switch { width: 40px; height: 24px; border-radius: 12px; border: none; padding: 0; background: var(--base-color-2); flex-shrink: 0; position: relative; transition: background .15s; cursor: pointer; }
+.thread-copy__switch:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: 2px; }
 .thread-copy__knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--indirect-color-1); transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
-.thread-copy.on .thread-copy__switch { background: var(--primary-color-1); }
-.thread-copy.on .thread-copy__knob { left: 19px; }
+.thread-copy__switch.on { background: var(--primary-color-1); }
+.thread-copy__switch.on .thread-copy__knob { left: 19px; }
 
 /* ---- Creating Thread: name field ---- */
 .thread-create__foot { flex-shrink: 0; border-top: 1px solid var(--separator); }
@@ -60,7 +61,9 @@
 .thread-row__icon { width: 28px; height: 28px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--base-color-1); }
 .thread-row__icon svg { width: 20px; height: 20px; }
 .thread-row.closed { opacity: .6; }
-.thread-row__body { flex: 1; min-width: 0; }
+.thread-row__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.thread-row:focus-visible, .channel-thread:focus-visible, .thread-card:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: -2px; }
+.thread-row__followed { color: var(--primary-color-1); }
 .thread-row__top { display: flex; align-items: center; gap: 6px; }
 .thread-row__title { font-size: var(--font-size-primary); font-weight: 500; color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .thread-row.unread .thread-row__title { font-weight: 700; }
@@ -103,6 +106,47 @@
 .msg-cmenu__item--accent svg { color: var(--primary-color-1); }
 .msg-cmenu__item--danger { color: var(--danger-color-1); }
 .msg-cmenu__item--danger svg { color: var(--danger-color-1); }
+
+/* ---- reactions bar (context menu top + thread parent) — Figma frame 1 ---- */
+.msg-cmenu__reactions, .msg-reactions-bar { display: flex; align-items: center; gap: 2px; padding: 4px; margin-bottom: 4px; border-bottom: 1px solid var(--separator); }
+.msg-reactions-bar { border: 1px solid var(--separator); border-radius: 20px; background: var(--base-color-3); width: fit-content; margin: 6px auto 12px; padding: 3px 6px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.msg-cmenu__react, .msg-reactions-bar__btn { width: 30px; height: 30px; border: none; background: transparent; border-radius: 8px; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+.msg-cmenu__react:hover, .msg-reactions-bar__btn:hover { background: var(--base-color-2); transform: scale(1.15); }
+.msg-cmenu__react--more, .msg-reactions-bar__more { color: var(--base-color-1); font-size: 18px; font-weight: 500; }
+.msg-cmenu__items { display: flex; flex-direction: column; }
+
+/* ---- inline edit of own thread messages (epic §16) ---- */
+.msg-edit { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.msg-edit__input { flex: 1; min-width: 0; padding: 6px 10px; border: 1px solid var(--primary-color-1); border-radius: 8px; background: var(--base-color-3); color: var(--direct-color-1); font-family: var(--font-family-base); font-size: var(--font-size-primary); outline: none; }
+.msg-edit__save, .msg-edit__cancel { height: 30px; padding: 0 12px; border-radius: 8px; border: none; font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; cursor: pointer; }
+.msg-edit__save { background: var(--primary-color-1); color: var(--indirect-color-1); }
+.msg-edit__cancel { background: var(--base-color-2); color: var(--direct-color-1); }
+
+/* ---- thread parent marker + empty replies ---- */
+.thread-view__parent { background: var(--base-color-3); border-radius: 12px; margin: 0 4px; }
+.thread-view__empty-replies { text-align: center; color: var(--base-color-1); font-size: var(--font-size-additional); padding: 20px; }
+.thread-empty__back { margin-top: 12px; padding: 8px 16px; border: 1px solid var(--primary-color-1); border-radius: 8px; background: transparent; color: var(--primary-color-1); font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; cursor: pointer; }
+.thread-ava--more { background: var(--base-color-2) !important; color: var(--base-color-1); }
+
+/* back arrow: arrow-right.svg lifted verbatim → flip to point left */
+.thread-view__back svg, .thread-list__header .thread-view__back svg { transform: scaleX(-1); }
+
+/* ---- channel-list thread rows (epic §6) ---- */
+.channel-threads { display: flex; flex-direction: column; margin: 2px 0 4px 0; }
+.channel-thread { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; padding: 5px 8px 5px 30px; border: none; background: transparent; cursor: pointer; text-align: left; border-radius: 8px; color: var(--base-color-1); position: relative; }
+.channel-thread:hover { background: var(--chat-list-item-hover-bg, var(--base-color-2)); }
+.channel-thread::before { content: ''; position: absolute; left: 18px; top: 0; bottom: 50%; width: 1px; background: var(--separator); }
+.channel-thread__glyph { width: 15px; height: 15px; flex-shrink: 0; display: inline-flex; }
+.channel-thread__glyph svg { width: 15px; height: 15px; }
+.channel-thread__name { flex: 1; min-width: 0; font-size: var(--font-size-additional); color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.channel-thread.unread .channel-thread__name { font-weight: 700; }
+.channel-thread__count { font-size: var(--font-size-aside); color: var(--base-color-1); }
+.channel-thread__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color-1); flex-shrink: 0; }
+.channel-thread__pin { font-size: 11px; }
+
+/* copied-from-thread tag on a parent message (epic §3.1) */
+.message__thread-ref { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: var(--font-size-aside); color: var(--base-color-1); }
+.message__thread-ref svg { width: 13px; height: 13px; }
 
 /* ---- toast ---- */
 .thread-toast { position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; background: var(--direct-color-1); color: var(--base-color-4); font-size: var(--font-size-additional); font-weight: 500; box-shadow: 0 6px 24px rgba(0,0,0,.4); z-index: 60; white-space: nowrap; }
