@@ -210,15 +210,28 @@ function renderToolbar() {
   `
 }
 
+// Keep the URL in sync with the in-memory environment (version/theme/view) so that a full-reload
+// navigation (opening a thread, back, etc.) preserves it — otherwise switching to Mobile via the
+// dropdown leaves the URL without ?view=mobile and the next navigation boots back into Desktop.
+function syncEnvToUrl() {
+  try {
+    const u = new URL(location.href)
+    u.searchParams.set('version', currentVersion)
+    u.searchParams.set('theme', currentTheme === 'current-light' ? 'light' : 'dark')
+    u.searchParams.set('view', currentView)
+    history.replaceState(null, '', u)
+  } catch {}
+}
+
 function bindToolbarEvents() {
   const themeSelect = document.querySelector('[data-set-theme]')
-  if (themeSelect) themeSelect.addEventListener('change', (e) => { currentTheme = e.target.value; render() })
+  if (themeSelect) themeSelect.addEventListener('change', (e) => { currentTheme = e.target.value; syncEnvToUrl(); render() })
 
   const viewSelect = document.querySelector('[data-set-view]')
-  if (viewSelect) viewSelect.addEventListener('change', (e) => { currentView = e.target.value; render() })
+  if (viewSelect) viewSelect.addEventListener('change', (e) => { currentView = e.target.value; syncEnvToUrl(); render() })
 
   const versionSelect = document.querySelector('[data-set-version]')
-  if (versionSelect) versionSelect.addEventListener('change', (e) => { currentVersion = e.target.value; render() })
+  if (versionSelect) versionSelect.addEventListener('change', (e) => { currentVersion = e.target.value; syncEnvToUrl(); render() })
 
   // Saved states — deep-link to a signed-off state (full reload with its params)
   const ucSelect = document.querySelector('[data-set-usecase]')
@@ -241,7 +254,11 @@ function bindToolbarEvents() {
   })
 
   document.querySelectorAll('[data-set-screen]').forEach(btn => {
-    btn.addEventListener('click', () => { currentScreen = btn.dataset.setScreen; render() })
+    btn.addEventListener('click', () => {
+      currentScreen = btn.dataset.setScreen
+      try { const u = new URL(location.href); u.searchParams.set('screen', currentScreen); history.replaceState(null, '', u) } catch {}
+      syncEnvToUrl(); render()
+    })
   })
 
   const screen = screens[currentScreen]
