@@ -63,10 +63,13 @@ function threadComposer(placeholder) {
     </div>`
 }
 
-function threadHeader({ title, sub, muted, back = true, menu = false }) {
+// close (X) — desktop side-panel dismiss (net-new; the full-screen view uses the back arrow instead)
+const CLOSE_X = `<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
+
+function threadHeader({ title, sub, muted, back = true, menu = false, close = false }) {
   return `
     <div class="thread-view__header">
-      ${back ? `<button class="thread-view__back" data-back title="Back" aria-label="Back to conversation">${THREAD_ICONS.back}</button>` : ''}
+      ${back && !close ? `<button class="thread-view__back" data-back title="Back" aria-label="Back to conversation">${THREAD_ICONS.back}</button>` : ''}
       <div class="thread-view__titles">
         <span class="thread-view__title">${title}</span>
         <span class="thread-view__sub">${sub}</span>
@@ -75,6 +78,7 @@ function threadHeader({ title, sub, muted, back = true, menu = false }) {
         <button class="chat-header__action-btn" title="Search" aria-label="Search thread">${CHANNEL_ICONS.search}</button>
         ${menu ? `<button class="chat-header__action-btn" data-mute title="${muted ? 'Unmute' : 'Mute'}" aria-label="${muted ? 'Unmute thread' : 'Mute thread'}" aria-pressed="${muted}">${muted ? THREAD_ICONS.bellOff : THREAD_ICONS.bell}</button>` : ''}
         ${menu ? `<button class="chat-header__action-btn" data-thread-more title="More" aria-label="Thread options" aria-haspopup="true">${CHANNEL_ICONS.more}</button>` : ''}
+        ${close ? `<button class="chat-header__action-btn thread-view__close" data-back title="Close" aria-label="Close thread panel">${CLOSE_X}</button>` : ''}
       </div>
     </div>`
 }
@@ -86,12 +90,12 @@ export function resolveParent(surface, parentMsgId) {
   if (parentMsgId) return store.getPendingParent(parentMsgId)
   return null // composer-initiated new thread: no parent message to pin
 }
-export function renderCreate(surface, parentMsgId) {
+export function renderCreate(surface, parentMsgId, { panel = false } = {}) {
   const s = SURFACES[surface] || SURFACES.channel
   const parent = resolveParent(surface, parentMsgId)
   return `
     <div class="thread-view thread-create">
-      ${threadHeader({ title: 'Creating Thread', sub: s.in, back: true, menu: false })}
+      ${threadHeader({ title: 'Creating Thread', sub: s.in, back: !panel, close: panel, menu: false })}
       <div class="thread-view__messages">
         ${parent ? `<div class="thread-view__parent-label">Starting a thread from</div><div class="thread-view__parent">${msg(...parent)}</div>` : `<div class="thread-view__parent-label">New thread ${s.in}</div>`}
       </div>
@@ -102,19 +106,13 @@ export function renderCreate(surface, parentMsgId) {
     </div>`
 }
 
-// ---- reactions bar (Figma frame 1 also atop the thread parent; epic §2 reactions) ----
-function reactionsBar() {
-  const emojis = ['👋', '🔨', '🚀', '🎃', '🎯', '🚗', '😀']
-  return `<div class="msg-reactions-bar" role="group" aria-label="Quick reactions">${emojis.map(e => `<button class="msg-reactions-bar__btn" aria-label="React ${e}">${e}</button>`).join('')}<button class="msg-reactions-bar__btn msg-reactions-bar__more" aria-label="More reactions">+</button></div>`
-}
-
 // ---- Thread view (parent + replies + composer + "Send copy" toggle) ----
-export function renderThread(t, { copy }) {
+export function renderThread(t, { copy, panel = false }) {
   const s = SURFACES[t.surface] || SURFACES.channel
   const title = t.title
   if (t.deleted) {
     return `<div class="thread-view thread-view--empty">
-      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: false })}
+      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: false, back: !panel, close: panel })}
       <div class="thread-empty">${THREAD_ICONS.thread}<div class="thread-empty__title">This thread was deleted</div><div class="thread-empty__sub">The thread and its replies are no longer available.</div><button class="thread-empty__back" data-back>Back to ${s.label}</button></div>
     </div>`
   }
@@ -128,11 +126,10 @@ export function renderThread(t, { copy }) {
   const replyRows = t.messages.map(m => msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
-      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true })}
+      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel })}
       <div class="thread-view__messages">
         <div class="thread-view__parent-label">Started this thread</div>
         <div class="thread-view__parent">${msg(...t.parentMsg)}</div>
-        ${reactionsBar()}
         <div class="thread-view__reply-sep"><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></div>
         ${replyRows || '<div class="thread-view__empty-replies">No replies yet — start the discussion.</div>'}
       </div>

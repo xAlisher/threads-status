@@ -61,10 +61,10 @@ function renderThreadPanel(p) {
   const surface = p.get('surface') || 'channel'
   const tpanel = p.get('tpanel')
   let inner
-  if (tpanel === 'create') inner = renderCreate(surface, p.get('tparent'))
+  if (tpanel === 'create') inner = renderCreate(surface, p.get('tparent'), { panel: true })
   else {
     const t = store.getThread(tpanel)
-    inner = t ? renderThread(t, { copy: p.get('copy') === '1' }) : '<div class="thread-empty">Thread not found.</div>'
+    inner = t ? renderThread(t, { copy: p.get('copy') === '1', panel: true }) : '<div class="thread-empty">Thread not found.</div>'
   }
   return `<div class="thread-panel">${inner}</div>`
 }
