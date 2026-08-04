@@ -128,7 +128,6 @@ export function renderThread(t, { copy, panel = false }) {
     <div class="thread-view" data-thread-id="${t.id}">
       ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel })}
       <div class="thread-view__messages">
-        <div class="thread-view__parent-label">Started this thread</div>
         <div class="thread-view__parent">${msg(...t.parentMsg)}</div>
         <div class="thread-view__reply-sep"><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></div>
         ${replyRows || '<div class="thread-view__empty-replies">No replies yet — start the discussion.</div>'}
