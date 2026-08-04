@@ -59,7 +59,7 @@
 .mcomposer__btn:hover { background: var(--base-color-2); }
 .mcomposer__btn svg { width: 20px; height: 20px; }
 .mcomposer__btn--text { font-family: var(--font-family-base); font-size: 15px; font-weight: 600; line-height: 1; }
-.mcomposer__send { width: 40px; height: 40px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: var(--primary-color-1); color: #fff; cursor: pointer; padding: 0; }
+.mcomposer__send { width: 36px; height: 36px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: var(--primary-color-1); color: #fff; cursor: pointer; padding: 0; } /* 36x36 square (Figma DS) */
 .mcomposer__send svg { width: 20px; height: 20px; }
 
 /* ---- Creating Thread: name field ---- */
@@ -149,6 +149,8 @@
 
 /* ---- thread parent marker + empty replies ---- */
 .thread-view__parent { border-radius: 12px; margin: 0 4px; } /* no highlight bg on the thread's first (parent) message */
+/* thread message author names are black (primary text), not the channel's blue (Figma #8) */
+.thread-view .message__sender, .thread-view .message__sender--self { color: var(--direct-color-1); }
 .thread-view__empty-replies { text-align: center; color: var(--base-color-1); font-size: var(--font-size-additional); padding: 20px; }
 .thread-empty__back { margin-top: 12px; padding: 8px 16px; border: 1px solid var(--primary-color-1); border-radius: 8px; background: transparent; color: var(--primary-color-1); font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; cursor: pointer; }
 .thread-ava--more { background: var(--base-color-2) !important; color: var(--base-color-1); }
