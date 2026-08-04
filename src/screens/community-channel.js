@@ -2,6 +2,9 @@
 // Hardcoded fill/stroke colors replaced with currentColor
 
 import * as store from '../thread-store.js'
+import { SURFACES } from '../thread-store.js'
+// desktop thread side-panel reuses the thread renderers + binders (epic §1)
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindInlineEdit, floatToast } from './threads.js'
 
 export const CHANNEL_ICONS = {
   // tiny/channel.svg (viewBox="0 0 16 17") — community channel type icon
@@ -43,11 +46,27 @@ export const CHANNEL_ICONS = {
 
 export function renderCommunityChannel(view, ver) {
   const revamp = ver === 'revamp'
+  const p = new URLSearchParams(location.search)
+  // desktop only (epic §1): reply-in-thread opens the thread as a side panel replacing Members
+  const tpanel = revamp && view === 'desktop' ? p.get('tpanel') : null
   const nav = renderNav(revamp)
   const left = renderLeftPanel(revamp)
-  const center = renderCenterPanel(revamp)
-  const right = renderRightPanel()
+  const center = renderCenterPanel(revamp, !!tpanel)
+  const right = tpanel ? renderThreadPanel(p) : renderRightPanel()
   return { nav, left, center, right }
+}
+
+// desktop thread side-panel — reuses the full thread view/create renderers inside shell__right
+function renderThreadPanel(p) {
+  const surface = p.get('surface') || 'channel'
+  const tpanel = p.get('tpanel')
+  let inner
+  if (tpanel === 'create') inner = renderCreate(surface, p.get('tparent'))
+  else {
+    const t = store.getThread(tpanel)
+    inner = t ? renderThread(t, { copy: p.get('copy') === '1' }) : '<div class="thread-empty">Thread not found.</div>'
+  }
+  return `<div class="thread-panel">${inner}</div>`
 }
 
 // Members sidebar — UserListPanel.qml (title + onlineStatus sections + StatusMemberListItem rows).
@@ -110,7 +129,7 @@ export function bindCommunityChannel(view, ver) {
   if (ci && p.get('reply') === '1') ci.classList.add('chat-input--replying')
 
   // ---- Threads (epic #21090) in-chat affordances — revamp only; version=current untouched ----
-  if (ver === 'revamp') bindThreadAffordances(p)
+  if (ver === 'revamp') bindThreadAffordances(p, view)
 }
 
 // Thread glyph — reply-in-thread bubble (net-new; Status line style)
@@ -185,6 +204,90 @@ function goToCreate(parentMsgId, parentMsg, surface) {
   location.search = q.toString()
 }
 
+// ---- desktop thread side-panel (epic §1) — open in place, no full-page navigation ----
+const isDesktop = () => !document.querySelector('.shell--mobile')
+const rerender = () => window.dispatchEvent(new Event('app:rerender'))
+
+// open a thread (or the create flow) in the right-hand panel, replacing Members. View-only URL state.
+function openThreadPanel(spec) {
+  const u = new URL(location.href)
+  u.searchParams.delete('copy')
+  if (spec.create) {
+    if (spec.parentMsgId && spec.parentMsg) store.setPendingParent(spec.parentMsgId, spec.parentMsg)
+    u.searchParams.set('tpanel', 'create')
+    spec.parentMsgId ? u.searchParams.set('tparent', spec.parentMsgId) : u.searchParams.delete('tparent')
+  } else {
+    u.searchParams.set('tpanel', spec.threadId)
+    u.searchParams.delete('tparent')
+  }
+  u.searchParams.set('surface', spec.surface || 'channel')
+  history.replaceState(null, '', u)
+  rerender()
+}
+function closeThreadPanel() {
+  const u = new URL(location.href)
+  ;['tpanel', 'tparent', 'copy'].forEach(k => u.searchParams.delete(k))
+  history.replaceState(null, '', u)
+  rerender()
+}
+
+// wire the open panel: close affordances, composer send (create/reply), mute/more/edit, focus the input
+function bindThreadPanel(p) {
+  const panel = document.querySelector('.shell__right .thread-panel')
+  if (!panel) return
+  const surface = p.get('surface') || 'channel'
+  const isCreate = p.get('tpanel') === 'create'
+  const threadId = isCreate ? null : p.get('tpanel')
+
+  // header back arrow closes the panel (Escape too); Members button is wired in bindThreadAffordances
+  panel.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', closeThreadPanel))
+
+  // drain any queued toast (unfollow/mute/close/delete confirmations) into the panel
+  const queued = store.takeToast()
+  if (queued) floatToast(panel, queued)
+
+  // "Send copy" switch — persist to the URL the renderer reads, so a re-render keeps the state
+  panel.querySelector('[data-copy]')?.addEventListener('click', function () {
+    const on = this.getAttribute('aria-checked') !== 'true'
+    this.setAttribute('aria-checked', String(on)); this.classList.toggle('on', on)
+    try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
+  })
+
+  if (isCreate) {
+    bindComposerSend(panel, () => {
+      const nameEl = panel.querySelector('[data-thread-name]')
+      const inputEl = panel.querySelector('[data-thread-input]')
+      const text = (inputEl?.value || '').trim(); if (!text) { inputEl?.focus(); return }
+      const parentMsgId = p.get('tparent')
+      const t = store.createThread({ surface, parentMsgId, parentMsg: resolveParent(surface, parentMsgId), title: nameEl?.value || '', firstMessage: text })
+      const u = new URL(location.href); u.searchParams.set('tpanel', t.id); u.searchParams.delete('tparent'); history.replaceState(null, '', u)
+      rerender() // swap the create panel for the freshly-created thread
+    })
+  } else if (threadId) {
+    const t0 = store.getThread(threadId)
+    if (t0 && t0.unread && !t0.muted) store.markRead(threadId, { silent: true })
+    bindComposerSend(panel, () => {
+      const inputEl = panel.querySelector('[data-thread-input]')
+      const text = (inputEl?.value || '').trim(); if (!text) return
+      const copyOn = panel.querySelector('[data-copy]')?.getAttribute('aria-checked') === 'true'
+      store.postReply(threadId, text, { copyToParent: copyOn }) // emit → re-render updates the panel
+      requestAnimationFrame(() => {
+        document.querySelector('.shell__right [data-thread-input]')?.focus()
+        if (copyOn) floatToast(document.querySelector('.shell__right .thread-panel'), 'Reply also posted to ' + (SURFACES[surface]?.label || 'channel'))
+      })
+    })
+    panel.querySelector('[data-mute]')?.addEventListener('click', () => { const t = store.getThread(threadId); store.setMuted(threadId, !t.muted) })
+    panel.querySelector('[data-thread-more]')?.addEventListener('click', (e) => { e.stopPropagation(); openThreadMenu(panel, threadId, e.currentTarget) })
+    bindInlineEdit(panel, threadId)
+  }
+
+  // spec: move focus to the thread input. Focus synchronously (the panel DOM is already in place at
+  // bind time) with a rAF fallback — synchronous is reliable even when the tab is backgrounded.
+  const focusTarget = () => panel.querySelector('[data-thread-input]') || panel.querySelector('[data-thread-name]')
+  focusTarget()?.focus()
+  requestAnimationFrame(() => { if (document.activeElement !== focusTarget()) focusTarget()?.focus() })
+}
+
 // open the message context menu on a specific message (real trigger — from the hover "More"
 // quick-action or the deep-link). Gates Edit/Delete on message ownership.
 function openContextMenu(msgEl) {
@@ -198,8 +301,14 @@ function openContextMenu(msgEl) {
   const parentMsg = readMsg(msgEl)
   menu.querySelector('[data-reply-in-thread]')?.addEventListener('click', () => {
     const existing = parentMsgId ? store.threadForParent(parentMsgId, surface) : null
-    if (existing) goToThread(existing.id, surface)
-    else goToCreate(parentMsgId, parentMsg, surface)
+    if (isDesktop()) {
+      close()  // dismiss the context menu + its listeners before the panel re-render
+      if (existing) openThreadPanel({ threadId: existing.id, surface })
+      else openThreadPanel({ create: true, parentMsgId, parentMsg, surface })
+    } else {
+      if (existing) goToThread(existing.id, surface)
+      else goToCreate(parentMsgId, parentMsg, surface)
+    }
   })
   menu.querySelector('.msg-cmenu__item')?.focus()
   const trigger = msgEl.querySelector('.message__qa-btn[aria-label="More"]')
@@ -220,11 +329,14 @@ function readMsg(msgEl) {
   return [name, initial, color, time, text, {}]
 }
 
-function bindThreadAffordances(p) {
+function bindThreadAffordances(p, view) {
   const scope = document.querySelector('.shell__center, .shell__mobile-content')
   if (!scope) return
   const surface = 'channel'
+  const desktop = view === 'desktop'
   const msgs = scope.querySelectorAll('.messages .message[data-msg-id]')
+  // on desktop, opening an existing thread shows it in the side panel; mobile keeps the full-screen nav
+  const openThread = (id, s) => desktop ? openThreadPanel({ threadId: id, surface: s || surface }) : goToThread(id, s || surface)
 
   // in-chat thread cards — data-driven: a card under every message that has a thread (epic §4/§20)
   msgs.forEach(mEl => {
@@ -249,16 +361,24 @@ function bindThreadAffordances(p) {
     btn.className = 'chat-input__btn chat-input__thread-btn' + (p.get('qa') === 'thread' ? ' checked' : '')
     btn.title = 'New thread'; btn.setAttribute('aria-label', 'Start a new thread'); btn.innerHTML = THREAD_GLYPH
     actions.insertBefore(btn, actions.firstChild)
-    btn.addEventListener('click', () => goToCreate(null, null, surface))
+    // desktop: open the create flow in the side panel; mobile: full-screen create
+    btn.addEventListener('click', () => desktop ? openThreadPanel({ create: true, surface }) : goToCreate(null, null, surface))
   }
 
   // open a thread from its in-chat card
-  scope.querySelectorAll('[data-open-thread]').forEach(el => el.addEventListener('click', () => goToThread(el.dataset.openThread, el.dataset.surface || surface)))
+  scope.querySelectorAll('[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
 
   // channel-list thread rows → open the thread (epic §22); already rendered in renderLeftPanel
   document.querySelectorAll('.channel-thread[data-open-thread]').forEach(el => el.addEventListener('click', (e) => {
-    e.stopPropagation(); goToThread(el.dataset.openThread, el.dataset.surface || surface)
+    e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface)
   }))
+
+  // ---- desktop thread side-panel: Members button closes it; bind + focus the open panel ----
+  if (desktop) {
+    const membersBtn = scope.querySelector('[data-members-btn]')
+    if (membersBtn) membersBtn.addEventListener('click', () => { if (p.get('tpanel')) closeThreadPanel(); })
+    if (p.get('tpanel')) bindThreadPanel(p)
+  }
 }
 
 function renderNav(revamp) {
@@ -390,7 +510,7 @@ function channelItem(name, { active = false, badge = 0, unread = false }) {
   `
 }
 
-function renderCenterPanel(revamp) {
+function renderCenterPanel(revamp, panelOpen = false) {
   // copied-to-parent posts from threads (epic §3.1) — appended live to the channel stream (revamp only)
   const copied = revamp ? store.parentPosts('channel') : []
   const copiedHtml = copied.map(pp => msg(pp.name, pp.initial, pp.color, pp.time, pp.text, { id: pp.id, threadRef: pp.threadTitle })).join('')
@@ -413,7 +533,7 @@ function renderCenterPanel(revamp) {
       </div>
       <div class="chat-header__actions">
         <button class="chat-header__action-btn" title="Search">${CHANNEL_ICONS.search}</button>
-        <button class="chat-header__action-btn" title="Members">${CHANNEL_ICONS.groupChat}</button>
+        <button class="chat-header__action-btn${panelOpen ? ' active' : ''}" data-members-btn title="Members" aria-pressed="${panelOpen}">${CHANNEL_ICONS.groupChat}</button>
         <button class="chat-header__action-btn" title="More">${CHANNEL_ICONS.more}</button>
       </div>
     </div>

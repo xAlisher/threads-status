@@ -161,6 +161,8 @@ const USE_CASES = [
     { id: 'th-qa',      label: 'Composer · new-thread icon',          screen: 'chat', params: 'version=revamp&theme=dark&qa=thread' },
     { id: 'th-card',    label: 'In-chat thread card (live)',          screen: 'chat', params: 'version=revamp&theme=dark&thread=card' },
     { id: 'th-chlist',  label: 'Threads in the channel list',         screen: 'chat', params: 'version=revamp&theme=dark' },
+    { id: 'th-panel',   label: 'Desktop · thread side-panel (reply in thread)', screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&tpanel=t-m1&surface=channel' },
+    { id: 'th-panel-c', label: 'Desktop · new-thread side-panel',     screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&tpanel=create&surface=channel' },
   ]},
   { group: 'Threads — surfaces (Threads)', items: [
     { id: 'th-create',  label: 'Creating Thread · from a message',    screen: 'threads', params: 'version=revamp&theme=dark&tview=create&parent=cc-1&from=chat' },
@@ -248,6 +250,8 @@ function bindToolbarEvents() {
 
 // Boot — re-render in place whenever the thread store mutates (post reply, follow, close, …)
 subscribe(() => render())
+// View-only re-render (no store mutation, no reload): opening/closing the desktop thread panel
+window.addEventListener('app:rerender', () => render())
 render()
 
 export { render }
