@@ -41,7 +41,7 @@
 /* ---- composer + "Send copy to #channel" toggle (epic 3.1) ---- */
 .thread-view__composer { flex-shrink: 0; }
 .thread-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px 14px; }
-.thread-copy__label { font-size: var(--font-size-additional); color: var(--primary-color-1); }
+.thread-copy__label { font-size: var(--font-size-additional); color: var(--direct-color-4); } /* neutral gray: near-white on dark (#FFFFFFB3), dark gray on light (#000000B3) */
 .thread-copy__switch { width: 40px; height: 24px; border-radius: 12px; border: none; padding: 0; background: var(--base-color-2); flex-shrink: 0; position: relative; transition: background .15s; cursor: pointer; }
 .thread-copy__switch:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: 2px; }
 .thread-copy__knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--indirect-color-1); transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
