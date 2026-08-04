@@ -16,6 +16,7 @@ import './screens/community-channel.css'
 import './screens/threads.css'
 import { renderCommunityChannel, bindCommunityChannel } from './screens/community-channel.js'
 import { renderThreads, bindThreads } from './screens/threads.js'
+import { subscribe } from './thread-store.js'
 
 // --- Theme registry (original Status light/dark only) ---
 const themes = {
@@ -158,21 +159,18 @@ const USE_CASES = [
   { group: 'Threads — in chat (Threads)', items: [
     { id: 'th-menu',    label: 'Context menu · Reply in thread',      screen: 'chat', params: 'version=revamp&theme=dark&menu=thread' },
     { id: 'th-qa',      label: 'Composer · new-thread icon',          screen: 'chat', params: 'version=revamp&theme=dark&qa=thread' },
-    { id: 'th-card',    label: 'In-chat thread card (indicator)',     screen: 'chat', params: 'version=revamp&theme=dark&thread=card' },
-    { id: 'th-cardc',   label: 'In-chat thread card · closed',        screen: 'chat', params: 'version=revamp&theme=dark&thread=card-closed' },
+    { id: 'th-card',    label: 'In-chat thread card (live)',          screen: 'chat', params: 'version=revamp&theme=dark&thread=card' },
+    { id: 'th-chlist',  label: 'Threads in the channel list',         screen: 'chat', params: 'version=revamp&theme=dark' },
   ]},
   { group: 'Threads — surfaces (Threads)', items: [
-    { id: 'th-create',  label: 'Creating Thread · empty',             screen: 'threads', params: 'version=revamp&theme=dark&tview=create' },
-    { id: 'th-title',   label: 'Creating Thread · named',             screen: 'threads', params: 'version=revamp&theme=dark&tview=create&state=title' },
-    { id: 'th-created', label: 'Creating Thread · created toast',     screen: 'threads', params: 'version=revamp&theme=dark&tview=create&state=created' },
-    { id: 'th-view',    label: 'Thread view (parent + replies)',      screen: 'threads', params: 'version=revamp&theme=dark&tview=thread' },
-    { id: 'th-copy',    label: 'Thread view · Send copy ON',          screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&copy=1' },
-    { id: 'th-follow',  label: 'Thread view · Following',             screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&following=1' },
-    { id: 'th-closed',  label: 'Thread view · closed',                screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&state=closed' },
-    { id: 'th-deleted', label: 'Thread view · deleted',              screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&state=deleted' },
-    { id: 'th-group',   label: 'Thread view · group chat',            screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&surface=group' },
-    { id: 'th-dm',      label: 'Thread view · DM',                    screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&surface=dm' },
+    { id: 'th-create',  label: 'Creating Thread · from a message',    screen: 'threads', params: 'version=revamp&theme=dark&tview=create&parent=cc-1&from=chat' },
+    { id: 'th-view',    label: 'Thread view (parent + replies)',      screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-m1&surface=channel&from=chat' },
+    { id: 'th-copy',    label: 'Thread view · Send copy ON',          screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-m1&surface=channel&copy=1' },
+    { id: 'th-closed',  label: 'Thread view · closed',                screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-release&surface=channel&from=list' },
+    { id: 'th-group',   label: 'Thread view · group chat',            screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-group&surface=group&from=list' },
+    { id: 'th-dm',      label: 'Thread view · DM',                    screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-dm&surface=dm&from=list' },
     { id: 'th-list',    label: 'Threads list (active + past)',        screen: 'threads', params: 'version=revamp&theme=dark&tview=list' },
+    { id: 'th-list-g',  label: 'Threads list · group surface',        screen: 'threads', params: 'version=revamp&theme=dark&tview=list&surface=group' },
   ]},
 ]
 function findUseCase(id) { for (const g of USE_CASES) { const u = g.items.find(i => i.id === id); if (u) return u } }
@@ -248,7 +246,8 @@ function bindToolbarEvents() {
   if (screen.bind) screen.bind(currentView, verFor())
 }
 
-// Boot
+// Boot — re-render in place whenever the thread store mutates (post reply, follow, close, …)
+subscribe(() => render())
 render()
 
 export { render }
