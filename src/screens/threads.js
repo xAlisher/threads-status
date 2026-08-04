@@ -41,8 +41,35 @@ export function avatarStack(people) {
     `<span class="thread-ava" style="background:${p.c};z-index:${shown.length - i}">${p.i}</span>`).join('')}${people.length > 4 ? `<span class="thread-ava thread-ava--more">+${people.length - 4}</span>` : ''}</span>`
 }
 
-// editable composer — reuses .chat-input structure; NOT readonly (epic §3 post/edit)
-function threadComposer(placeholder) {
+// mobile composer action icons — lifted from Status assets (camera/image/arrow-up.svg → currentColor),
+// @ and Aa drawn to the Figma DS mobile composer (node 13030-108833)
+const MCOMPOSER_ICONS = {
+  camera: `<svg viewBox="0 0 24 24" fill="none"><g clip-rule="evenodd" fill="currentColor" fill-rule="evenodd"><path d="m18 12c0 2.7614-2.2386 5-5 5s-5-2.2386-5-5c0-2.76142 2.2386-5 5-5s5 2.23858 5 5zm-1.5 0c0 1.933-1.567 3.5-3.5 3.5s-3.5-1.567-3.5-3.5 1.567-3.5 3.5-3.5 3.5 1.567 3.5 3.5z"/><path d="m2 7c0-2.20914 1.79086-4 4-4h12c2.2091 0 4 1.79086 4 4v10c0 2.2091-1.7909 4-4 4h-12c-2.20914 0-4-1.7909-4-4zm4-2.5h12c1.3807 0 2.5 1.11929 2.5 2.5v10c0 1.3807-1.1193 2.5-2.5 2.5h-12c-1.38071 0-2.5-1.1193-2.5-2.5v-10c0-1.38071 1.11929-2.5 2.5-2.5z"/></g></svg>`,
+  image: `<svg viewBox="0 0 24 24" fill="none"><g clip-rule="evenodd" fill="currentColor" fill-rule="evenodd"><path d="m18.5 9.5c0 1.6569-1.3431 3-3 3s-3-1.3431-3-3c0-1.65685 1.3431-3 3-3s3 1.34315 3 3zm-1.5 0c0 .8284-.6716 1.5-1.5 1.5s-1.5-.6716-1.5-1.5c0-.82843.6716-1.5 1.5-1.5s1.5.67157 1.5 1.5z"/><path d="m6 3c-2.20914 0-4 1.79086-4 4v10c0 2.2091 1.79086 4 4 4h12c2.2091 0 4-1.7909 4-4v-10c0-2.20914-1.7909-4-4-4zm12 1.5h-12c-1.38071 0-2.5 1.11929-2.5 2.5v3.2322c0 .4455.53857.6686.85355.3536l1.40901-1.40902c.68342-.68342 1.79146-.68342 2.47488 0l10.08066 10.08072c.1191.119.2913.1736.4514.1218 1.0042-.3245 1.7305-1.2671 1.7305-2.3793v-10c0-1.38071-1.1193-2.5-2.5-2.5zm-14.46967 9.0303c-.0188.0188-.03033.0439-.03033.0705v3.3992c0 1.3807 1.11929 2.5 2.5 2.5h9.2322c.4455 0 .6686-.5386.3536-.8536l-8.40902-8.409c-.09764-.0976-.25593-.0976-.35356 0z"/></g></svg>`,
+  mention: `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.5"/><path d="M15.5 12v1.3a2.2 2.2 0 0 0 4.4 0V12a8 8 0 1 0-3 6.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  sendUp: `<svg viewBox="0 0 24 24" fill="none"><path d="m6.53033 10.5303c-.29289.2929-.76777.2929-1.06066 0s-.29289-.76774 0-1.06063l6.00003-6c.2929-.29289.7677-.29289 1.0606 0l6 6c.2929.29289.2929.76773 0 1.06063s-.7677.2929-1.0606 0l-3.8661-3.86609c-.315-.31498-.8536-.09189-.8536.35356v12.98223c0 .4142-.3358.75-.75.75s-.75-.3358-.75-.75v-12.98223c0-.44546-.5386-.66854-.8536-.35356z" fill="currentColor"/></svg>`,
+}
+
+// editable composer — reuses .chat-input structure; NOT readonly (epic §3 post/edit).
+// mobile = the Figma DS two-row layout (text on top, outlined icon toolbar + blue send below).
+function threadComposer(placeholder, mobile = false) {
+  if (mobile) {
+    return `
+    <div class="chat-input thread-view__composer mcomposer">
+      <textarea class="chat-input__field mcomposer__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
+      <div class="mcomposer__bar">
+        <div class="mcomposer__actions">
+          <button class="mcomposer__btn mcomposer__btn--text" title="Format" aria-label="Format text">Aa</button>
+          <button class="mcomposer__btn" title="Camera" aria-label="Camera">${MCOMPOSER_ICONS.camera}</button>
+          <button class="mcomposer__btn" title="Image" aria-label="Image">${MCOMPOSER_ICONS.image}</button>
+          <button class="mcomposer__btn" title="Commands" aria-label="Commands">${CHANNEL_ICONS.chatCommands}</button>
+          <button class="mcomposer__btn" title="Mention" aria-label="Mention">${MCOMPOSER_ICONS.mention}</button>
+          <button class="mcomposer__btn" title="Emoji" aria-label="Emoji">${CHANNEL_ICONS.emojis}</button>
+        </div>
+        <button class="mcomposer__send" data-thread-send title="Send" aria-label="Send">${MCOMPOSER_ICONS.sendUp}</button>
+      </div>
+    </div>`
+  }
   return `
     <div class="chat-input thread-view__composer">
       <div class="chat-input__row">
@@ -91,7 +118,7 @@ export function resolveParent(surface, parentMsgId) {
   if (parentMsgId) return store.getPendingParent(parentMsgId)
   return null // composer-initiated new thread: no parent message to pin
 }
-export function renderCreate(surface, parentMsgId, { panel = false } = {}) {
+export function renderCreate(surface, parentMsgId, { panel = false, mobile = false } = {}) {
   const s = SURFACES[surface] || SURFACES.channel
   const parent = resolveParent(surface, parentMsgId)
   return `
@@ -102,13 +129,13 @@ export function renderCreate(surface, parentMsgId, { panel = false } = {}) {
       </div>
       <div class="thread-create__foot">
         <input class="thread-create__name" data-thread-name type="text" placeholder="Thread name (optional)" aria-label="Thread name (optional)" />
-        ${threadComposer('Type message')}
+        ${threadComposer('Type message', mobile)}
       </div>
     </div>`
 }
 
 // ---- Thread view (parent + replies + composer + "Send copy" toggle) ----
-export function renderThread(t, { copy, panel = false }) {
+export function renderThread(t, { copy, panel = false, mobile = false }) {
   const s = SURFACES[t.surface] || SURFACES.channel
   const title = t.title
   if (t.deleted) {
@@ -118,7 +145,7 @@ export function renderThread(t, { copy, panel = false }) {
     </div>`
   }
   const closedBar = t.closed ? `<div class="thread-closed-bar">${THREAD_ICONS.lock}This thread is closed — no new replies can be posted.</div>` : ''
-  const composer = t.closed ? '' : threadComposer('Reply in thread')
+  const composer = t.closed ? '' : threadComposer('Reply in thread', mobile)
   const copyRow = t.closed ? '' : `
     <div class="thread-copy">
       <span class="thread-copy__label" id="thread-copy-label">${s.copy}</span>
@@ -180,14 +207,15 @@ export function renderThreads(view, ver) {
   const p = new URLSearchParams(location.search)
   const surface = p.get('surface') || 'channel'
   const v = p.get('tview') || 'thread'
+  const mobile = view === 'mobile'
   let center
-  if (v === 'create') center = renderCreate(surface, p.get('parent'))
+  if (v === 'create') center = renderCreate(surface, p.get('parent'), { mobile })
   else if (v === 'list') center = renderList(p.get('surface') || null)
   else {
     const id = p.get('t')
     let t = id ? store.getThread(id) : null
     if (!t) t = store.threadsForSurface(surface)[0] || store.allThreads()[0]
-    center = t ? renderThread(t, { copy: p.get('copy') === '1' }) : '<div class="thread-empty">No thread selected.</div>'
+    center = t ? renderThread(t, { copy: p.get('copy') === '1', mobile }) : '<div class="thread-empty">No thread selected.</div>'
   }
   return { nav: null, left: null, center: `<div class="thread-screen">${center}</div>`, right: null }
 }
