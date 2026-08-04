@@ -51,7 +51,7 @@ export function renderCommunityChannel(view, ver) {
   const tpanel = revamp && view === 'desktop' ? p.get('tpanel') : null
   const nav = renderNav(revamp)
   const left = renderLeftPanel(revamp)
-  const center = renderCenterPanel(revamp, !!tpanel)
+  const center = renderCenterPanel(revamp, !!tpanel, view === 'mobile')
   const right = tpanel ? renderThreadPanel(p) : renderRightPanel()
   return { nav, left, center, right }
 }
@@ -510,11 +510,47 @@ function channelItem(name, { active = false, badge = 0, unread = false }) {
   `
 }
 
-function renderCenterPanel(revamp, panelOpen = false) {
+// arrow-left.svg (lifted verbatim, #000 → currentColor) — the toolbar back button (StatusToolBar.qml:28)
+const ARROW_LEFT = `<svg viewBox="0 0 24 24" fill="none"><path d="m10.5303 6.53033c.2929-.29289.2929-.76777 0-1.06066s-.76774-.29289-1.06063 0l-6 6.00003c-.29289.2929-.29289.7677 0 1.0606l6 6c.29289.2929.76773.2929 1.06063 0s.2929-.7677 0-1.0606l-3.86609-3.8661c-.31498-.315-.09189-.8536.35356-.8536h12.98223c.4142 0 .75-.3358.75-.75s-.3358-.75-.75-.75h-12.98223c-.44546 0-.66854-.5386-.35356-.8536z" fill="currentColor"/></svg>`
+
+// Mobile chat header — faithful recreation of the Status portrait toolbar (source-traced):
+//   StatusToolBar (padding 8, background:null, no border) → [arrow-left back, leftMargin 20]
+//   + ChatHeaderContentView RowLayout → StatusChatInfoButton (avatar 36 · title Medium+type-icon · subtitle)
+//   + action buttons search·group-chat·more (StatusFlatRoundButton 44×44, icon 24, spacing 8).
+// Sources: StatusToolBar.qml:20-40, ChatHeaderContentView.qml:17-129, StatusChatInfoButton.qml:24-208,
+//   StatusFlatRoundButton.qml:15,114, theme.cpp:53-90 (halfPadding 8, smallPadding 10).
+function mobileChatHeader() {
+  return `
+    <div class="chat-header chat-header--mobile">
+      <button class="chat-header__back" title="Back" aria-label="Back">${ARROW_LEFT}</button>
+      <button class="chat-header__info chat-header__info--mobile">
+        <div class="chat-header__avatar" style="background:var(--misc-color-5);font-size:18px;color:var(--indirect-color-1)">#</div>
+        <div class="chat-header__text">
+          <div class="chat-header__title-row">
+            <span class="chat-header__channel-icon">${CHANNEL_ICONS.channel}</span>
+            <span class="chat-header__title">general</span>
+          </div>
+          <div class="chat-header__subtitle-row">
+            <span class="chat-header__description">General discussion about Status</span>
+            <span class="chat-header__separator"></span>
+            <span class="chat-header__pin-icon">${CHANNEL_ICONS.pinHeader}</span>
+            <span class="chat-header__pin-text">3 pinned</span>
+          </div>
+        </div>
+      </button>
+      <div class="chat-header__actions chat-header__actions--mobile">
+        <button class="chat-header__round-btn" title="Search" aria-label="Search">${CHANNEL_ICONS.search}</button>
+        <button class="chat-header__round-btn" title="Members" aria-label="Members">${CHANNEL_ICONS.groupChat}</button>
+        <button class="chat-header__round-btn" title="More" aria-label="More">${CHANNEL_ICONS.more}</button>
+      </div>
+    </div>`
+}
+
+function renderCenterPanel(revamp, panelOpen = false, mobile = false) {
   // copied-to-parent posts from threads (epic §3.1) — appended live to the channel stream (revamp only)
   const copied = revamp ? store.parentPosts('channel') : []
   const copiedHtml = copied.map(pp => msg(pp.name, pp.initial, pp.color, pp.time, pp.text, { id: pp.id, threadRef: pp.threadTitle })).join('')
-  return `
+  const header = mobile ? mobileChatHeader() : `
     <div class="chat-header">
       <div class="chat-header__info">
         <div class="chat-header__avatar" style="background:var(--misc-color-5);font-size:18px;color:var(--indirect-color-1)">#</div>
@@ -536,7 +572,9 @@ function renderCenterPanel(revamp, panelOpen = false) {
         <button class="chat-header__action-btn${panelOpen ? ' active' : ''}" data-members-btn title="Members" aria-pressed="${panelOpen}">${CHANNEL_ICONS.groupChat}</button>
         <button class="chat-header__action-btn" title="More">${CHANNEL_ICONS.more}</button>
       </div>
-    </div>
+    </div>`
+  return `
+    ${header}
     <div class="messages">
       <div class="messages__day-separator">Today</div>
       ${msg('Elena', 'E', '#D37EF4', '10:23', 'Just switched the whole design system to CSS tokens. Agents can now restyle screens by editing one file.', { id: 'cc-0', delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}

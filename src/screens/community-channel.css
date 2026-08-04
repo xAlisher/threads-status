@@ -366,6 +366,45 @@
 .chat-header__action-btn svg { width: 20px; height: 20px; }
 .chat-header__action-btn:hover { background: var(--background-hover); }
 
+/* ---- Mobile chat header — Status portrait toolbar (source-traced) ----
+   StatusToolBar (padding 8, background:null → no border) + arrow-left back (leftMargin 20)
+   + ChatHeaderContentView (info button fillWidth + search/group-chat/more StatusFlatRoundButton 44/24). */
+.chat-header--mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;                       /* actionButtons spacing — ChatHeaderContentView.qml:89 */
+  padding: 8px;                   /* Theme.halfPadding — StatusToolBar.qml:20 / theme.cpp:65 */
+  border-bottom: none;            /* background:null — StatusToolBar.qml:21 (no separator) */
+  flex-shrink: 0;
+}
+.chat-header__back {
+  flex-shrink: 0;
+  margin-left: 20px;              /* smallPadding*2 — StatusToolBar.qml:26 / theme.cpp:89 (16*.625*2) */
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; background: transparent; color: var(--direct-color-1);
+  border-radius: 8px; cursor: pointer; padding: 0;
+}
+.chat-header__back:hover { background: var(--background-hover); }
+.chat-header__back svg { width: 24px; height: 24px; }   /* StatusBaseButton iconSize Large=24 */
+.chat-header__info--mobile {
+  flex: 1; min-width: 0;          /* Loader Layout.fillWidth — ChatHeaderContentView.qml:79 */
+  border: none; background: transparent; text-align: left; cursor: pointer; padding: 0;
+}
+.chat-header__actions--mobile { gap: 8px; flex-shrink: 0; }
+.chat-header__round-btn {
+  flex-shrink: 0;
+  width: 44px; height: 44px;      /* StatusFlatRoundButton 44×44 — StatusFlatRoundButton.qml:114-115 */
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; background: transparent; color: var(--base-color-1);
+  border-radius: 50%; cursor: pointer; padding: 0;
+}
+.chat-header__round-btn:hover { background: var(--background-hover); }
+.chat-header__round-btn svg { width: 24px; height: 24px; }  /* icon 24 — StatusFlatRoundButton.qml:15 */
+/* subtitle stays a single truncating line on the narrow mobile toolbar (description elides, pin stays) */
+.chat-header--mobile .chat-header__subtitle-row { flex-wrap: nowrap; overflow: hidden; }
+.chat-header--mobile .chat-header__pin-text { white-space: nowrap; }
+
 /* ============================================================
    CENTER: Messages — StatusMessage.qml
    ListView spacing: 0
