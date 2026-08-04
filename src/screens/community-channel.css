@@ -409,6 +409,9 @@
 .mobile-list { width: 100%; height: 100%; overflow-y: auto; background: var(--base-color-4); display: flex; flex-direction: column; }
 /* full-width rows on the mobile list (the desktop 288px fixed width leaves a gap on the phone) */
 .mobile-list .channel-item { cursor: pointer; width: 100%; box-sizing: border-box; }
+/* right-align the channel badge so counters + group chevrons share one vertical line (16px from edge).
+   The badge is otherwise centered in a 32px slot, sitting 7px further left than the counts/chevrons. */
+.mobile-list .channel-item__badge { justify-content: flex-end; }
 
 /* ============================================================
    CENTER: Messages — StatusMessage.qml
