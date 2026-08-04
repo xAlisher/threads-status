@@ -151,7 +151,8 @@
 .channel-thread__glyph svg { width: 15px; height: 15px; }
 .channel-thread__name { flex: 1; min-width: 0; font-size: var(--font-size-additional); color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .channel-thread.unread .channel-thread__name { font-weight: 700; }
-.channel-thread__count { font-size: var(--font-size-aside); color: var(--base-color-1); }
+/* thread counter matches the channel unread badge (.channel-item__badge-dot) — blue pill, both views */
+.channel-thread__count { min-width: 18px; height: 18px; border-radius: 9px; background: var(--primary-color-1); color: var(--indirect-color-1); font-size: var(--font-size-aside); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; flex-shrink: 0; box-sizing: border-box; }
 .channel-thread__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color-1); flex-shrink: 0; }
 .channel-thread__pin { font-size: 11px; }
 
