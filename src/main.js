@@ -49,10 +49,30 @@ function applyTheme(tokens, mode) {
   document.documentElement.setAttribute('data-mode', mode)
 }
 
+// Desktop has no standalone full-screen thread screen — its home is the normal three-panel chat
+// (channels · chat · members). A thread opens as the side panel. So on desktop, rewrite any
+// screen=threads request into the equivalent chat view (mobile keeps the full-screen thread screen).
+function normalizeDesktopThreads() {
+  if (currentView !== 'desktop' || currentScreen !== 'threads') return
+  const q = new URLSearchParams(location.search)
+  const tview = q.get('tview')
+  const surface = q.get('surface') || 'channel'
+  const nq = new URLSearchParams()
+  ;['theme', 'view', 'version'].forEach(k => { if (q.get(k)) nq.set(k, q.get(k)) })
+  nq.set('screen', 'chat')
+  if (surface !== 'channel') nq.set('chat', surface)   // dm | group render behind the panel
+  if (tview === 'thread' && q.get('t')) { nq.set('tpanel', q.get('t')); nq.set('surface', surface) }
+  else if (tview === 'create') { nq.set('tpanel', 'create'); if (q.get('parent')) nq.set('tparent', q.get('parent')); nq.set('surface', surface) }
+  // else (threads list / default): land on the plain three-panel chat home
+  currentScreen = 'chat'
+  try { history.replaceState(null, '', location.pathname + '?' + nq.toString()) } catch {}
+}
+
 function render() {
   const { tokens, mode } = themes[currentTheme]
   applyTheme(tokens, mode)
 
+  normalizeDesktopThreads()
   const app = document.querySelector('#app')
   const screenFn = screens[currentScreen].render
 
