@@ -982,7 +982,7 @@
 .info-pin__time { font-size: var(--font-size-aside); color: var(--base-color-1); }
 .info-pin__text { font-size: var(--font-size-additional); color: var(--direct-color-4); margin-top: 2px; }
 .info-link { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; text-decoration: none; }
-.info-link__icon { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--base-color-3); color: var(--primary-color-1); }
+.info-link__icon { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--primary-color-2); color: var(--primary-color-1); }
 .info-link__icon svg { width: 18px; height: 18px; }
 .info-link__body { display: flex; flex-direction: column; min-width: 0; }
 .info-link__title { font-size: var(--font-size-additional); font-weight: 600; color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

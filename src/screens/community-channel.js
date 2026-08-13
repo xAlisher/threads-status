@@ -65,7 +65,8 @@ export function renderCommunityChannel(view, ver) {
   const infoTab = explicitInfo || (revamp && !mobile && !tpanel ? 'members' : null)
   // mobile: Details takes over the full screen when opened
   if (mobile && explicitInfo) {
-    return { nav, left, center: renderInfoPanel(explicitInfo, ctx.surface, true), right: null }
+    const sub = ctx.channelIcon ? '# ' + ctx.title : ctx.title
+    return { nav, left, center: renderInfoPanel(explicitInfo, ctx.surface, true, sub), right: null }
   }
   const center = renderCenterPanel(revamp, !!tpanel, mobile, chat)
   const right = infoTab ? renderInfoPanel(infoTab, ctx.surface) : (tpanel ? renderThreadPanel(p) : null)
@@ -188,13 +189,13 @@ function renderInfoBody(tab, surface = 'channel') {
     <span class="info-link__body"><span class="info-link__title">${l.title}</span><span class="info-link__url">${l.url}</span><span class="info-link__meta">${l.name} · ${l.time}</span></span>
   </a>`).join('')
 }
-function renderInfoPanel(tab, surface = 'channel', mobile = false) {
+function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   const nav = INFO_TABS.map(([k, label]) => `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}">${label}</button>`).join('')
-  // mobile: a thread-style header (back arrow + title); desktop: title + close (X)
+  // mobile: same layout as the thread header (back arrow + title/subtitle); desktop: title + close (X)
   const header = mobile
     ? `<div class="thread-view__header info-panel__mheader">
         <button class="thread-view__back" data-close-info title="Back" aria-label="Back">${ARROW_LEFT}</button>
-        <div class="thread-view__titles"><span class="thread-view__title">Details</span></div>
+        <div class="thread-view__titles"><span class="thread-view__title">Details</span>${sub ? `<span class="thread-view__sub">${sub}</span>` : ''}</div>
       </div>`
     : `<div class="info-panel__header">
         <span class="info-panel__title">Details</span>
