@@ -61,7 +61,7 @@ export function renderCommunityChannel(view, ver) {
   const infoTab = revamp ? infoTabOf(p) : null
   const center = renderCenterPanel(revamp, !!tpanel, mobile, chat)
   // Details takes the right column; closing it falls back to the open thread, then members
-  const right = infoTab ? renderInfoPanel(infoTab) : (tpanel ? renderThreadPanel(p) : (ctx.members ? renderRightPanel() : null))
+  const right = infoTab ? renderInfoPanel(infoTab, ctx.surface) : (tpanel ? renderThreadPanel(p) : (ctx.members ? renderRightPanel() : null))
   return { nav, left, center, right }
 }
 
@@ -145,7 +145,7 @@ const INFO_LINKS = [
   { title: 'StatusQ · QML source', url: 'github.com/status-im/StatusQ', name: 'Kai', time: '10:34' },
   { title: 'Threads epic #21090', url: 'github.com/status-im/status-app/issues/21090', name: 'Marcus', time: '10:36' },
 ]
-const INFO_TABS = [['members', 'Members'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links']]
+const INFO_TABS = [['members', 'Members'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links'], ['threads', 'Threads']]
 
 function infoMemberRow(m, online) {
   return `<div class="info-item member-item" data-info-item data-search="${m.name.toLowerCase()}">
@@ -153,7 +153,16 @@ function infoMemberRow(m, online) {
     <span class="member-item__name">${m.name}</span>${m.owner ? `<span class="member-item__owner" title="Owner">${MEMBER_ICONS.crown}</span>` : ''}
   </div>`
 }
-function renderInfoBody(tab) {
+function renderInfoBody(tab, surface = 'channel') {
+  if (tab === 'threads') {
+    const list = store.threadsForSurface(surface)
+    if (!list.length) return `<div class="info-empty">No threads yet</div>`
+    return list.map(t => `<button class="info-item info-thread" data-info-item data-search="${t.title.toLowerCase()}" data-open-thread="${t.id}" data-surface="${t.surface}" title="Open thread">
+      <span class="info-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
+      <span class="info-thread__body"><span class="info-thread__title">${t.title}</span><span class="info-thread__meta">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.closed ? ' · closed' : ''}</span></span>
+      <span class="info-thread__count">${t.messages.length}</span>
+    </button>`).join('')
+  }
   if (tab === 'members') {
     return `<div class="info-section">Online — ${INFO_MEMBERS.online.length}</div>${INFO_MEMBERS.online.map(m => infoMemberRow(m, true)).join('')}
       <div class="info-section">Offline — ${INFO_MEMBERS.offline.length}</div>${INFO_MEMBERS.offline.map(m => infoMemberRow(m, false)).join('')}`
@@ -172,7 +181,7 @@ function renderInfoBody(tab) {
     <span class="info-link__body"><span class="info-link__title">${l.title}</span><span class="info-link__url">${l.url}</span><span class="info-link__meta">${l.name} · ${l.time}</span></span>
   </a>`).join('')
 }
-function renderInfoPanel(tab) {
+function renderInfoPanel(tab, surface = 'channel') {
   const nav = INFO_TABS.map(([k, label]) => `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}">${label}</button>`).join('')
   return `
     <div class="info-panel">
@@ -182,7 +191,7 @@ function renderInfoPanel(tab) {
       </div>
       <div class="info-panel__tabs">${nav}</div>
       <div class="info-panel__search">${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>
-      <div class="info-panel__body" data-info-body>${renderInfoBody(tab)}</div>
+      <div class="info-panel__body" data-info-body>${renderInfoBody(tab, surface)}</div>
     </div>`
 }
 const infoTabOf = (p) => { const v = p.get('info'); if (INFO_TABS.some(([k]) => k === v)) return v; return v === '1' ? 'members' : null }
@@ -585,6 +594,8 @@ function bindThreadAffordances(p, view) {
   scope.querySelectorAll('.thread-card[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
   // "from thread <name>" tag on a copied-to-parent post → open that thread
   scope.querySelectorAll('.message__thread-ref-link[data-open-thread]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface) }))
+  // Details → Threads tab: clicking a thread opens it (openThreadPanel closes Details)
+  document.querySelectorAll('.info-thread[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
 
   // channel-list thread rows (epic §22): desktop → side panel; mobile → full-screen thread that
   // returns to the mobile channel+thread list (from=mlist)
