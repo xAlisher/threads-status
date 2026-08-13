@@ -493,6 +493,8 @@ function bindThreadAffordances(p, view) {
 
   // open a thread from its in-chat card (in the chat → back returns to the chat)
   scope.querySelectorAll('.thread-card[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
+  // "from thread <name>" tag on a copied-to-parent post → open that thread
+  scope.querySelectorAll('.message__thread-ref-link[data-open-thread]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface) }))
 
   // channel-list thread rows (epic §22): desktop → side panel; mobile → full-screen thread that
   // returns to the mobile channel+thread list (from=mlist)
@@ -749,7 +751,7 @@ function renderCenterPanel(revamp, panelOpen = false, mobile = false, chat = 'co
   const ctx = CHATS[chat] || CHATS.community
   // copied-to-parent posts from threads (epic §3.1) — appended live to the channel stream (revamp only)
   const copied = revamp && ctx.surface === 'channel' ? store.parentPosts('channel') : []
-  const copiedHtml = copied.map(pp => msg(pp.name, pp.initial, pp.color, pp.time, pp.text, { id: pp.id, threadRef: pp.threadTitle })).join('')
+  const copiedHtml = copied.map(pp => msg(pp.name, pp.initial, pp.color, pp.time, pp.text, { id: pp.id, threadRef: pp.threadTitle, threadRefId: pp.threadId, threadRefSurface: ctx.surface })).join('')
   const header = mobile ? chatHeaderMobile(ctx) : chatHeaderDesktop(ctx, panelOpen)
   return `
     ${header}
@@ -848,11 +850,14 @@ export function formatGroup() {
    reply, pinned indicator, full header (name + delivery), text, reactions
    Options: { reactions, pinned, pinnedBy, reply, replyTo, replyText, delivery, edited, continued } */
 export function msg(name, initial, color, time, text, opts = {}) {
-  const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '', id = '', threadRef = '', sending = false, mention = false } = opts
+  const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '', id = '', threadRef = '', threadRefId = '', threadRefSurface = 'channel', sending = false, mention = false } = opts
   const stateClass = `${pinned ? ' message--pinned' : ''}${sending ? ' message--sending' : ''}${mention ? ' message--mention' : ''}`
   const idAttr = id ? ` data-msg-id="${id}"` : ''
-  // copied-from-thread tag (epic §3.1) — shows a copied parent post came from a thread
-  const threadRefHtml = threadRef ? `<span class="message__thread-ref">${THREAD_GLYPH}<span>from thread “${threadRef}”</span></span>` : ''
+  // copied-from-thread tag (epic §3.1) — "replied to a thread: #<name>", the name links back to the thread
+  const threadName = threadRefId
+    ? `<button type="button" class="message__thread-ref-link" data-open-thread="${threadRefId}" data-surface="${threadRefSurface}">#${threadRef}</button>`
+    : `#${threadRef}`
+  const threadRefHtml = threadRef ? `<span class="message__thread-ref">replied to a thread: ${threadName}</span>` : ''
 
   // Pinned indicator
   const pinnedHtml = pinned ? `
@@ -914,8 +919,8 @@ export function msg(name, initial, color, time, text, opts = {}) {
       <div class="message${stateClass}"${idAttr}>
         ${pinnedHtml}${replyHtml}
         <div class="message__body message__body--continued">
-          <div class="message__text">${text}${editedHtml}</div>
           ${threadRefHtml}
+          <div class="message__text">${text}${editedHtml}</div>
           ${reactionsHtml}
         </div>
         ${quickActions(isSelf, pinned)}
@@ -935,8 +940,8 @@ export function msg(name, initial, color, time, text, opts = {}) {
             <span class="message__time">${time}</span>
             ${deliveryHtml}
           </div>
-          <div class="message__text">${text}${editedHtml}</div>
           ${threadRefHtml}
+          <div class="message__text">${text}${editedHtml}</div>
           ${reactionsHtml}
         </div>
       </div>

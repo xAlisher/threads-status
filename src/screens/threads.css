@@ -217,8 +217,10 @@
 .channel-thread__pin { font-size: 11px; }
 
 /* copied-from-thread tag on a parent message (epic §3.1) */
-.message__thread-ref { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: var(--font-size-aside); color: var(--base-color-1); }
+.message__thread-ref { display: inline-flex; align-items: center; gap: 4px; margin: 1px 0 2px; font-size: var(--font-size-additional); color: var(--base-color-1); }
 .message__thread-ref svg { width: 13px; height: 13px; }
+.message__thread-ref-link { border: none; background: none; padding: 0; margin: 0; font: inherit; color: var(--primary-color-1); font-weight: 600; cursor: pointer; }
+.message__thread-ref-link:hover { text-decoration: underline; }
 
 /* ---- toast ---- */
 .thread-toast { position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; background: var(--direct-color-1); color: var(--base-color-4); font-size: var(--font-size-additional); font-weight: 500; box-shadow: 0 6px 24px rgba(0,0,0,.4); z-index: 60; white-space: nowrap; }
