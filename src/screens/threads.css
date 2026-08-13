@@ -64,7 +64,7 @@
 .thread-copy__check:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: 2px; }
 
 /* ---- mobile composer (Figma DS 13030-108833): borderless text on top, outlined icon toolbar + blue send ---- */
-.mcomposer { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 6px; flex-shrink: 0; }
+.mcomposer { display: flex; flex-direction: column; gap: 6px; padding: 4px 10px 8px; flex-shrink: 0; background: var(--base-color-3); border-top: 1px solid var(--base-color-2); border-radius: 16px 16px 0 0; }
 .mcomposer__handle { width: 32px; height: 5px; border-radius: 2.5px; background: var(--direct-color-7); margin: 6px auto 2px; flex-shrink: 0; } /* input-drawer grab handle (Figma) */
 .mcomposer__field { width: 100%; box-sizing: border-box; padding: 4px 16px; min-height: 24px; max-height: 120px; background: transparent; border: none; resize: none; outline: none; color: var(--direct-color-1); font-family: var(--font-family-base); font-size: 15px; line-height: 1.45; letter-spacing: -0.9px; }
 .mcomposer__field::placeholder { color: var(--base-color-1); }
