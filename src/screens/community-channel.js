@@ -192,18 +192,48 @@ function msgContextMenu(isSelf) {
     </div>`
 }
 
-// in-chat thread card under a root message (epic §4) — data-driven from the store:
-// title · N replies · participant avatars · new/unread dot · closed variant.
+// relative "17h ago" stamp for the in-chat last-message line (#21932 §2)
+function relAgo(ts) {
+  const d = Date.now() - ts, m = 60000, h = 60 * m, day = 24 * h
+  if (d < m) return 'just now'
+  if (d < h) return `${Math.floor(d / m)}m ago`
+  if (d < day) return `${Math.floor(d / h)}h ago`
+  if (d < 7 * day) return `${Math.floor(d / day)}d ago`
+  return `${Math.floor(d / (7 * day))}w ago`
+}
+
+// in-chat thread card under a root message (epic §4 / #21932) — data-driven from the store:
+// title · N replies · participant avatars · new/unread dot · last-message line · closed & deleted variants.
 function threadCard(t) {
+  // deleted thread → tombstone (not clickable; the thread is gone) — #21932 §4
+  if (t.deleted) {
+    return `
+    <div class="thread-card thread-card--deleted">
+      <span class="thread-card__icon">${THREAD_GLYPH}</span>
+      <span class="thread-card__main">
+        <span class="thread-card__title">This thread was deleted</span>
+      </span>
+    </div>`
+  }
   const people = store.participants(t)
   const stack = `<span class="thread-ava-stack">${people.slice(0, 4).map((p, i) => `<span class="thread-ava" style="background:${p.c};z-index:${people.length - i}">${p.i}</span>`).join('')}${people.length > 4 ? `<span class="thread-ava thread-ava--more">+${people.length - 4}</span>` : ''}</span>`
   const closed = t.closed
+  // last-message preview: sender avatar + name + text + "17h ago" (#21932 §2e)
+  const lm = t.messages[t.messages.length - 1]
+  const last = lm ? `
+        <span class="thread-card__last">
+          <span class="thread-card__last-ava" style="background:${lm.color || '#4360DF'}">${lm.initial || '?'}</span>
+          <span class="thread-card__last-name">${lm.name}</span>
+          <span class="thread-card__last-text">${lm.text}</span>
+          <span class="thread-card__last-time">${relAgo(lm.ts)}</span>
+        </span>` : ''
   return `
     <button class="thread-card${closed ? ' thread-card--closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}">
       <span class="thread-card__icon">${closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
       <span class="thread-card__main">
         <span class="thread-card__title">${t.title}${closed ? ' <span class="thread-card__closed">· closed</span>' : ''}</span>
         <span class="thread-card__meta">${stack}<span class="thread-card__replies">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></span>
+        ${last}
       </span>
       ${!closed && t.followed && t.unread ? '<span class="thread-card__dot" title="New messages"></span>' : ''}
     </button>`
@@ -360,7 +390,7 @@ function bindThreadAffordances(p, view) {
 
   // in-chat thread cards — data-driven: a card under every message that has a thread (epic §4/§20)
   msgs.forEach(mEl => {
-    const t = store.threadForParent(mEl.dataset.msgId, surface)
+    const t = store.threadForParentAny(mEl.dataset.msgId, surface)
     if (t) mEl.insertAdjacentHTML('afterend', threadCard(t))
   })
 

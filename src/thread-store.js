@@ -92,6 +92,17 @@ function seed() {
         followed: false, muted: false, closed: false, deleted: false, keptVisible: false,
         unread: false, lastActivityTs: now - 2 * hr,
       },
+      {
+        // deleted thread — still depicted in-chat as a tombstone under its parent (#21932 §4)
+        id: 't-deleted', surface: 'channel', channelLabel: '# general', parentMsgId: 'cc-3',
+        parentMsg: ['Elena', 'E', '#D37EF4', '10:30', 'Exactly. The design system lives in the browser now, not in Figma. Agent-readable and human-visible at the same time.', { ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' }],
+        title: 'Figma vs browser',
+        messages: [
+          { id: 'del1', name: 'Kai', initial: 'K', color: '#FE8F59', time: '10:31', text: 'Does this kill the Figma handoff entirely?', own: false, ts: now - 5 * hr, opts: {} },
+        ],
+        followed: false, muted: false, closed: false, deleted: true, keptVisible: false,
+        unread: false, lastActivityTs: now - 5 * hr,
+      },
     ],
   }
 }
@@ -146,6 +157,10 @@ export function allThreads() { return ensure().threads.filter(t => !t.deleted) }
 // threads to show under a parent message in the channel (the in-chat card)
 export function threadForParent(parentMsgId, surface = 'channel') {
   return ensure().threads.find(t => t.parentMsgId === parentMsgId && t.surface === surface && !t.deleted) || null
+}
+// any thread incl. deleted — the in-chat card renders a "deleted" tombstone for these (#21932 §4)
+export function threadForParentAny(parentMsgId, surface = 'channel') {
+  return ensure().threads.find(t => t.parentMsgId === parentMsgId && t.surface === surface) || null
 }
 
 // channel-list rows (epic §6): active/followed threads that haven't disappeared (§6.1)
