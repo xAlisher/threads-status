@@ -39,7 +39,7 @@ function seed() {
           { id: 'r2', name: 'You', initial: 'A', color: '#4360DF', time: '10:33', text: 'Thinking 3 levels max. Beyond that we collapse older replies.', own: true, ts: now - 38 * min, opts: { delivery: 'delivered' } },
         ],
         followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
-        unread: true, lastActivityTs: now - 3 * min,
+        unread: true, newCount: 2, lastActivityTs: now - 3 * min,
       },
       {
         id: 't-design', surface: 'channel', channelLabel: '# design', parentMsgId: 'm3',
@@ -80,7 +80,7 @@ function seed() {
           { id: 'gr1', name: 'You', initial: 'A', color: '#4360DF', time: '11:05', text: 'Off by default — least surprise.', own: true, ts: now - 20 * min, opts: { delivery: 'delivered' } },
         ],
         followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
-        unread: true, lastActivityTs: now - 6 * min,
+        unread: true, newCount: 1, lastActivityTs: now - 6 * min,
       },
       {
         id: 't-dm', surface: 'dm', channelLabel: 'carmen.eth', parentMsgId: 'dm1',

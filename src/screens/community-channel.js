@@ -235,7 +235,7 @@ function threadCard(t) {
         <span class="thread-card__meta">${stack}<span class="thread-card__replies">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></span>
         ${last}
       </span>
-      ${!closed && t.followed && t.unread ? '<span class="thread-card__dot" title="New messages"></span>' : ''}
+      ${!closed && t.followed && t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : ''}
     </button>`
 }
 
@@ -394,6 +394,27 @@ function bindThreadAffordances(p, view) {
     if (t) mEl.insertAdjacentHTML('afterend', threadCard(t))
   })
 
+  // connector spine: line from the parent message's avatar down to the centre of its thread card (#21932)
+  const drawSpines = () => scope.querySelectorAll('.thread-card:not(.thread-card--deleted)').forEach(card => {
+    const av = card.previousElementSibling?.querySelector('.message__avatar')
+    if (!av) return
+    card.querySelector('.thread-card__spine')?.remove()
+    const cr = card.getBoundingClientRect(), ar = av.getBoundingClientRect()
+    const x0 = ar.left + ar.width / 2 - cr.left   // avatar centre, relative to card
+    const y0 = ar.bottom - cr.top                 // avatar bottom, relative to card
+    const w = -x0, h = cr.height / 2 - y0, R = Math.min(10, w, h)   // elbow into card left-middle
+    if (w <= 0 || h <= 0) return
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('class', 'thread-card__spine')
+    svg.setAttribute('width', w); svg.setAttribute('height', h)
+    svg.style.cssText = `position:absolute;left:${x0}px;top:${y0}px;overflow:visible;pointer-events:none`
+    svg.innerHTML = `<path d="M0 0 V${h - R} Q0 ${h} ${R} ${h} H${w}" fill="none" stroke-width="2" stroke-linecap="round"/>`
+    card.style.position = 'relative'
+    card.appendChild(svg)
+  })
+  drawSpines()
+  window.addEventListener('resize', drawSpines)
+
   // real trigger: the hover quick-actions "More" opens the context menu for THAT message (epic §1.1)
   scope.querySelectorAll('.messages .message').forEach(mEl => {
     const moreBtn = mEl.querySelector('.message__qa-btn[aria-label="More"]')
@@ -493,7 +514,7 @@ function renderLeftPanel(revamp) {
       <span class="channel-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
       <span class="channel-thread__name">${t.title}</span>
       ${t.keptVisible ? `<span class="channel-thread__pin" title="Kept visible">${CHANNEL_ICONS.pinHeader}</span>` : ''}
-      ${t.followed && t.unread ? '<span class="channel-thread__dot" title="New messages"></span>' : `<span class="channel-thread__count">${t.messages.length}</span>`}
+      ${t.followed && t.unread ? `<span class="channel-thread__count channel-thread__count--unread" title="New messages">${t.newCount || 1}</span>` : `<span class="channel-thread__count">${t.messages.length}</span>`}
     </button>`).join('')
   return `
     <div class="community-header">
@@ -632,7 +653,7 @@ function renderCenterPanel(revamp, panelOpen = false, mobile = false) {
       <div class="messages__day-separator">Today</div>
       ${msg('Elena', 'E', '#D37EF4', '10:23', 'Just switched the whole design system to CSS tokens. Agents can now restyle screens by editing one file.', { id: 'cc-0', delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}
       ${msg('Marcus', 'M', '#26A69A', '10:25', '11 themes built in one session — Nord, Dracula, Solarized, even a hacker green-on-black one. All live-swappable.', { id: 'cc-1', reactions: ['👍 3', '🔥 1'], delivery: 'delivered', senderId: '0x04d7e1...a92b05' })}
-      ${msg('You', 'A', '#4360DF', '10:28', 'The best part is the auditor agent catches pixel mismatches before merge. No more "does this match the spec?" debates.', { id: 'cc-2', delivery: 'delivered', reply: true, replyTo: 'Elena', replyInitial: 'E', replyColor: '#D37EF4', replyText: 'Just switched the whole design system to CSS tokens. Agents can now restyle screens by editing one file.' })}
+      ${msg('You', 'A', '#4360DF', '10:28', 'The best part is the auditor agent catches pixel mismatches before merge. No more "does this match the spec?" debates.', { id: 'cc-2', delivery: 'delivered' })}
       ${msg('Elena', 'E', '#D37EF4', '10:30', 'Exactly. The design system lives in the browser now, not in Figma. Agent-readable and human-visible at the same time.', { id: 'cc-3', delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}
       ${msg('Elena', '', '', '', 'No export pipeline, no handoff docs. Change a token, see it everywhere instantly.', { id: 'cc-4', continued: true })}
       ${msg('Kai', 'K', '#FE8F59', '10:34', 'How long did the full pipeline take? QML source to browser-ready with audited components?', { id: 'cc-5', pinned: true, pinnedBy: 'Marcus', senderId: '0x04f3c8...7d1e02' })}

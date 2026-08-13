@@ -124,8 +124,14 @@
 .thread-card__last-name { font-weight: 600; color: var(--direct-color-1); flex-shrink: 0; }
 .thread-card__last-text { color: var(--base-color-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
 .thread-card__last-time { color: var(--base-color-1); flex-shrink: 0; }
-/* deleted tombstone (#21932 §4) — not clickable, muted */
-.thread-card--deleted { cursor: default; opacity: .6; }
+/* new-message counter badges (replacing the old dots) — #21932 §2 */
+.thread-card__count, .thread-row__count { min-width: 18px; height: 18px; border-radius: 9px; background: var(--primary-color-1); color: var(--indirect-color-1); font-size: var(--font-size-aside); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; flex-shrink: 0; box-sizing: border-box; }
+.thread-card__count { margin-left: 4px; }
+.thread-row__count { margin-left: 4px; }
+/* thread-card spine connector: theme-aware stroke */
+.thread-card__spine path { stroke: var(--separator); }
+/* deleted tombstone (#21932 §4) — not clickable, muted, icon+label centred */
+.thread-card--deleted { cursor: default; opacity: .6; align-items: center; }
 .thread-card--deleted:hover { background: var(--base-color-3); }
 .thread-card--deleted .thread-card__icon { color: var(--base-color-1); }
 .thread-card--deleted .thread-card__title { font-weight: 400; font-style: italic; color: var(--base-color-1); }
