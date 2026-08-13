@@ -60,7 +60,8 @@ export function renderCommunityChannel(view, ver) {
   }
   const infoTab = revamp ? infoTabOf(p) : null
   const center = renderCenterPanel(revamp, !!tpanel, mobile, chat)
-  const right = tpanel ? renderThreadPanel(p) : (infoTab ? renderInfoPanel(infoTab) : (ctx.members ? renderRightPanel() : null))
+  // Details takes the right column; closing it falls back to the open thread, then members
+  const right = infoTab ? renderInfoPanel(infoTab) : (tpanel ? renderThreadPanel(p) : (ctx.members ? renderRightPanel() : null))
   return { nav, left, center, right }
 }
 
@@ -114,6 +115,8 @@ function renderRightPanel() {
 }
 // ---- "All info" panel (#21971): Members · Media · Pins · Links, viewable + searchable ----
 const INFO_CLOSE = `<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
+// info.svg (Status) — "i" in a circle, opens the Details panel
+export const INFO_ICON = `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor"/></svg>`
 const LINK_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M9.5 14.5 14.5 9.5M8 12l-2 2a3 3 0 1 0 4.24 4.24l2-2M16 12l2-2a3 3 0 1 0-4.24-4.24l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 const INFO_MEMBERS = {
   online: [
@@ -160,7 +163,7 @@ function renderInfoBody(tab) {
   }
   if (tab === 'pins') {
     return INFO_PINS.map(p => `<div class="info-item info-pin" data-info-item data-search="${(p.text + ' ' + p.name).toLowerCase()}">
-      <div class="member-item__avatar member-item__avatar--sm" style="background:${p.color}">${p.initial}</div>
+      <div class="message__avatar" style="background:${p.color}">${p.initial}</div>
       <div class="info-pin__body"><div class="info-pin__head"><span class="info-pin__name">${p.name}</span><span class="info-pin__time">${p.time}</span></div><div class="info-pin__text">${p.text}</div></div>
     </div>`).join('')
   }
@@ -345,7 +348,7 @@ const rerender = () => window.dispatchEvent(new Event('app:rerender'))
 // open a thread (or the create flow) in the right-hand panel, replacing Members. View-only URL state.
 function openThreadPanel(spec) {
   const u = new URL(location.href)
-  u.searchParams.delete('copy')
+  u.searchParams.delete('copy'); u.searchParams.delete('info')   // opening a thread closes the Details panel
   if (spec.create) {
     if (spec.parentMsgId && spec.parentMsg) store.setPendingParent(spec.parentMsgId, spec.parentMsg)
     u.searchParams.set('tpanel', 'create')
@@ -507,7 +510,7 @@ function bindThreadAffordances(p, view) {
   // community "…" menu: Invite member / Hide-Show threads
   document.querySelector('[data-community-more]')?.addEventListener('click', (e) => { e.stopPropagation(); openCommunityMenu(e.currentTarget) })
   // "All info" panel (#21971): open/close/switch tab (in-place rerender) + search-filter the active tab
-  const setInfo = (tab) => { const u = new URL(location.href); tab ? u.searchParams.set('info', tab) : u.searchParams.delete('info'); u.searchParams.delete('tpanel'); history.replaceState(null, '', u); rerender() }
+  const setInfo = (tab) => { const u = new URL(location.href); tab ? u.searchParams.set('info', tab) : u.searchParams.delete('info'); history.replaceState(null, '', u); rerender() }
   document.querySelectorAll('[data-open-info]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); setInfo(el.dataset.openInfo) }))
   document.querySelector('[data-close-info]')?.addEventListener('click', () => setInfo(null))
   document.querySelectorAll('[data-info-tab]').forEach(el => el.addEventListener('click', () => setInfo(el.dataset.infoTab)))
@@ -770,9 +773,8 @@ function chatHeaderMobile(ctx) {
         </div>
       </button>
       <div class="chat-header__actions chat-header__actions--mobile">
-        <button class="chat-header__round-btn" title="Search" aria-label="Search">${CHANNEL_ICONS.search}</button>
-        ${ctx.members ? `<button class="chat-header__round-btn" title="Members" aria-label="Members">${CHANNEL_ICONS.groupChat}</button>` : ''}
-        <button class="chat-header__round-btn" title="More" aria-label="More">${CHANNEL_ICONS.more}</button>
+        <button class="chat-header__round-btn" data-open-info="media" title="Search" aria-label="Search">${CHANNEL_ICONS.search}</button>
+        <button class="chat-header__round-btn" data-open-info="members" title="Details" aria-label="Details">${INFO_ICON}</button>
       </div>
     </div>`
 }
@@ -827,9 +829,8 @@ function chatHeaderDesktop(ctx, panelOpen) {
         </div>
       </div>
       <div class="chat-header__actions">
-        <button class="chat-header__action-btn" data-open-info="media" title="Search & info">${CHANNEL_ICONS.search}</button>
-        ${ctx.members ? `<button class="chat-header__action-btn${panelOpen ? ' active' : ''}" data-open-info="members" data-members-btn title="Members" aria-pressed="${panelOpen}">${CHANNEL_ICONS.groupChat}</button>` : ''}
-        <button class="chat-header__action-btn" data-open-info="members" title="Details (Members · Media · Pins · Links)">${CHANNEL_ICONS.more}</button>
+        <button class="chat-header__action-btn" data-open-info="media" title="Search">${CHANNEL_ICONS.search}</button>
+        <button class="chat-header__action-btn" data-open-info="members" title="Details (Members · Media · Pins · Links)" aria-label="Details">${INFO_ICON}</button>
       </div>
     </div>`
 }
