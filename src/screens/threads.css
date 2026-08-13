@@ -195,7 +195,6 @@
 .channel-threads { display: flex; flex-direction: column; margin: 2px 0 4px 0; }
 .channel-thread { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; padding: 5px 8px 5px 30px; border: none; background: transparent; cursor: pointer; text-align: left; border-radius: 8px; color: var(--base-color-1); position: relative; }
 .channel-thread:hover { background: var(--chat-list-item-hover-bg, var(--base-color-2)); }
-.channel-thread::before { content: ''; position: absolute; left: 18px; top: 0; bottom: 50%; width: 1px; background: var(--separator); }
 .channel-thread__glyph { width: 15px; height: 15px; flex-shrink: 0; display: inline-flex; }
 .channel-thread__glyph svg { width: 15px; height: 15px; }
 .channel-thread__name { flex: 1; min-width: 0; font-size: var(--font-size-additional); color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
