@@ -11,9 +11,11 @@
 /* let the thread composer shrink to a narrow width (desktop panel AND mobile full-screen thread) —
    flex children default to min-width:auto and would otherwise overflow, clipping the format icons */
 .thread-view__composer .chat-input__row, .thread-view__composer .chat-input__box { min-width: 0; }
-/* action buttons moved BELOW the input as a bottom bar (buttons left, send pushed right) */
+/* action buttons moved BELOW the input as a bottom bar (+, format, emoji, gif, sticker) */
 .thread-view__composer .chat-input__actions--below { margin: 0; padding: 2px 6px 4px; }
-.thread-view__composer .chat-input__actions--below .chat-input__btn--send { margin-left: auto; }
+/* send sits in the input's upper-right corner */
+.thread-view__composer .chat-input__input-row { align-items: flex-start; }
+.thread-view__composer .chat-input__input-row .chat-input__btn--send { margin: 4px 4px 0 0; }
 /* thread glyph to the left of the title in the desktop panel header */
 .thread-view__lead-icon { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--base-color-1); }
 .thread-view__lead-icon svg { width: 20px; height: 20px; }

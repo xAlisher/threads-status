@@ -83,18 +83,18 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
   return `
     <div class="chat-input thread-view__composer">
       <div class="chat-input__row">
-        <button class="chat-input__cmd-btn" title="Commands" aria-label="Commands">${CHANNEL_ICONS.chatCommands}</button>
         <div class="chat-input__box">
           <div class="chat-input__input-row">
             <textarea class="chat-input__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
+            <button class="chat-input__btn chat-input__btn--send" data-thread-send title="Send" aria-label="Send">${CHANNEL_ICONS.send}</button>
           </div>
           ${copyInline}
           <div class="chat-input__actions chat-input__actions--below">
+            <button class="chat-input__btn" title="Commands" aria-label="Commands">${CHANNEL_ICONS.chatCommands}</button>
             ${formatGroup()}
             <button class="chat-input__btn" title="Emoji" aria-label="Emoji">${CHANNEL_ICONS.emojis}</button>
             <button class="chat-input__btn" title="GIF" aria-label="GIF">${CHANNEL_ICONS.gif}</button>
             <button class="chat-input__btn" title="Stickers" aria-label="Stickers">${CHANNEL_ICONS.stickers}</button>
-            <button class="chat-input__btn chat-input__btn--send" data-thread-send title="Send" aria-label="Send">${CHANNEL_ICONS.send}</button>
           </div>
         </div>
       </div>
