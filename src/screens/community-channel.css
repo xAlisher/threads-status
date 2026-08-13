@@ -72,6 +72,7 @@
 
 .community-header__invite-btn svg { width: 20px; height: 20px; }
 .community-header__invite-btn:hover { background: var(--background-hover); }
+.community-header__invite-btn[data-community-more] { margin-left: 0; }   /* sits next to invite, not split by auto-margin */
 
 /* ============================================================
    LEFT PANEL: Channel List

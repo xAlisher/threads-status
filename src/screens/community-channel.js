@@ -393,9 +393,37 @@ function readMsg(msgEl) {
   return [name, initial, color, time, text, {}]
 }
 
+// community "…" options menu (left header) — Invite member + Hide/Show threads (#21931 §6.2)
+function openCommunityMenu(anchor) {
+  const root = anchor.closest('.shell__left') || document.querySelector('.shell__left') || anchor.parentElement
+  root.querySelector('.community-more-menu')?.remove()
+  const hidden = areThreadsHidden()
+  const menu = document.createElement('div')
+  menu.className = 'msg-cmenu community-more-menu'
+  menu.setAttribute('role', 'menu')
+  const item = (icon, label, act) => `<button class="msg-cmenu__item" role="menuitem" data-act="${act}">${icon}<span>${label}</span></button>`
+  menu.innerHTML =
+    item(CHANNEL_ICONS.addContact, 'Invite member', 'invite') +
+    item(THREAD_GLYPH, hidden ? 'Show threads' : 'Hide threads', 'toggle-threads')
+  const rect = anchor.getBoundingClientRect(), rootRect = root.getBoundingClientRect()
+  menu.style.position = 'absolute'; menu.style.top = (rect.bottom - rootRect.top + 4) + 'px'
+  menu.style.right = (rootRect.right - rect.right) + 'px'; menu.style.left = 'auto'
+  root.style.position = 'relative'
+  root.appendChild(menu)
+  const close = () => { menu.remove(); document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', onKey) }
+  const acts = { invite: () => {}, 'toggle-threads': () => { setThreadsHidden(!hidden); rerender() } }
+  menu.querySelectorAll('.msg-cmenu__item').forEach(btn => btn.addEventListener('click', () => { acts[btn.dataset.act]?.(); close() }))
+  menu.querySelector('.msg-cmenu__item')?.focus()
+  const dismiss = (e) => { if (!menu.contains(e.target) && e.target !== anchor) close() }
+  const onKey = (e) => { if (e.key === 'Escape') { close(); anchor.focus() } }
+  setTimeout(() => { document.addEventListener('mousedown', dismiss); document.addEventListener('keydown', onKey) }, 0)
+}
+
 function bindThreadAffordances(p, view) {
   const scope = document.querySelector('.shell__center, .shell__mobile-content')
   if (!scope) return
+  // community "…" menu: Invite member / Hide-Show threads
+  document.querySelector('[data-community-more]')?.addEventListener('click', (e) => { e.stopPropagation(); openCommunityMenu(e.currentTarget) })
   // switch chats in the DM/group demo (left messenger list + "back to community")
   document.querySelectorAll('[data-open-chat]').forEach(el => el.addEventListener('click', () => {
     const u = new URL(location.href); const c = el.dataset.openChat
@@ -523,12 +551,17 @@ function navBtn(title, iconSvg, active) {
   return `<button class="shell__nav-btn${active ? ' active' : ''}" title="${title}">${iconSvg}</button>`
 }
 
+// "Hide threads" toggle (community "…" menu) — hides all thread rows from the channel list (#21931 §6.2)
+const THREADS_HIDDEN_KEY = 'threadsHidden'
+const areThreadsHidden = () => { try { return sessionStorage.getItem(THREADS_HIDDEN_KEY) === '1' } catch { return false } }
+const setThreadsHidden = (v) => { try { v ? sessionStorage.setItem(THREADS_HIDDEN_KEY, '1') : sessionStorage.removeItem(THREADS_HIDDEN_KEY) } catch {} }
+
 function renderLeftPanel(revamp) {
   // epic §6: active/followed channel threads surface under their parent channel in the left list,
   // with an unread indicator, honouring §6.1 disappear rules (closed / 1-week-inactive / keep-visible).
   // channelListThreads already applies §6.1 (surface/closed/1-week/keep-visible) + the #22 followed
   // rule — trust it; a secondary parentMsgId filter here wrongly dropped kept-visible/active threads.
-  const genThreads = revamp ? store.channelListThreads('channel') : []
+  const genThreads = (revamp && !areThreadsHidden()) ? store.channelListThreads('channel') : []
   const threadRows = genThreads.map(t => `
     <button class="channel-thread${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="channel" title="Open thread">
       <span class="channel-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
@@ -545,6 +578,7 @@ function renderLeftPanel(revamp) {
           <div class="community-header__members">4,832 members</div>
         </div>
         <button class="community-header__invite-btn" title="Invite contacts">${CHANNEL_ICONS.addContact}</button>
+        <button class="community-header__invite-btn" data-community-more title="Community options" aria-label="Community options" aria-haspopup="true">${CHANNEL_ICONS.more}</button>
       </div>
     </div>
     <div class="channel-list">
