@@ -296,12 +296,24 @@ function bindThreadPanel(p) {
   const queued = store.takeToast()
   if (queued) floatToast(panel, queued)
 
-  // "Send copy" switch — persist to the URL the renderer reads, so a re-render keeps the state
-  panel.querySelector('[data-copy]')?.addEventListener('click', function () {
-    const on = this.getAttribute('aria-checked') !== 'true'
-    this.setAttribute('aria-checked', String(on)); this.classList.toggle('on', on)
+  // "Send copy" checkbox — persist to the URL the renderer reads, so a re-render keeps the state
+  panel.querySelector('[data-copy]')?.addEventListener('change', function () {
+    const on = this.checked
     try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
   })
+  // the row is revealed via :focus-within; pressing the (non-focusable) label text would blur the
+  // textarea on mousedown → row hides mid-click → toggle lost. Keep the textarea focused and drive
+  // the toggle ourselves so a click anywhere on the row reliably flips the box.
+  const copyRow = panel.querySelector('.thread-copy--inline')
+  if (copyRow) {
+    copyRow.addEventListener('mousedown', (e) => e.preventDefault())
+    copyRow.addEventListener('click', function (e) {
+      e.preventDefault()
+      const chk = this.querySelector('[data-copy]'); if (!chk) return
+      chk.checked = !chk.checked
+      chk.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+  }
 
   if (isCreate) {
     bindComposerSend(panel, () => {
@@ -319,7 +331,7 @@ function bindThreadPanel(p) {
     bindComposerSend(panel, () => {
       const inputEl = panel.querySelector('[data-thread-input]')
       const text = (inputEl?.value || '').trim(); if (!text) return
-      const copyOn = panel.querySelector('[data-copy]')?.getAttribute('aria-checked') === 'true'
+      const copyOn = !!panel.querySelector('[data-copy]')?.checked
       store.postReply(threadId, text, { copyToParent: copyOn }) // emit → re-render updates the panel
       requestAnimationFrame(() => {
         document.querySelector('.shell__right [data-thread-input]')?.focus()
