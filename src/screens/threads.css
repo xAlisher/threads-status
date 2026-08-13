@@ -127,7 +127,7 @@
 .thread-card:hover { background: var(--base-color-2); }
 .thread-card__icon { width: 22px; height: 22px; flex-shrink: 0; color: var(--primary-color-1); }
 .thread-card__icon svg { width: 20px; height: 20px; }
-.thread-card__main { display: flex; flex-direction: column; min-width: 0; }
+.thread-card__main { display: flex; flex-direction: column; min-width: 0; flex: 1; }   /* fill so the counter/lock pin to the card's right edge */
 .thread-card__title { font-size: var(--font-size-additional); font-weight: 600; color: var(--direct-color-1); }
 .thread-card__closed { color: var(--base-color-1); font-weight: 400; }
 .thread-card__meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: var(--font-size-aside); color: var(--base-color-1); }
