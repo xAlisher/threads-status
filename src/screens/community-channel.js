@@ -58,10 +58,15 @@ export function renderCommunityChannel(view, ver) {
   if (mobile && p.get('mlist') === '1') {
     return { nav, left, center: `<div class="mobile-list">${left}</div>`, right: null }
   }
-  // Details is the persistent right panel (no separate members pane). Default = Members tab;
-  // a thread takes the column while open, and closing it returns to Details. info=closed hides it.
+  // Details panel: desktop = persistent right column (default Members, no separate members pane);
+  // mobile = full-screen overlay opened only via (i). info=closed hides it.
   const infoParam = revamp ? p.get('info') : null
-  const infoTab = infoParam === 'closed' ? null : (infoTabOf(p) || (revamp && !tpanel ? 'members' : null))
+  const explicitInfo = infoParam === 'closed' ? null : infoTabOf(p)
+  const infoTab = explicitInfo || (revamp && !mobile && !tpanel ? 'members' : null)
+  // mobile: Details takes over the full screen when opened
+  if (mobile && explicitInfo) {
+    return { nav, left, center: renderInfoPanel(explicitInfo, ctx.surface), right: null }
+  }
   const center = renderCenterPanel(revamp, !!tpanel, mobile, chat)
   const right = infoTab ? renderInfoPanel(infoTab, ctx.surface) : (tpanel ? renderThreadPanel(p) : null)
   return { nav, left, center, right }
