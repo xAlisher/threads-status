@@ -55,17 +55,18 @@ const MCOMPOSER_ICONS = {
 // editable composer — reuses .chat-input structure; NOT readonly (epic §3 post/edit).
 // mobile = the Figma DS two-row layout (text on top, outlined icon toolbar + blue send below).
 function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = false } = {}) {
-  // "Send copy to #channel" as an in-composer row — revealed only while the composer is focused (:focus-within)
+  // Slack-style "Send copy to #channel" — a checkbox row INSIDE the composer box, revealed on :focus-within
   const copyInline = copyLabel ? `
-      <div class="thread-copy thread-copy--inline">
-        <span class="thread-copy__label" id="thread-copy-label">${copyLabel}</span>
-        <button type="button" role="switch" aria-checked="${copy}" aria-labelledby="thread-copy-label" class="thread-copy__switch${copy ? ' on' : ''}" data-copy><span class="thread-copy__knob"></span></button>
-      </div>` : ''
+            <label class="thread-copy--inline">
+              <input type="checkbox" class="thread-copy__check" data-copy${copy ? ' checked' : ''} aria-label="${copyLabel}" />
+              <span class="thread-copy__label">${copyLabel}</span>
+            </label>` : ''
   if (mobile) {
     return `
     <div class="chat-input thread-view__composer mcomposer">
       <div class="mcomposer__handle" aria-hidden="true"></div>
       <textarea class="chat-input__field mcomposer__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
+      ${copyInline}
       <div class="mcomposer__bar">
         <div class="mcomposer__actions">
           <button class="mcomposer__btn mcomposer__btn--text" title="Format" aria-label="Format text">Aa</button>
@@ -77,7 +78,6 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
         </div>
         <button class="mcomposer__send" data-thread-send title="Send" aria-label="Send">${MCOMPOSER_ICONS.sendUp}</button>
       </div>
-      ${copyInline}
     </div>`
   }
   return `
@@ -95,9 +95,9 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
               <button class="chat-input__btn chat-input__btn--send" data-thread-send title="Send" aria-label="Send">${CHANNEL_ICONS.send}</button>
             </div>
           </div>
+          ${copyInline}
         </div>
       </div>
-      ${copyInline}
     </div>`
 }
 
@@ -236,12 +236,11 @@ export function bindThreads() {
   const queued = store.takeToast()
   if (queued) floatToast(root, queued)
 
-  // "Send copy to #channel" switch (epic §3.1) — real ARIA switch, keyboard-activatable.
+  // "Send copy to #channel" checkbox (epic §3.1).
   // Persist the choice into the `copy` URL param (which renderThread reads) so posting a reply
-  // — which triggers a re-render — doesn't silently snap the toggle back on/off.
-  root.querySelector('[data-copy]')?.addEventListener('click', function () {
-    const on = this.getAttribute('aria-checked') !== 'true'
-    this.setAttribute('aria-checked', String(on)); this.classList.toggle('on', on)
+  // — which triggers a re-render — doesn't silently snap the checkbox back on/off.
+  root.querySelector('[data-copy]')?.addEventListener('change', function () {
+    const on = this.checked
     try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
   })
 
@@ -272,7 +271,7 @@ export function bindThreads() {
       const inputEl = root.querySelector('[data-thread-input]')
       const text = (inputEl?.value || '').trim()
       if (!text) return
-      const copyOn = root.querySelector('[data-copy]')?.getAttribute('aria-checked') === 'true'
+      const copyOn = !!root.querySelector('[data-copy]')?.checked
       store.postReply(threadId, text, { copyToParent: copyOn })
       // store.emit → main re-renders in place; focus the fresh composer + toast if copied
       requestAnimationFrame(() => {

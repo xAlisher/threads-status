@@ -47,11 +47,15 @@
 .thread-copy__knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--indirect-color-1); transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
 .thread-copy__switch.on { background: var(--primary-color-1); }
 .thread-copy__switch.on .thread-copy__knob { left: 19px; }
-/* in-composer "Send copy to #channel" row — hidden until the composer is focused (Image #13) */
-.thread-copy--inline { display: none; }
+/* Slack-style "Send copy to #channel" checkbox — inside the composer box, revealed on focus */
+.thread-copy--inline { display: none; align-items: center; gap: 8px; cursor: pointer; }
 .chat-input:focus-within .thread-copy--inline { display: flex; }
-.thread-view__composer .thread-copy--inline { margin: 8px -10px -8px; padding: 10px 16px; }         /* full-bleed band under the desktop composer */
-.mcomposer .thread-copy--inline { margin: 6px 0 0; border-radius: 10px; padding: 10px 14px; }        /* mobile: rounded band */
+.chat-input__box .thread-copy--inline { margin: 2px 2px 4px; }
+.mcomposer .thread-copy--inline { margin: 2px 4px 0; }
+.thread-copy__check { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; margin: 0; flex-shrink: 0; border: 1.5px solid var(--direct-color-5); border-radius: 4px; background: transparent; cursor: pointer; position: relative; }
+.thread-copy__check:checked { background: var(--primary-color-1); border-color: var(--primary-color-1); }
+.thread-copy__check:checked::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 8px; border: solid var(--indirect-color-1); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.thread-copy__check:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: 2px; }
 
 /* ---- mobile composer (Figma DS 13030-108833): borderless text on top, outlined icon toolbar + blue send ---- */
 .mcomposer { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 6px; flex-shrink: 0; }
