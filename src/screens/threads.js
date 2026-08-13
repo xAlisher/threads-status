@@ -243,6 +243,19 @@ export function bindThreads() {
     const on = this.checked
     try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
   })
+  // the row is revealed via :focus-within; pressing the (non-focusable) label text would blur the
+  // textarea on mousedown → row hides mid-click → toggle lost. Keep the textarea focused (row stays
+  // visible) and drive the toggle ourselves so a click anywhere on the row reliably flips the box.
+  const copyRow = root.querySelector('.thread-copy--inline')
+  if (copyRow) {
+    copyRow.addEventListener('mousedown', (e) => e.preventDefault())
+    copyRow.addEventListener('click', function (e) {
+      e.preventDefault()
+      const chk = this.querySelector('[data-copy]'); if (!chk) return
+      chk.checked = !chk.checked
+      chk.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+  }
 
   // ---- create flow: Send creates a thread in the model (epic §15/UC1) ----
   if (p.get('tview') === 'create') {
