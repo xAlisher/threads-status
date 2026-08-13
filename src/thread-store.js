@@ -10,7 +10,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 // ---- surfaces: consistent thread experience across chat types (epic: Communities/Group/DM) ----
 export const SURFACES = {
-  channel: { label: '# general',   in: 'in # general',            copy: 'Send copy to # general',   screen: 'chat' },
+  channel: { label: '# general',   in: 'in # general',            copy: 'Send copy to #general',   screen: 'chat' },
   group:   { label: 'Design Team', in: 'in Design Team',          copy: 'Send copy to Design Team', screen: 'group' },
   dm:      { label: 'carmen.eth',  in: 'in chat with carmen.eth', copy: 'Send copy to carmen.eth',  screen: 'dm' },
 }

@@ -50,14 +50,16 @@ export function renderCommunityChannel(view, ver) {
   // desktop only (epic §1): reply-in-thread opens the thread as a side panel replacing Members
   const tpanel = revamp && view === 'desktop' ? p.get('tpanel') : null
   const mobile = view === 'mobile'
+  const chat = revamp ? chatCtx(p) : 'community'   // community | dm | group (#21931 DM/group demo)
+  const ctx = CHATS[chat]
   const nav = renderNav(revamp)
-  const left = renderLeftPanel(revamp)
+  const left = chat === 'community' ? renderLeftPanel(revamp) : renderMessengerLeft(chat)
   // mobile portrait: back from a channel shows the channel + thread list full-screen (StatusSectionLayoutPortrait)
   if (mobile && p.get('mlist') === '1') {
     return { nav, left, center: `<div class="mobile-list">${left}</div>`, right: null }
   }
-  const center = renderCenterPanel(revamp, !!tpanel, mobile)
-  const right = tpanel ? renderThreadPanel(p) : renderRightPanel()
+  const center = renderCenterPanel(revamp, !!tpanel, mobile, chat)
+  const right = tpanel ? renderThreadPanel(p) : (ctx.members ? renderRightPanel() : null)
   return { nav, left, center, right }
 }
 
@@ -394,7 +396,13 @@ function readMsg(msgEl) {
 function bindThreadAffordances(p, view) {
   const scope = document.querySelector('.shell__center, .shell__mobile-content')
   if (!scope) return
-  const surface = 'channel'
+  // switch chats in the DM/group demo (left messenger list + "back to community")
+  document.querySelectorAll('[data-open-chat]').forEach(el => el.addEventListener('click', () => {
+    const u = new URL(location.href); const c = el.dataset.openChat
+    c === 'community' ? u.searchParams.delete('chat') : u.searchParams.set('chat', c)
+    u.searchParams.delete('tpanel'); u.searchParams.delete('copy'); location.search = u.searchParams.toString()
+  }))
+  const surface = CHATS[chatCtx(p)].surface   // channel | dm | group
   const desktop = view === 'desktop'
   const msgs = scope.querySelectorAll('.messages .message[data-msg-id]')
   // on desktop, opening an existing thread shows it in the side panel; mobile keeps the full-screen nav
@@ -605,63 +613,45 @@ const ARROW_LEFT = `<svg viewBox="0 0 24 24" fill="none"><path d="m10.5303 6.530
 //   + action buttons search·group-chat·more (StatusFlatRoundButton 44×44, icon 24, spacing 8).
 // Sources: StatusToolBar.qml:20-40, ChatHeaderContentView.qml:17-129, StatusChatInfoButton.qml:24-208,
 //   StatusFlatRoundButton.qml:15,114, theme.cpp:53-90 (halfPadding 8, smallPadding 10).
-function mobileChatHeader() {
+function chatHeaderAvatar(ctx) {
+  return ctx.kind === 'community'
+    ? `<div class="chat-header__avatar" style="background:var(--misc-color-5);font-size:18px;color:var(--indirect-color-1)">#</div>`
+    : `<div class="chat-header__avatar" style="background:${ctx.avatarColor};font-size:16px;color:#fff">${ctx.avatar}</div>`
+}
+function chatHeaderTitleRow(ctx) {
+  return ctx.channelIcon
+    ? `<span class="chat-header__channel-icon">${CHANNEL_ICONS.channel}</span><span class="chat-header__title">${ctx.title}</span>`
+    : `<span class="chat-header__title">${ctx.title}</span>`
+}
+function chatHeaderSubtitle(ctx, pinnedSuffix) {
+  return ctx.kind === 'community'
+    ? `<span class="chat-header__description">${ctx.subtitle}</span><span class="chat-header__separator"></span><span class="chat-header__pin-icon">${CHANNEL_ICONS.pinHeader}</span><span class="chat-header__pin-text">${ctx.pinned} pinned${pinnedSuffix}</span>`
+    : `<span class="chat-header__description">${ctx.subtitle}</span>`
+}
+function chatHeaderMobile(ctx) {
   return `
     <div class="chat-header chat-header--mobile">
       <button class="chat-header__back" title="Back" aria-label="Back">${ARROW_LEFT}</button>
       <button class="chat-header__info chat-header__info--mobile">
-        <div class="chat-header__avatar" style="background:var(--misc-color-5);font-size:18px;color:var(--indirect-color-1)">#</div>
+        ${chatHeaderAvatar(ctx)}
         <div class="chat-header__text">
-          <div class="chat-header__title-row">
-            <span class="chat-header__channel-icon">${CHANNEL_ICONS.channel}</span>
-            <span class="chat-header__title">general</span>
-          </div>
-          <div class="chat-header__subtitle-row">
-            <span class="chat-header__description">General discussion about Status</span>
-            <span class="chat-header__separator"></span>
-            <span class="chat-header__pin-icon">${CHANNEL_ICONS.pinHeader}</span>
-            <span class="chat-header__pin-text">3 pinned</span>
-          </div>
+          <div class="chat-header__title-row">${chatHeaderTitleRow(ctx)}</div>
+          <div class="chat-header__subtitle-row">${chatHeaderSubtitle(ctx, '')}</div>
         </div>
       </button>
       <div class="chat-header__actions chat-header__actions--mobile">
         <button class="chat-header__round-btn" title="Search" aria-label="Search">${CHANNEL_ICONS.search}</button>
-        <button class="chat-header__round-btn" title="Members" aria-label="Members">${CHANNEL_ICONS.groupChat}</button>
+        ${ctx.members ? `<button class="chat-header__round-btn" title="Members" aria-label="Members">${CHANNEL_ICONS.groupChat}</button>` : ''}
         <button class="chat-header__round-btn" title="More" aria-label="More">${CHANNEL_ICONS.more}</button>
       </div>
     </div>`
 }
 
-function renderCenterPanel(revamp, panelOpen = false, mobile = false) {
-  // copied-to-parent posts from threads (epic §3.1) — appended live to the channel stream (revamp only)
-  const copied = revamp ? store.parentPosts('channel') : []
-  const copiedHtml = copied.map(pp => msg(pp.name, pp.initial, pp.color, pp.time, pp.text, { id: pp.id, threadRef: pp.threadTitle })).join('')
-  const header = mobile ? mobileChatHeader() : `
-    <div class="chat-header">
-      <div class="chat-header__info">
-        <div class="chat-header__avatar" style="background:var(--misc-color-5);font-size:18px;color:var(--indirect-color-1)">#</div>
-        <div class="chat-header__text">
-          <div class="chat-header__title-row">
-            <span class="chat-header__channel-icon">${CHANNEL_ICONS.channel}</span>
-            <span class="chat-header__title">general</span>
-          </div>
-          <div class="chat-header__subtitle-row">
-            <span class="chat-header__description">General discussion about Status</span>
-            <span class="chat-header__separator"></span>
-            <span class="chat-header__pin-icon">${CHANNEL_ICONS.pinHeader}</span>
-            <span class="chat-header__pin-text">3 pinned messages</span>
-          </div>
-        </div>
-      </div>
-      <div class="chat-header__actions">
-        <button class="chat-header__action-btn" title="Search">${CHANNEL_ICONS.search}</button>
-        <button class="chat-header__action-btn${panelOpen ? ' active' : ''}" data-members-btn title="Members" aria-pressed="${panelOpen}">${CHANNEL_ICONS.groupChat}</button>
-        <button class="chat-header__action-btn" title="More">${CHANNEL_ICONS.more}</button>
-      </div>
-    </div>`
+// ---- Chat surfaces for the threads demo: the community channel + a DM + a group (#21931/epic) ----
+// Each supplies a header + a message set; the threaded message carries the store's parentMsgId
+// (dm1 / g1) so bindThreadAffordances renders the in-chat thread card under it.
+function communityMessages(copiedHtml) {
   return `
-    ${header}
-    <div class="messages">
       <div class="messages__day-separator">Today</div>
       ${msg('Elena', 'E', '#D37EF4', '10:23', 'Just switched the whole design system to CSS tokens. Agents can now restyle screens by editing one file.', { id: 'cc-0', delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}
       ${msg('Marcus', 'M', '#26A69A', '10:25', '11 themes built in one session — Nord, Dracula, Solarized, even a hacker green-on-black one. All live-swappable.', { id: 'cc-1', reactions: ['👍 3', '🔥 1'], delivery: 'delivered', senderId: '0x04d7e1...a92b05' })}
@@ -671,7 +661,59 @@ function renderCenterPanel(revamp, panelOpen = false, mobile = false) {
       ${msg('Kai', 'K', '#FE8F59', '10:34', 'How long did the full pipeline take? QML source to browser-ready with audited components?', { id: 'cc-5', pinned: true, pinnedBy: 'Marcus', senderId: '0x04f3c8...7d1e02' })}
       ${msg('Marcus', 'M', '#26A69A', '10:36', 'About 3 hours with two agents running — builder writes code, auditor verifies against QML. Cost maybe $25 in API tokens.', { id: 'cc-6', reactions: ['✅ 2*', '🎉 1'], delivery: 'delivered', edited: true, senderId: '0x04d7e1...a92b05' })}
       ${msg('You', 'A', '#4360DF', '10:38', 'Font schemes too — switch between Inter, IBM Plex, Serif, Monospace from a dropdown. Layout holds across all of them.', { id: 'cc-7', delivery: 'sent' })}
-      ${copiedHtml}
+      ${copiedHtml}`
+}
+function dmMessages() {
+  return `
+      <div class="messages__day-separator">Today</div>
+      ${msg('carmen.eth', 'C', '#887AF9', '14:12', 'Hey! Did you get a chance to look at the new avatar sizes?', { id: 'dm-0', ensName: 'carmen.eth' })}
+      ${msg('You', 'A', '#4360DF', '14:15', 'Yeah — 32 in the member list, 24 in the channel list, right?', { id: 'dm-1', delivery: 'delivered' })}
+      ${msg('carmen.eth', 'C', '#887AF9', '14:20', 'Two topics at once — let me thread the design one.', { id: 'dm1', ensName: 'carmen.eth' })}
+      ${msg('You', 'A', '#4360DF', '14:22', 'Good call — easier to follow that way.', { id: 'dm-3', delivery: 'sent' })}`
+}
+function groupMessages() {
+  return `
+      <div class="messages__day-separator">Today</div>
+      ${msg('Marcus', 'M', '#26A69A', '10:58', 'Design Team sync in 10 — bring the thread mocks.', { id: 'g-0', senderId: '0x04d7e1...a92b05' })}
+      ${msg('Elena', 'E', '#D37EF4', '11:02', 'Should the send-copy toggle default on or off?', { id: 'g1', ensName: 'elena.eth' })}
+      ${msg('Kai', 'K', '#FE8F59', '11:06', 'Off by default — least surprise for new users.', { id: 'g-2', senderId: '0x04f3c8...7d1e02' })}`
+}
+
+const CHATS = {
+  community: { surface: 'channel', kind: 'community', title: 'general', channelIcon: true, subtitle: 'General discussion about Status', pinned: 3, members: true, messages: communityMessages },
+  dm:        { surface: 'dm',      kind: 'dm',        title: 'carmen.eth',  avatar: 'C', avatarColor: '#887AF9', subtitle: 'Online', members: false, messages: dmMessages },
+  group:     { surface: 'group',   kind: 'group',     title: 'Design Team', avatar: 'D', avatarColor: '#4E77F5', subtitle: '6 members', members: true, messages: groupMessages },
+}
+function chatCtx(p) { const c = p.get('chat'); return CHATS[c] ? c : 'community' }
+
+function chatHeaderDesktop(ctx, panelOpen) {
+  return `
+    <div class="chat-header">
+      <div class="chat-header__info">
+        ${chatHeaderAvatar(ctx)}
+        <div class="chat-header__text">
+          <div class="chat-header__title-row">${chatHeaderTitleRow(ctx)}</div>
+          <div class="chat-header__subtitle-row">${chatHeaderSubtitle(ctx, ' messages')}</div>
+        </div>
+      </div>
+      <div class="chat-header__actions">
+        <button class="chat-header__action-btn" title="Search">${CHANNEL_ICONS.search}</button>
+        ${ctx.members ? `<button class="chat-header__action-btn${panelOpen ? ' active' : ''}" data-members-btn title="Members" aria-pressed="${panelOpen}">${CHANNEL_ICONS.groupChat}</button>` : ''}
+        <button class="chat-header__action-btn" title="More">${CHANNEL_ICONS.more}</button>
+      </div>
+    </div>`
+}
+
+function renderCenterPanel(revamp, panelOpen = false, mobile = false, chat = 'community') {
+  const ctx = CHATS[chat] || CHATS.community
+  // copied-to-parent posts from threads (epic §3.1) — appended live to the channel stream (revamp only)
+  const copied = revamp && ctx.surface === 'channel' ? store.parentPosts('channel') : []
+  const copiedHtml = copied.map(pp => msg(pp.name, pp.initial, pp.color, pp.time, pp.text, { id: pp.id, threadRef: pp.threadTitle })).join('')
+  const header = mobile ? chatHeaderMobile(ctx) : chatHeaderDesktop(ctx, panelOpen)
+  return `
+    ${header}
+    <div class="messages">
+      ${ctx.messages(copiedHtml)}
     </div>
     <div class="chat-input">
       ${replyPreview()}
@@ -692,6 +734,29 @@ function renderCenterPanel(revamp, panelOpen = false, mobile = false) {
       </div>
     </div>
   `
+}
+
+// minimal Messenger left panel for the DM/group demo — 2 chats, active highlighted, clickable to switch
+function renderMessengerLeft(active) {
+  const item = (key, name, avatar, color, sub) => `
+    <button class="msgr-chat${active === key ? ' active' : ''}" data-open-chat="${key}" title="Open ${name}">
+      <span class="msgr-chat__avatar" style="background:${color}">${avatar}</span>
+      <span class="msgr-chat__text">
+        <span class="msgr-chat__name">${name}</span>
+        <span class="msgr-chat__sub">${sub}</span>
+      </span>
+    </button>`
+  return `
+    <div class="community-header">
+      <div class="community-header__info">
+        <div><div class="community-header__name">Messages</div></div>
+        <button class="community-header__invite-btn" data-open-chat="community" title="Back to community">${ARROW_LEFT}</button>
+      </div>
+    </div>
+    <div class="msgr-list">
+      ${item('dm', 'carmen.eth', 'C', '#887AF9', 'Two topics at once — let me thread…')}
+      ${item('group', 'Design Team', 'D', '#4E77F5', 'Should the send-copy toggle default…')}
+    </div>`
 }
 
 // Hover quick-actions icons — lifted verbatim from StatusQ/src/assets/img/icons/ (recolored → currentColor)

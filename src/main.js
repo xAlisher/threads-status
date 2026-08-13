@@ -163,6 +163,9 @@ const USE_CASES = [
     { id: 'th-chlist',  label: 'Threads in the channel list',         screen: 'chat', params: 'version=revamp&theme=dark' },
     { id: 'th-panel',   label: 'Desktop · thread side-panel (reply in thread)', screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&tpanel=t-m1&surface=channel' },
     { id: 'th-panel-c', label: 'Desktop · new-thread side-panel',     screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&tpanel=create&surface=channel' },
+    { id: 'th-dm',      label: 'DM chat · thread (carmen.eth)',       screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&chat=dm' },
+    { id: 'th-grpchat', label: 'Group chat · thread (Design Team)',   screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&chat=group' },
+    { id: 'th-dm-m',    label: 'DM chat · thread · Mobile',           screen: 'chat', params: 'version=revamp&theme=dark&view=mobile&chat=dm' },
   ]},
   { group: 'Threads — surfaces (Threads)', items: [
     { id: 'th-create',  label: 'Creating Thread · from a message',    screen: 'threads', params: 'version=revamp&theme=dark&tview=create&parent=cc-1&from=chat' },
