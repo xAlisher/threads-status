@@ -102,6 +102,19 @@ function seed() {
         ],
         followed: false, muted: false, closed: false, deleted: true, keptVisible: false,
         unread: false, lastActivityTs: now - 5 * hr,
+        deletedBy: { name: 'Marcus', initial: 'M', color: '#26A69A' }, deletedAtLabel: 'Today 1:04 PM',
+      },
+      {
+        // closed thread — shown in-chat with a lock after the reply-count badge (no new replies)
+        id: 't-closed-chat', surface: 'channel', channelLabel: '# general', parentMsgId: 'cc-6',
+        parentMsg: ['Marcus', 'M', '#26A69A', '10:36', 'About 3 hours with two agents running — builder writes code, auditor verifies against QML. Cost maybe $25 in API tokens.', { senderId: '0x04d7e1...a92b05' }],
+        title: 'Token cost breakdown',
+        messages: [
+          { id: 'tc1', name: 'Dana', initial: 'D', color: '#2A799B', time: '10:40', text: 'Is that per run or per day?', own: false, ts: now - 4 * hr, opts: {} },
+          { id: 'tc2', name: 'Marcus', initial: 'M', color: '#26A69A', time: '10:42', text: 'Per full run. Wrapping this one up.', own: false, ts: now - 4 * hr, opts: {} },
+        ],
+        followed: true, muted: false, closed: true, deleted: false, keptVisible: false,
+        unread: false, lastActivityTs: now - 4 * hr,
       },
     ],
   }

@@ -365,10 +365,10 @@ export function openThreadMenu(root, threadId, anchor) {
   menu.setAttribute('role', 'menu')
   const item = (icon, label, act, cls = '') => `<button class="msg-cmenu__item${cls}" role="menuitem" data-act="${act}">${icon}<span>${label}</span></button>`
   menu.innerHTML =
-    item(THREAD_ICONS.check, t.followed ? 'Unfollow thread' : 'Follow thread', 'follow') +
+    item(THREAD_ICONS.check, t.followed ? 'Unfollow' : 'Follow', 'follow') +
     item(THREAD_ICONS.pin, t.keptVisible ? 'Unpin from list' : 'Keep visible', 'keep') +
-    (t.closed ? item(THREAD_ICONS.thread, 'Reopen thread', 'reopen') : item(THREAD_ICONS.closeCircle, 'Close thread', 'close')) +
-    item(THREAD_ICONS.del, 'Delete thread', 'delete', ' msg-cmenu__item--danger')
+    (t.closed ? item(THREAD_ICONS.thread, 'Reopen', 'reopen') : item(THREAD_ICONS.closeCircle, 'Close', 'close')) +
+    item(THREAD_ICONS.del, 'Delete', 'delete', ' msg-cmenu__item--danger')
   // position under the anchor
   const rect = anchor.getBoundingClientRect(); const rootRect = root.getBoundingClientRect()
   menu.style.position = 'absolute'; menu.style.top = (rect.bottom - rootRect.top + 4) + 'px'; menu.style.right = (rootRect.right - rect.right) + 'px'; menu.style.left = 'auto'

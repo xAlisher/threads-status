@@ -148,11 +148,20 @@
 .thread-row__count { margin-left: 4px; }
 /* thread-card spine connector: theme-aware stroke */
 .thread-card__spine path { stroke: var(--separator); }
-/* deleted tombstone (#21932 §4) — not clickable, muted, icon+label centred */
-.thread-card--deleted { cursor: default; opacity: .6; align-items: center; }
+/* closed thread card: reply-count badge (muted) + lock icon at the top-right */
+.thread-card__tr { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.thread-card__count--muted { background: var(--base-color-2); color: var(--base-color-1); margin-left: 0; }
+.thread-card__lock { display: inline-flex; align-items: center; color: var(--base-color-1); }
+.thread-card__lock svg { width: 11px; height: 13px; }
+/* deleted tombstone showing WHO deleted it (Status delete-message pattern) — #21932 §4 */
+.thread-card--deleted { cursor: default; align-items: center; gap: 10px; }
 .thread-card--deleted:hover { background: var(--base-color-3); }
-.thread-card--deleted .thread-card__icon { color: var(--base-color-1); }
-.thread-card--deleted .thread-card__title { font-weight: 400; font-style: italic; color: var(--base-color-1); }
+.thread-card__trash { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: rgba(233,84,96,.14); color: var(--danger-color-1, #E95460); }
+.thread-card__trash svg { width: 16px; height: 16px; }
+.thread-card__del-ava { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #fff; }
+.thread-card__del-text { font-size: var(--font-size-additional); color: var(--direct-color-1); }
+.thread-card__del-text strong { font-weight: 600; }
+.thread-card__del-time { font-size: var(--font-size-aside); color: var(--base-color-1); margin-left: 2px; }
 
 /* composer thread button */
 .chat-input__thread-btn.checked { color: var(--primary-color-1); }

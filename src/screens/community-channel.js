@@ -158,6 +158,8 @@ export function bindCommunityChannel(view, ver) {
 const THREAD_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 9.5 11 12l2.5 2.5M11 12h3.2a2.3 2.3 0 0 1 0 4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // lock.svg (Status asset) — closed-thread glyph, so a closed card/row reads differently from an open one
 const LOCK_GLYPH = `<svg viewBox="0 0 10 12" fill="none"><path clip-rule="evenodd" d="m2 5.5v-1.74359c0-1.78315 1.32593-3.25641 3-3.25641s3 1.47326 3 3.25641v1.74359h.5c.82843 0 1.5.67157 1.5 1.5v3c0 .8284-.67157 1.5-1.5 1.5h-7c-.828427 0-1.5-.6716-1.5-1.5v-3c0-.82843.671573-1.5 1.5-1.5zm1.38462 0h3.23076v-1.74359c0-1.04908-.74044-1.87179-1.61538-1.87179s-1.61538.82271-1.61538 1.87179z" fill="currentColor" fill-rule="evenodd"/></svg>`
+// trash / bin — for the "X deleted this thread" tombstone (Status delete_message pattern)
+const TRASH_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 4h4M6 7l1 12.5A2 2 0 0 0 9 21.4h6a2 2 0 0 0 2-1.9L18 7M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // extra menu icons — real Status assets (hide.svg / copy.svg / delete.svg), recoloured → currentColor
 const MENU_EXTRA = {
   // hide.svg — used for "Mark as unread" (eye-off)
@@ -207,14 +209,15 @@ function relAgo(ts) {
 // in-chat thread card under a root message (epic §4 / #21932) — data-driven from the store:
 // title · N replies · participant avatars · new/unread dot · last-message line · closed & deleted variants.
 function threadCard(t) {
-  // deleted thread → tombstone (not clickable; the thread is gone) — #21932 §4
+  // deleted thread → tombstone showing WHO deleted it (Status delete-message pattern) — #21932 §4
   if (t.deleted) {
+    const db = t.deletedBy || { name: 'Someone', initial: '?', color: '#7A7A7A' }
     return `
     <div class="thread-card thread-card--deleted">
-      <span class="thread-card__icon">${THREAD_GLYPH}</span>
-      <span class="thread-card__main">
-        <span class="thread-card__title">This thread was deleted</span>
-      </span>
+      <span class="thread-card__trash">${TRASH_GLYPH}</span>
+      <span class="thread-card__del-ava" style="background:${db.color}">${db.initial}</span>
+      <span class="thread-card__del-text"><strong>${db.name}</strong> deleted this thread</span>
+      ${t.deletedAtLabel ? `<span class="thread-card__del-time">${t.deletedAtLabel}</span>` : ''}
     </div>`
   }
   const people = store.participants(t)
@@ -229,15 +232,19 @@ function threadCard(t) {
           <span class="thread-card__last-text">${lm.text}</span>
           <span class="thread-card__last-time">${relAgo(lm.ts)}</span>
         </span>` : ''
+  // top-right badge: closed → reply count + lock icon; open+unread → new-message counter
+  const badge = closed
+    ? `<span class="thread-card__tr"><span class="thread-card__count thread-card__count--muted">${t.messages.length}</span><span class="thread-card__lock" title="Closed">${LOCK_GLYPH}</span></span>`
+    : (t.followed && t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : '')
   return `
     <button class="thread-card${closed ? ' thread-card--closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}">
-      <span class="thread-card__icon">${closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
+      <span class="thread-card__icon">${THREAD_GLYPH}</span>
       <span class="thread-card__main">
-        <span class="thread-card__title">${t.title}${closed ? ' <span class="thread-card__closed">· closed</span>' : ''}</span>
+        <span class="thread-card__title">${t.title}</span>
         <span class="thread-card__meta">${stack}<span class="thread-card__replies">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></span>
         ${last}
       </span>
-      ${!closed && t.followed && t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : ''}
+      ${badge}
     </button>`
 }
 
@@ -443,7 +450,7 @@ function bindThreadAffordances(p, view) {
   })
 
   // connector spine: line from the parent message's avatar down to the centre of its thread card (#21932)
-  const drawSpines = () => scope.querySelectorAll('.thread-card:not(.thread-card--deleted)').forEach(card => {
+  const drawSpines = () => scope.querySelectorAll('.thread-card').forEach(card => {
     const av = card.previousElementSibling?.querySelector('.message__avatar')
     if (!av) return
     card.querySelector('.thread-card__spine')?.remove()
