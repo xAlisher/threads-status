@@ -961,11 +961,10 @@ export function msg(name, initial, color, time, text, opts = {}) {
 
   return `
     <div class="message${stateClass}"${idAttr}>
-      ${pinnedHtml}${replyHtml}
+      ${alsoSentHtml}${pinnedHtml}${replyHtml}
       <div class="message__row">
         <div class="message__avatar" style="background:${color}">${initial}</div>
         <div class="message__body">
-          ${alsoSentHtml}
           <div class="message__header">
             <span class="message__sender">${name}</span>${headerDotsHtml}
             <span class="message__header-dot">•</span>
