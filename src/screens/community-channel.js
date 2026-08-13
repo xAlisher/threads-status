@@ -58,10 +58,12 @@ export function renderCommunityChannel(view, ver) {
   if (mobile && p.get('mlist') === '1') {
     return { nav, left, center: `<div class="mobile-list">${left}</div>`, right: null }
   }
-  const infoTab = revamp ? infoTabOf(p) : null
+  // Details is the persistent right panel (no separate members pane). Default = Members tab;
+  // a thread takes the column while open, and closing it returns to Details. info=closed hides it.
+  const infoParam = revamp ? p.get('info') : null
+  const infoTab = infoParam === 'closed' ? null : (infoTabOf(p) || (revamp && !tpanel ? 'members' : null))
   const center = renderCenterPanel(revamp, !!tpanel, mobile, chat)
-  // Details takes the right column; closing it falls back to the open thread, then members
-  const right = infoTab ? renderInfoPanel(infoTab, ctx.surface) : (tpanel ? renderThreadPanel(p) : (ctx.members ? renderRightPanel() : null))
+  const right = infoTab ? renderInfoPanel(infoTab, ctx.surface) : (tpanel ? renderThreadPanel(p) : null)
   return { nav, left, center, right }
 }
 
@@ -372,7 +374,7 @@ function openThreadPanel(spec) {
 }
 function closeThreadPanel() {
   const u = new URL(location.href)
-  ;['tpanel', 'tparent', 'copy'].forEach(k => u.searchParams.delete(k))
+  ;['tpanel', 'tparent', 'copy', 'info'].forEach(k => u.searchParams.delete(k))   // → falls back to Details (Members)
   history.replaceState(null, '', u)
   rerender()
 }
@@ -521,7 +523,7 @@ function bindThreadAffordances(p, view) {
   // "All info" panel (#21971): open/close/switch tab (in-place rerender) + search-filter the active tab
   const setInfo = (tab) => { const u = new URL(location.href); tab ? u.searchParams.set('info', tab) : u.searchParams.delete('info'); history.replaceState(null, '', u); rerender() }
   document.querySelectorAll('[data-open-info]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); setInfo(el.dataset.openInfo) }))
-  document.querySelector('[data-close-info]')?.addEventListener('click', () => setInfo(null))
+  document.querySelector('[data-close-info]')?.addEventListener('click', () => setInfo('closed'))
   document.querySelectorAll('[data-info-tab]').forEach(el => el.addEventListener('click', () => setInfo(el.dataset.infoTab)))
   const infoSearch = document.querySelector('[data-info-search]')
   if (infoSearch) {
