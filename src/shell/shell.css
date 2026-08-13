@@ -620,3 +620,26 @@ html, body, #app {
 .shell__right.hidden {
   display: none;
 }
+
+/* Draggable panel dividers (#21969) — desktop only */
+.shell__resizer {
+  width: 6px;
+  flex-shrink: 0;
+  margin: 0 -3px;              /* straddle the panel border without adding layout width */
+  cursor: col-resize;
+  position: relative;
+  z-index: 6;
+  background: transparent;
+  touch-action: none;
+}
+.shell__resizer::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 2px;
+  width: 2px;
+  background: transparent;
+  transition: background .12s;
+}
+.shell__resizer:hover::after,
+.shell__resizer.dragging::after { background: var(--primary-color-1); }
+.shell--mobile .shell__resizer { display: none; }

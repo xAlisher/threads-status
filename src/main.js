@@ -109,17 +109,65 @@ function render() {
   }
 
   bindToolbarEvents()
+  bindResizers()
   renderReviewBanner()
 }
 
 function renderShellInner(screenFn) {
   const { nav, left, center, right } = screenFn(currentView, verFor())
+  // draggable dividers between panels (#21969) — desktop only
   return `
     ${nav || ''}
-    ${left ? `<div class="shell__left">${left}</div>` : ''}
+    ${left ? `<div class="shell__left">${left}</div><div class="shell__resizer" data-resize="left" title="Drag to resize"></div>` : ''}
     <div class="shell__center">${center}</div>
-    ${right ? `<div class="shell__right">${right}</div>` : ''}
+    ${right ? `<div class="shell__resizer" data-resize="right" title="Drag to resize"></div><div class="shell__right">${right}</div>` : ''}
   `
+}
+
+// --- Resizable panels (#21969): draggable dividers, min/max, center keeps ≥300px, persisted per device ---
+const PANEL_W_KEY = 'panelWidths'
+const PANEL_BOUNDS = { left: [200, 480], right: [220, 560] }
+const CENTER_MIN = 300
+const loadPanelWidths = () => { try { return JSON.parse(localStorage.getItem(PANEL_W_KEY)) || {} } catch { return {} } }
+const savePanelWidths = (w) => { try { localStorage.setItem(PANEL_W_KEY, JSON.stringify(w)) } catch {} }
+function applyPanelWidths() {
+  const w = loadPanelWidths()
+  const l = document.querySelector('.shell__left'); if (l && w.left) l.style.width = w.left + 'px'
+  const r = document.querySelector('.shell__right'); if (r && w.right) r.style.width = w.right + 'px'
+}
+function bindResizers() {
+  if (currentView !== 'desktop') return
+  applyPanelWidths()   // re-apply after each render (the shell is rebuilt)
+  document.querySelectorAll('.shell__resizer').forEach(rz => {
+    rz.addEventListener('pointerdown', (e) => {
+      e.preventDefault()
+      const side = rz.dataset.resize
+      const panel = document.querySelector(side === 'left' ? '.shell__left' : '.shell__right')
+      if (!panel) return
+      const shell = document.querySelector('.shell')
+      const startX = e.clientX, startW = panel.getBoundingClientRect().width
+      const [min, max] = PANEL_BOUNDS[side]
+      rz.classList.add('dragging'); document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none'
+      const onMove = (ev) => {
+        const dx = ev.clientX - startX
+        // headroom so the centre pane keeps CENTER_MIN even with both sidebars expanded (AC#4)
+        const total = shell.getBoundingClientRect().width
+        const nav = document.querySelector('.shell__nav')?.getBoundingClientRect().width || 0
+        const otherSel = side === 'left' ? '.shell__right' : '.shell__left'
+        const other = document.querySelector(otherSel)?.getBoundingClientRect().width || 0
+        const roomMax = total - nav - other - 14 - CENTER_MIN   // 14 ≈ the two resizers
+        let nw = side === 'left' ? startW + dx : startW - dx
+        nw = Math.max(min, Math.min(max, roomMax, nw))
+        panel.style.width = nw + 'px'
+      }
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp)
+        rz.classList.remove('dragging'); document.body.style.cursor = ''; document.body.style.userSelect = ''
+        const w = loadPanelWidths(); w[side] = Math.round(parseFloat(panel.style.width)); savePanelWidths(w)
+      }
+      window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp)
+    })
+  })
 }
 
 function renderMobileShellInner(screenFn) {
