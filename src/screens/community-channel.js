@@ -310,8 +310,8 @@ function bindThreadPanel(p) {
   if (copyRow) {
     copyRow.addEventListener('mousedown', (e) => e.preventDefault())
     copyRow.addEventListener('click', function (e) {
+      const chk = this.querySelector('[data-copy]'); if (!chk || e.target === chk) return  // keyboard Space on the box is native-handled
       e.preventDefault()
-      const chk = this.querySelector('[data-copy]'); if (!chk) return
       chk.checked = !chk.checked
       chk.dispatchEvent(new Event('change', { bubbles: true }))
     })
