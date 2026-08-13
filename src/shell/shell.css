@@ -393,6 +393,10 @@ html, body, #app {
   height: 100%;
 }
 
+/* hide native scrollbars app-wide — scrolling still works */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
 /* --- Nav sidebar (PrimaryNavSidebar.qml) ---
    Outer bg = baseColor4 (line 74-76)
    Width = 60 + 8L + 8R = 76px (line 98)
@@ -640,6 +644,18 @@ html, body, #app {
   background: transparent;
   transition: background .12s;
 }
+/* always-visible grab handle centred on the divider */
+.shell__resizer::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 4px; height: 34px; border-radius: 3px;
+  background: var(--base-color-2);
+  transition: background .12s, height .12s;
+  z-index: 1;
+}
 .shell__resizer:hover::after,
 .shell__resizer.dragging::after { background: var(--primary-color-1); }
+.shell__resizer:hover::before,
+.shell__resizer.dragging::before { background: var(--primary-color-1); height: 44px; }
 .shell--mobile .shell__resizer { display: none; }
