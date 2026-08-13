@@ -58,8 +58,9 @@ export function renderCommunityChannel(view, ver) {
   if (mobile && p.get('mlist') === '1') {
     return { nav, left, center: `<div class="mobile-list">${left}</div>`, right: null }
   }
+  const infoTab = revamp ? infoTabOf(p) : null
   const center = renderCenterPanel(revamp, !!tpanel, mobile, chat)
-  const right = tpanel ? renderThreadPanel(p) : (ctx.members ? renderRightPanel() : null)
+  const right = tpanel ? renderThreadPanel(p) : (infoTab ? renderInfoPanel(infoTab) : (ctx.members ? renderRightPanel() : null))
   return { nav, left, center, right }
 }
 
@@ -111,6 +112,78 @@ function renderRightPanel() {
       ${offline.map(member).join('')}
     </div>`
 }
+// ---- "All info" panel (#21971): Members · Media · Pins · Links, viewable + searchable ----
+const INFO_CLOSE = `<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
+const LINK_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M9.5 14.5 14.5 9.5M8 12l-2 2a3 3 0 1 0 4.24 4.24l2-2M16 12l2-2a3 3 0 1 0-4.24-4.24l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+const INFO_MEMBERS = {
+  online: [
+    { name: 'You', initial: 'A', color: '#4360DF', owner: true },
+    { name: 'Elena', initial: 'E', color: '#D37EF4' },
+    { name: 'Marcus', initial: 'M', color: '#26A69A' },
+    { name: 'carmen.eth', initial: 'C', color: '#887AF9' },
+  ],
+  offline: [
+    { name: 'Kai', initial: 'K', color: '#FE8F59' },
+    { name: 'Dana', initial: 'D', color: '#2A799B' },
+    { name: 'Sam', initial: 'S', color: '#C4A052' },
+  ],
+}
+const INFO_MEDIA = [
+  { label: 'nord-theme.png', color: '#4360DF' }, { label: 'dracula.png', color: '#7A4FD6' },
+  { label: 'solarized.gif', color: '#C4A052' }, { label: 'hacker-green.png', color: '#26A69A' },
+  { label: 'tokens-demo.mp4', color: '#E95460' }, { label: 'layout-holds.png', color: '#FE8F59' },
+]
+const INFO_PINS = [
+  { name: 'Kai', initial: 'K', color: '#FE8F59', time: '10:34', text: 'How long did the full pipeline take? QML source to browser-ready with audited components?' },
+  { name: 'Marcus', initial: 'M', color: '#26A69A', time: '10:36', text: 'About 3 hours with two agents running — builder writes code, auditor verifies against QML.' },
+]
+const INFO_LINKS = [
+  { title: 'Status design system', url: 'status.app/design', name: 'Elena', time: '10:23' },
+  { title: 'StatusQ · QML source', url: 'github.com/status-im/StatusQ', name: 'Kai', time: '10:34' },
+  { title: 'Threads epic #21090', url: 'github.com/status-im/status-app/issues/21090', name: 'Marcus', time: '10:36' },
+]
+const INFO_TABS = [['members', 'Members'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links']]
+
+function infoMemberRow(m, online) {
+  return `<div class="info-item member-item" data-info-item data-search="${m.name.toLowerCase()}">
+    <div class="member-item__avatar" style="background:${m.color}">${m.initial}<span class="member-item__status member-item__status--${online ? 'online' : 'offline'}"></span></div>
+    <span class="member-item__name">${m.name}</span>${m.owner ? `<span class="member-item__owner" title="Owner">${MEMBER_ICONS.crown}</span>` : ''}
+  </div>`
+}
+function renderInfoBody(tab) {
+  if (tab === 'members') {
+    return `<div class="info-section">Online — ${INFO_MEMBERS.online.length}</div>${INFO_MEMBERS.online.map(m => infoMemberRow(m, true)).join('')}
+      <div class="info-section">Offline — ${INFO_MEMBERS.offline.length}</div>${INFO_MEMBERS.offline.map(m => infoMemberRow(m, false)).join('')}`
+  }
+  if (tab === 'media') {
+    return `<div class="info-media">${INFO_MEDIA.map(x => `<div class="info-media__tile" data-info-item data-search="${x.label.toLowerCase()}" style="background:linear-gradient(135deg, ${x.color}, ${x.color}99)" title="${x.label}"><span class="info-media__label">${x.label}</span></div>`).join('')}</div>`
+  }
+  if (tab === 'pins') {
+    return INFO_PINS.map(p => `<div class="info-item info-pin" data-info-item data-search="${(p.text + ' ' + p.name).toLowerCase()}">
+      <div class="member-item__avatar member-item__avatar--sm" style="background:${p.color}">${p.initial}</div>
+      <div class="info-pin__body"><div class="info-pin__head"><span class="info-pin__name">${p.name}</span><span class="info-pin__time">${p.time}</span></div><div class="info-pin__text">${p.text}</div></div>
+    </div>`).join('')
+  }
+  return INFO_LINKS.map(l => `<a class="info-item info-link" data-info-item data-search="${(l.title + ' ' + l.url).toLowerCase()}" href="#" onclick="return false">
+    <span class="info-link__icon">${LINK_GLYPH}</span>
+    <span class="info-link__body"><span class="info-link__title">${l.title}</span><span class="info-link__url">${l.url}</span><span class="info-link__meta">${l.name} · ${l.time}</span></span>
+  </a>`).join('')
+}
+function renderInfoPanel(tab) {
+  const nav = INFO_TABS.map(([k, label]) => `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}">${label}</button>`).join('')
+  return `
+    <div class="info-panel">
+      <div class="info-panel__header">
+        <span class="info-panel__title">Details</span>
+        <button class="info-panel__close" data-close-info title="Close" aria-label="Close">${INFO_CLOSE}</button>
+      </div>
+      <div class="info-panel__tabs">${nav}</div>
+      <div class="info-panel__search">${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>
+      <div class="info-panel__body" data-info-body>${renderInfoBody(tab)}</div>
+    </div>`
+}
+const infoTabOf = (p) => { const v = p.get('info'); if (INFO_TABS.some(([k]) => k === v)) return v; return v === '1' ? 'members' : null }
+
 const MEMBER_ICONS = {
   // crown.svg — owner badge (lifted verbatim from StatusQ assets, recoloured → currentColor)
   crown: `<svg viewBox="0 0 20 20" fill="none"><g stroke="currentColor"><path d="m15 13 1-6.5-1.1272.75147c-1.6774 1.11826-3.9583.29684-4.5376-1.6341l-.3352-1.11737-.33521 1.11737c-.57928 1.93094-2.8602 2.75236-4.53758 1.6341l-1.12721-.75147 1 6.5m10 0h-10m10 0v3h-10v-3" stroke-linejoin="round"/><g fill="currentColor"><circle cx="10" cy="4.5" r="1.5"/><circle cx="16" cy="6.5" r="1.5"/><circle cx="4" cy="6.5" r="1.5"/></g></g></svg>`,
@@ -433,6 +506,18 @@ function bindThreadAffordances(p, view) {
   if (!scope) return
   // community "…" menu: Invite member / Hide-Show threads
   document.querySelector('[data-community-more]')?.addEventListener('click', (e) => { e.stopPropagation(); openCommunityMenu(e.currentTarget) })
+  // "All info" panel (#21971): open/close/switch tab (in-place rerender) + search-filter the active tab
+  const setInfo = (tab) => { const u = new URL(location.href); tab ? u.searchParams.set('info', tab) : u.searchParams.delete('info'); u.searchParams.delete('tpanel'); history.replaceState(null, '', u); rerender() }
+  document.querySelectorAll('[data-open-info]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); setInfo(el.dataset.openInfo) }))
+  document.querySelector('[data-close-info]')?.addEventListener('click', () => setInfo(null))
+  document.querySelectorAll('[data-info-tab]').forEach(el => el.addEventListener('click', () => setInfo(el.dataset.infoTab)))
+  const infoSearch = document.querySelector('[data-info-search]')
+  if (infoSearch) {
+    infoSearch.addEventListener('input', () => {
+      const q = infoSearch.value.trim().toLowerCase()
+      document.querySelectorAll('.info-panel__body [data-info-item]').forEach(it => { it.style.display = (!q || (it.dataset.search || '').includes(q)) ? '' : 'none' })
+    })
+  }
   // switch chats in the DM/group demo (left messenger list + "back to community")
   document.querySelectorAll('[data-open-chat]').forEach(el => el.addEventListener('click', () => {
     const u = new URL(location.href); const c = el.dataset.openChat
@@ -742,9 +827,9 @@ function chatHeaderDesktop(ctx, panelOpen) {
         </div>
       </div>
       <div class="chat-header__actions">
-        <button class="chat-header__action-btn" title="Search">${CHANNEL_ICONS.search}</button>
-        ${ctx.members ? `<button class="chat-header__action-btn${panelOpen ? ' active' : ''}" data-members-btn title="Members" aria-pressed="${panelOpen}">${CHANNEL_ICONS.groupChat}</button>` : ''}
-        <button class="chat-header__action-btn" title="More">${CHANNEL_ICONS.more}</button>
+        <button class="chat-header__action-btn" data-open-info="media" title="Search & info">${CHANNEL_ICONS.search}</button>
+        ${ctx.members ? `<button class="chat-header__action-btn${panelOpen ? ' active' : ''}" data-open-info="members" data-members-btn title="Members" aria-pressed="${panelOpen}">${CHANNEL_ICONS.groupChat}</button>` : ''}
+        <button class="chat-header__action-btn" data-open-info="members" title="Details (Members · Media · Pins · Links)">${CHANNEL_ICONS.more}</button>
       </div>
     </div>`
 }
