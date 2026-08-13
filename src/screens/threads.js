@@ -156,7 +156,7 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
     </div>`
   }
   const closedBar = t.closed ? `<div class="thread-closed-bar">${THREAD_ICONS.lock}This thread is closed — no new replies can be posted.</div>` : ''
-  const composer = t.closed ? '' : threadComposer(`Reply in ${t.title}`, mobile, { copyLabel: s.copy, copy })
+  const composer = t.closed ? '' : threadComposer(`Reply in #${t.title}`, mobile, { copyLabel: s.copy, copy })
   const replyRows = t.messages.map(m => msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
