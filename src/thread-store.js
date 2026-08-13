@@ -237,7 +237,7 @@ export function createThread({ surface = 'channel', parentMsgId = null, parentMs
 export function postReply(threadId, text, { copyToParent = false } = {}) {
   const t = getThread(threadId); if (!t || t.closed || t.deleted) return null
   const now = Date.now()
-  const m = { id: nid('r'), name: 'You', initial: 'A', color: '#4360DF', time: timeNow(), text: escapeText(text.trim()), own: true, ts: now, opts: { delivery: 'sent' } }
+  const m = { id: nid('r'), name: 'You', initial: 'A', color: '#4360DF', time: timeNow(), text: escapeText(text.trim()), own: true, ts: now, opts: { delivery: 'sent', alsoSent: copyToParent } }
   t.messages.push(m)
   t.lastActivityTs = now
   if (copyToParent) {

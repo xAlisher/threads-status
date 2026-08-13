@@ -160,6 +160,8 @@ const THREAD_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.3
 const LOCK_GLYPH = `<svg viewBox="0 0 10 12" fill="none"><path clip-rule="evenodd" d="m2 5.5v-1.74359c0-1.78315 1.32593-3.25641 3-3.25641s3 1.47326 3 3.25641v1.74359h.5c.82843 0 1.5.67157 1.5 1.5v3c0 .8284-.67157 1.5-1.5 1.5h-7c-.828427 0-1.5-.6716-1.5-1.5v-3c0-.82843.671573-1.5 1.5-1.5zm1.38462 0h3.23076v-1.74359c0-1.04908-.74044-1.87179-1.61538-1.87179s-1.61538.82271-1.61538 1.87179z" fill="currentColor" fill-rule="evenodd"/></svg>`
 // trash / bin — for the "X deleted this thread" tombstone (Status delete_message pattern)
 const TRASH_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 4h4M6 7l1 12.5A2 2 0 0 0 9 21.4h6a2 2 0 0 0 2-1.9L18 7M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+// "#←" — a channel-hash with a back arrow, for the thread reply "Also sent to the channel" tag
+const ALSO_SENT_GLYPH = `<svg viewBox="0 0 20 12" fill="none"><path d="M4 1.5 3 10.5M8 1.5 7 10.5M1.8 4.3h7M1.2 7.7h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M19 6h-5m0 0 2.2-2.2M14 6l2.2 2.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // extra menu icons — real Status assets (hide.svg / copy.svg / delete.svg), recoloured → currentColor
 const MENU_EXTRA = {
   // hide.svg — used for "Mark as unread" (eye-off)
@@ -747,11 +749,38 @@ function chatHeaderDesktop(ctx, panelOpen) {
     </div>`
 }
 
+// copied-to-parent posts in the channel: group consecutive replies from the same thread under one
+// "replied to a thread: #name" header, stacking the texts like Status does for one sender (#21935)
+function renderCopiedGroups(copied, surface) {
+  if (!copied.length) return ''
+  const groups = []
+  copied.forEach(pp => {
+    const last = groups[groups.length - 1]
+    if (last && last.threadId === pp.threadId && last.name === pp.name) last.posts.push(pp)
+    else groups.push({ threadId: pp.threadId, threadTitle: pp.threadTitle, name: pp.name, initial: pp.initial, color: pp.color, time: pp.time, posts: [pp] })
+  })
+  return groups.map(g => {
+    const link = `<button type="button" class="message__thread-ref-link" data-open-thread="${g.threadId}" data-surface="${surface}">#${g.threadTitle}</button>`
+    const texts = g.posts.map(pp => `<div class="message__text">${pp.text}</div>`).join('')
+    return `
+      <div class="message message--copied" data-msg-id="${g.posts[0].id}">
+        <div class="message__row">
+          <div class="message__avatar" style="background:${g.color}">${g.initial}</div>
+          <div class="message__body">
+            <div class="message__header"><span class="message__sender">${g.name}</span><span class="message__header-dot">•</span><span class="message__time">${g.time}</span></div>
+            <span class="message__thread-ref">replied to a thread: ${link}</span>
+            ${texts}
+          </div>
+        </div>
+      </div>`
+  }).join('')
+}
+
 function renderCenterPanel(revamp, panelOpen = false, mobile = false, chat = 'community') {
   const ctx = CHATS[chat] || CHATS.community
   // copied-to-parent posts from threads (epic §3.1) — appended live to the channel stream (revamp only)
   const copied = revamp && ctx.surface === 'channel' ? store.parentPosts('channel') : []
-  const copiedHtml = copied.map(pp => msg(pp.name, pp.initial, pp.color, pp.time, pp.text, { id: pp.id, threadRef: pp.threadTitle, threadRefId: pp.threadId, threadRefSurface: ctx.surface })).join('')
+  const copiedHtml = renderCopiedGroups(copied, ctx.surface)
   const header = mobile ? chatHeaderMobile(ctx) : chatHeaderDesktop(ctx, panelOpen)
   return `
     ${header}
@@ -850,7 +879,9 @@ export function formatGroup() {
    reply, pinned indicator, full header (name + delivery), text, reactions
    Options: { reactions, pinned, pinnedBy, reply, replyTo, replyText, delivery, edited, continued } */
 export function msg(name, initial, color, time, text, opts = {}) {
-  const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '', id = '', threadRef = '', threadRefId = '', threadRefSurface = 'channel', sending = false, mention = false } = opts
+  const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '', id = '', threadRef = '', threadRefId = '', threadRefSurface = 'channel', alsoSent = false, sending = false, mention = false } = opts
+  // thread reply that was also posted to the parent channel — Slack-style tag above the name
+  const alsoSentHtml = alsoSent ? `<span class="message__also-sent">${ALSO_SENT_GLYPH}<span>Also sent to the channel</span></span>` : ''
   const stateClass = `${pinned ? ' message--pinned' : ''}${sending ? ' message--sending' : ''}${mention ? ' message--mention' : ''}`
   const idAttr = id ? ` data-msg-id="${id}"` : ''
   // copied-from-thread tag (epic §3.1) — "replied to a thread: #<name>", the name links back to the thread
@@ -934,6 +965,7 @@ export function msg(name, initial, color, time, text, opts = {}) {
       <div class="message__row">
         <div class="message__avatar" style="background:${color}">${initial}</div>
         <div class="message__body">
+          ${alsoSentHtml}
           <div class="message__header">
             <span class="message__sender">${name}</span>${headerDotsHtml}
             <span class="message__header-dot">•</span>
