@@ -87,15 +87,15 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
         <div class="chat-input__box">
           <div class="chat-input__input-row">
             <textarea class="chat-input__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
-            <div class="chat-input__actions">
-              ${formatGroup()}
-              <button class="chat-input__btn" title="Emoji" aria-label="Emoji">${CHANNEL_ICONS.emojis}</button>
-              <button class="chat-input__btn" title="GIF" aria-label="GIF">${CHANNEL_ICONS.gif}</button>
-              <button class="chat-input__btn" title="Stickers" aria-label="Stickers">${CHANNEL_ICONS.stickers}</button>
-              <button class="chat-input__btn chat-input__btn--send" data-thread-send title="Send" aria-label="Send">${CHANNEL_ICONS.send}</button>
-            </div>
           </div>
           ${copyInline}
+          <div class="chat-input__actions chat-input__actions--below">
+            ${formatGroup()}
+            <button class="chat-input__btn" title="Emoji" aria-label="Emoji">${CHANNEL_ICONS.emojis}</button>
+            <button class="chat-input__btn" title="GIF" aria-label="GIF">${CHANNEL_ICONS.gif}</button>
+            <button class="chat-input__btn" title="Stickers" aria-label="Stickers">${CHANNEL_ICONS.stickers}</button>
+            <button class="chat-input__btn chat-input__btn--send" data-thread-send title="Send" aria-label="Send">${CHANNEL_ICONS.send}</button>
+          </div>
         </div>
       </div>
     </div>`
