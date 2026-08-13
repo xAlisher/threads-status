@@ -26,7 +26,14 @@ function seed() {
     // monotonic id counter — PERSISTED so ids never collide across the deep-link reloads
     seq: 100,
     // messages the user copied from a thread into a parent conversation (keyed by surface)
-    parentPosts: { channel: [], group: [], dm: [] },
+    // seeded example so the "replied to a thread" state is always visible in the demo
+    parentPosts: {
+      channel: [
+        { id: 'pp-r2', name: 'You', initial: 'A', color: '#4360DF', time: '10:33', text: 'Thinking 3 levels max. Beyond that we collapse older replies.', threadId: 't-m1', threadTitle: 'Threads MVP' },
+        { id: 'pp-r3', name: 'You', initial: 'A', color: '#4360DF', time: '10:34', text: 'Sharing the summary back to the channel too.', threadId: 't-m1', threadTitle: 'Threads MVP' },
+      ],
+      group: [], dm: [],
+    },
     // toast queue drained by the renderer
     toast: null,
     threads: [
@@ -36,7 +43,8 @@ function seed() {
         title: 'Threads MVP',
         messages: [
           { id: 'r1', name: 'Volo', initial: 'V', color: '#D37EF4', time: '10:31', text: "Nice. What's the main goal — better conversations or more engagement?", own: false, ts: now - 40 * min, opts: { ensName: 'volo.eth', senderId: '0x04zQ39...9d4Gs0' } },
-          { id: 'r2', name: 'You', initial: 'A', color: '#4360DF', time: '10:33', text: 'Thinking 3 levels max. Beyond that we collapse older replies.', own: true, ts: now - 38 * min, opts: { delivery: 'delivered' } },
+          { id: 'r2', name: 'You', initial: 'A', color: '#4360DF', time: '10:33', text: 'Thinking 3 levels max. Beyond that we collapse older replies.', own: true, ts: now - 38 * min, opts: { delivery: 'delivered', alsoSent: true } },
+          { id: 'r3', name: 'You', initial: 'A', color: '#4360DF', time: '10:34', text: 'Sharing the summary back to the channel too.', own: true, ts: now - 36 * min, opts: { delivery: 'delivered', alsoSent: true } },
         ],
         followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
         unread: true, newCount: 2, lastActivityTs: now - 3 * min,

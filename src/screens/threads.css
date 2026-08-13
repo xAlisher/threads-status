@@ -224,6 +224,7 @@
 /* thread reply "Also sent to the channel" tag (above the sender name) — Slack-style */
 .message__also-sent { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: var(--font-size-aside); color: var(--base-color-1); }
 .message__also-sent svg { width: 17px; height: 11px; color: var(--primary-color-1); flex-shrink: 0; }
+.message__thread-tag svg { width: 14px; height: 14px; }
 /* copied-to-parent group: replies stacked under one header */
 .message--copied .message__text + .message__text { margin-top: 2px; }
 

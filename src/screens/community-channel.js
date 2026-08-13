@@ -762,13 +762,14 @@ function renderCopiedGroups(copied, surface) {
   return groups.map(g => {
     const link = `<button type="button" class="message__thread-ref-link" data-open-thread="${g.threadId}" data-surface="${surface}">#${g.threadTitle}</button>`
     const texts = g.posts.map(pp => `<div class="message__text">${pp.text}</div>`).join('')
+    // "replied to a thread: #name" sits above the avatar, same style as the "Also sent" tag but with the thread glyph
     return `
       <div class="message message--copied" data-msg-id="${g.posts[0].id}">
+        <span class="message__also-sent message__thread-tag">${THREAD_GLYPH}<span>replied to a thread: ${link}</span></span>
         <div class="message__row">
           <div class="message__avatar" style="background:${g.color}">${g.initial}</div>
           <div class="message__body">
             <div class="message__header"><span class="message__sender">${g.name}</span><span class="message__header-dot">•</span><span class="message__time">${g.time}</span></div>
-            <span class="message__thread-ref">replied to a thread: ${link}</span>
             ${texts}
           </div>
         </div>
