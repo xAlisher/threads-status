@@ -115,7 +115,6 @@ function threadHeader({ title, sub, muted, back = true, menu = false, close = fa
       </div>
       <div class="thread-view__actions">
         <button class="chat-header__action-btn" title="Search" aria-label="Search thread">${CHANNEL_ICONS.search}</button>
-        ${menu && !close ? `<button class="chat-header__action-btn" data-open-info="members" title="Details" aria-label="Details">${INFO_ICON}</button>` : ''}
         ${menu ? `<button class="chat-header__action-btn" data-mute title="${muted ? 'Unmute' : 'Mute'}" aria-label="${muted ? 'Unmute thread' : 'Mute thread'}" aria-pressed="${muted}">${muted ? THREAD_ICONS.bellOff : THREAD_ICONS.bell}</button>` : ''}
         ${menu ? `<button class="chat-header__action-btn" data-thread-more title="More" aria-label="Thread options" aria-haspopup="true">${CHANNEL_ICONS.more}</button>` : ''}
         ${close ? `<button class="chat-header__action-btn thread-view__close" data-back title="Close" aria-label="Close thread panel">${CLOSE_X}</button>` : ''}

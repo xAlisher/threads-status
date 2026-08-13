@@ -954,6 +954,7 @@
 /* Members sidebar — UserListPanel.qml (title + onlineStatus sections) + StatusMemberListItem.qml (32px avatar + online dot + name) */
 /* "All info" panel (#21971): Members · Media · Pins · Links + search */
 .info-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.info-panel__mheader .thread-view__back svg { transform: none; }   /* ARROW_LEFT already points left — cancel the thread-back flip */
 .info-panel__header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; flex-shrink: 0; }
 .info-panel__title { font-size: var(--font-size-large, 17px); font-weight: 600; color: var(--direct-color-1); }
 .info-panel__close { border: none; background: transparent; color: var(--base-color-1); cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; padding: 0; }

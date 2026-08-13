@@ -65,7 +65,7 @@ export function renderCommunityChannel(view, ver) {
   const infoTab = explicitInfo || (revamp && !mobile && !tpanel ? 'members' : null)
   // mobile: Details takes over the full screen when opened
   if (mobile && explicitInfo) {
-    return { nav, left, center: renderInfoPanel(explicitInfo, ctx.surface), right: null }
+    return { nav, left, center: renderInfoPanel(explicitInfo, ctx.surface, true), right: null }
   }
   const center = renderCenterPanel(revamp, !!tpanel, mobile, chat)
   const right = infoTab ? renderInfoPanel(infoTab, ctx.surface) : (tpanel ? renderThreadPanel(p) : null)
@@ -188,14 +188,21 @@ function renderInfoBody(tab, surface = 'channel') {
     <span class="info-link__body"><span class="info-link__title">${l.title}</span><span class="info-link__url">${l.url}</span><span class="info-link__meta">${l.name} · ${l.time}</span></span>
   </a>`).join('')
 }
-function renderInfoPanel(tab, surface = 'channel') {
+function renderInfoPanel(tab, surface = 'channel', mobile = false) {
   const nav = INFO_TABS.map(([k, label]) => `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}">${label}</button>`).join('')
-  return `
-    <div class="info-panel">
-      <div class="info-panel__header">
+  // mobile: a thread-style header (back arrow + title); desktop: title + close (X)
+  const header = mobile
+    ? `<div class="thread-view__header info-panel__mheader">
+        <button class="thread-view__back" data-close-info title="Back" aria-label="Back">${ARROW_LEFT}</button>
+        <div class="thread-view__titles"><span class="thread-view__title">Details</span></div>
+      </div>`
+    : `<div class="info-panel__header">
         <span class="info-panel__title">Details</span>
         <button class="info-panel__close" data-close-info title="Close" aria-label="Close">${INFO_CLOSE}</button>
-      </div>
+      </div>`
+  return `
+    <div class="info-panel">
+      ${header}
       <div class="info-panel__tabs">${nav}</div>
       <div class="info-panel__search">${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>
       <div class="info-panel__body" data-info-body>${renderInfoBody(tab, surface)}</div>
