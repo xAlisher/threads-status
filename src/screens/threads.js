@@ -54,7 +54,13 @@ const MCOMPOSER_ICONS = {
 
 // editable composer — reuses .chat-input structure; NOT readonly (epic §3 post/edit).
 // mobile = the Figma DS two-row layout (text on top, outlined icon toolbar + blue send below).
-function threadComposer(placeholder, mobile = false) {
+function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = false } = {}) {
+  // "Send copy to #channel" as an in-composer row — revealed only while the composer is focused (:focus-within)
+  const copyInline = copyLabel ? `
+      <div class="thread-copy thread-copy--inline">
+        <span class="thread-copy__label" id="thread-copy-label">${copyLabel}</span>
+        <button type="button" role="switch" aria-checked="${copy}" aria-labelledby="thread-copy-label" class="thread-copy__switch${copy ? ' on' : ''}" data-copy><span class="thread-copy__knob"></span></button>
+      </div>` : ''
   if (mobile) {
     return `
     <div class="chat-input thread-view__composer mcomposer">
@@ -71,6 +77,7 @@ function threadComposer(placeholder, mobile = false) {
         </div>
         <button class="mcomposer__send" data-thread-send title="Send" aria-label="Send">${MCOMPOSER_ICONS.sendUp}</button>
       </div>
+      ${copyInline}
     </div>`
   }
   return `
@@ -90,6 +97,7 @@ function threadComposer(placeholder, mobile = false) {
           </div>
         </div>
       </div>
+      ${copyInline}
     </div>`
 }
 
@@ -148,12 +156,7 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
     </div>`
   }
   const closedBar = t.closed ? `<div class="thread-closed-bar">${THREAD_ICONS.lock}This thread is closed — no new replies can be posted.</div>` : ''
-  const composer = t.closed ? '' : threadComposer('Reply in thread', mobile)
-  const copyRow = t.closed ? '' : `
-    <div class="thread-copy">
-      <span class="thread-copy__label" id="thread-copy-label">${s.copy}</span>
-      <button type="button" role="switch" aria-checked="${copy}" aria-labelledby="thread-copy-label" class="thread-copy__switch${copy ? ' on' : ''}" data-copy><span class="thread-copy__knob"></span></button>
-    </div>`
+  const composer = t.closed ? '' : threadComposer('Reply in thread', mobile, { copyLabel: s.copy, copy })
   const replyRows = t.messages.map(m => msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
@@ -165,7 +168,6 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
       </div>
       ${closedBar}
       ${composer}
-      ${copyRow}
     </div>`
 }
 
