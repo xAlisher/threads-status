@@ -254,3 +254,6 @@
 .share-modal__link { flex: 1; min-width: 0; border: 1px solid var(--base-color-2); border-radius: 10px; background: var(--base-color-4); color: var(--direct-color-4); padding: 9px 12px; font-family: var(--font-family-base); font-size: var(--font-size-additional); outline: none; }
 .share-modal__copy { flex-shrink: 0; border: none; border-radius: 10px; background: var(--primary-color-1); color: #fff; font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; padding: 0 16px; cursor: pointer; }
 .share-modal__copy.done { background: var(--success-color-1, #23A26D); }
+
+/* thread opened in the centre column (from the channel list) */
+.thread-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }

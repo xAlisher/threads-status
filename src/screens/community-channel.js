@@ -58,6 +58,15 @@ export function renderCommunityChannel(view, ver) {
   if (mobile && p.get('mlist') === '1') {
     return { nav, left, center: `<div class="mobile-list">${left}</div>`, right: null }
   }
+  // thread opened from the channel list (desktop): thread fills the centre, Details in the third column
+  const tmain = revamp && !mobile ? p.get('tmain') : null
+  const tmainThread = tmain ? store.getThread(tmain) : null
+  if (tmainThread && !tmainThread.deleted) {
+    const centerThread = renderThread(tmainThread, { copy: p.get('copy') === '1', panel: false })
+    const infoTab = (p.get('info') === 'closed' ? null : infoTabOf(p)) || 'members'
+    const right = infoTab ? renderInfoPanel(infoTab, tmainThread.surface) : null
+    return { nav, left, center: `<div class="thread-main">${centerThread}</div>`, right }
+  }
   // Details panel: desktop = persistent right column (default Members, no separate members pane);
   // mobile = full-screen overlay opened only via (i). info=closed hides it.
   const infoParam = revamp ? p.get('info') : null
@@ -393,17 +402,35 @@ function closeThreadPanel() {
   history.replaceState(null, '', u)
   rerender()
 }
+// open a thread from the channel list: thread fills the CENTRE column, its Details in the third column
+function openThreadMain(threadId, surface) {
+  const u = new URL(location.href)
+  u.searchParams.delete('tpanel'); u.searchParams.delete('copy')
+  u.searchParams.set('tmain', threadId); u.searchParams.set('surface', surface || 'channel'); u.searchParams.set('info', 'members')
+  history.replaceState(null, '', u)
+  rerender()
+}
+function closeThreadMain() {
+  const u = new URL(location.href)
+  ;['tmain', 'copy', 'info'].forEach(k => u.searchParams.delete(k))
+  history.replaceState(null, '', u)
+  rerender()
+}
 
-// wire the open panel: close affordances, composer send (create/reply), mute/more/edit, focus the input
-function bindThreadPanel(p) {
-  const panel = document.querySelector('.shell__right .thread-panel')
+// wire a thread view (right-side panel OR centre column): close, composer send (create/reply),
+// mute/more/edit, focus. cfg lets the centre-column variant reuse this same binder.
+function bindThreadPanel(p, cfg = {}) {
+  const rootSel = cfg.rootSel || '.shell__right .thread-panel'
+  const threadIdParam = cfg.threadIdParam || 'tpanel'
+  const closeFn = cfg.closeFn || closeThreadPanel
+  const panel = document.querySelector(rootSel)
   if (!panel) return
   const surface = p.get('surface') || 'channel'
-  const isCreate = p.get('tpanel') === 'create'
-  const threadId = isCreate ? null : p.get('tpanel')
+  const isCreate = p.get(threadIdParam) === 'create'
+  const threadId = isCreate ? null : p.get(threadIdParam)
 
-  // header back arrow closes the panel (Escape too); Members button is wired in bindThreadAffordances
-  panel.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', closeThreadPanel))
+  // header back arrow closes the view (Escape too)
+  panel.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', closeFn))
 
   // drain any queued toast (unfollow/mute/close/delete confirmations) into the panel
   const queued = store.takeToast()
@@ -445,10 +472,10 @@ function bindThreadPanel(p) {
       const inputEl = panel.querySelector('[data-thread-input]')
       const text = (inputEl?.value || '').trim(); if (!text) return
       const copyOn = !!panel.querySelector('[data-copy]')?.checked
-      store.postReply(threadId, text, { copyToParent: copyOn }) // emit → re-render updates the panel
+      store.postReply(threadId, text, { copyToParent: copyOn }) // emit → re-render updates the view
       requestAnimationFrame(() => {
-        document.querySelector('.shell__right [data-thread-input]')?.focus()
-        if (copyOn) floatToast(document.querySelector('.shell__right .thread-panel'), 'Reply also posted to ' + (SURFACES[surface]?.label || 'channel'))
+        document.querySelector(rootSel + ' [data-thread-input]')?.focus()
+        if (copyOn) floatToast(document.querySelector(rootSel), 'Reply also posted to ' + (SURFACES[surface]?.label || 'channel'))
       })
     })
     panel.querySelector('[data-mute]')?.addEventListener('click', () => { const t = store.getThread(threadId); store.setMuted(threadId, !t.muted) })
@@ -613,19 +640,18 @@ function bindThreadAffordances(p, view) {
   // Details → Threads tab: clicking a thread opens it (openThreadPanel closes Details)
   document.querySelectorAll('.info-thread[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
 
-  // channel-list thread rows (epic §22): desktop → side panel; mobile → full-screen thread that
-  // returns to the mobile channel+thread list (from=mlist)
+  // channel-list thread rows (epic §22): desktop → thread in the CENTRE column + Details in the
+  // third column; mobile → full-screen thread that returns to the mobile channel+thread list
   document.querySelectorAll('.channel-thread[data-open-thread]').forEach(el => el.addEventListener('click', (e) => {
     e.stopPropagation()
-    if (desktop) openThreadPanel({ threadId: el.dataset.openThread, surface: el.dataset.surface || surface })
+    if (desktop) openThreadMain(el.dataset.openThread, el.dataset.surface || surface)
     else goToThread(el.dataset.openThread, el.dataset.surface || surface, 'mlist')
   }))
 
-  // ---- desktop thread side-panel: Members button closes it; bind + focus the open panel ----
+  // ---- desktop: bind the open thread (side-panel via tpanel, or centre column via tmain) ----
   if (desktop) {
-    const membersBtn = scope.querySelector('[data-members-btn]')
-    if (membersBtn) membersBtn.addEventListener('click', () => { if (p.get('tpanel')) closeThreadPanel(); })
     if (p.get('tpanel')) bindThreadPanel(p)
+    if (p.get('tmain')) bindThreadPanel(p, { rootSel: '.shell__center .thread-view', threadIdParam: 'tmain', closeFn: closeThreadMain })
   }
 }
 
