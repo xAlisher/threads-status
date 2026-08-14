@@ -512,7 +512,6 @@ function openCommunityMenu(anchor) {
   menu.setAttribute('role', 'menu')
   const item = (icon, label, act) => `<button class="msg-cmenu__item" role="menuitem" data-act="${act}">${icon}<span>${label}</span></button>`
   menu.innerHTML =
-    item(CHANNEL_ICONS.addContact, 'Invite member', 'invite') +
     item(THREAD_GLYPH, hidden ? 'Show threads' : 'Hide threads', 'toggle-threads')
   const rect = anchor.getBoundingClientRect(), rootRect = root.getBoundingClientRect()
   menu.style.position = 'absolute'; menu.style.top = (rect.bottom - rootRect.top + 4) + 'px'
@@ -520,7 +519,7 @@ function openCommunityMenu(anchor) {
   root.style.position = 'relative'
   root.appendChild(menu)
   const close = () => { menu.remove(); document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', onKey) }
-  const acts = { invite: () => {}, 'toggle-threads': () => { setThreadsHidden(!hidden); rerender() } }
+  const acts = { 'toggle-threads': () => { setThreadsHidden(!hidden); rerender() } }
   menu.querySelectorAll('.msg-cmenu__item').forEach(btn => btn.addEventListener('click', () => { acts[btn.dataset.act]?.(); close() }))
   menu.querySelector('.msg-cmenu__item')?.focus()
   const dismiss = (e) => { if (!menu.contains(e.target) && e.target !== anchor) close() }
