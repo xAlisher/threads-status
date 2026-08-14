@@ -873,12 +873,17 @@ function renderCopiedGroups(copied, surface) {
     else groups.push({ threadId: pp.threadId, threadTitle: pp.threadTitle, name: pp.name, initial: pp.initial, color: pp.color, time: pp.time, posts: [pp] })
   })
   return groups.map(g => {
-    const link = `<button type="button" class="message__thread-ref-link" data-open-thread="${g.threadId}" data-surface="${surface}">#${g.threadTitle}</button>`
+    const t = store.getThread(g.threadId)
+    const deleted = !t || t.deleted
+    // deleted thread → the copy persists but its link is gone: show "from a deleted thread"
+    const tagInner = deleted
+      ? `<span class="message__thread-ref-deleted">from a deleted thread</span>`
+      : `replied to a thread: <button type="button" class="message__thread-ref-link" data-open-thread="${g.threadId}" data-surface="${surface}">#${g.threadTitle}</button>`
     const texts = g.posts.map(pp => `<div class="message__text">${pp.text}</div>`).join('')
-    // "replied to a thread: #name" sits above the avatar, same style as the "Also sent" tag but with the thread glyph
+    // sits above the avatar, same style as the "Also sent" tag but with the thread glyph
     return `
       <div class="message message--copied" data-msg-id="${g.posts[0].id}">
-        <span class="message__also-sent message__thread-tag">${THREAD_GLYPH}<span>replied to a thread: ${link}</span></span>
+        <span class="message__also-sent message__thread-tag">${THREAD_GLYPH}<span>${tagInner}</span></span>
         <div class="message__row">
           <div class="message__avatar" style="background:${g.color}">${g.initial}</div>
           <div class="message__body">

@@ -221,6 +221,7 @@
 .message__thread-ref svg { width: 13px; height: 13px; }
 .message__thread-ref-link { border: none; background: none; padding: 0; margin: 0; font: inherit; color: var(--primary-color-1); font-weight: 600; cursor: pointer; }
 .message__thread-ref-link:hover { text-decoration: underline; }
+.message__thread-ref-deleted { color: var(--base-color-1); font-style: italic; }
 /* thread reply "Also sent to the channel" tag (above the sender name) — Slack-style */
 .message__also-sent { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: var(--font-size-aside); color: var(--base-color-1); }
 .message__also-sent svg { width: 17px; height: 11px; color: var(--primary-color-1); flex-shrink: 0; }
@@ -237,3 +238,19 @@
 .shell--mobile .thread-view, .shell--mobile .thread-list { border-radius: 0; }
 .shell--mobile .thread-card { margin-left: 48px; max-width: calc(100% - 60px); }
 .shell--mobile .msg-cmenu { left: 12px; right: 12px; min-width: 0; }
+/* "Share link" modal (thread menu) */
+.share-modal-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.5); }
+.share-modal { width: 360px; max-width: calc(100vw - 40px); background: var(--base-color-3); border: 1px solid var(--base-color-2); border-radius: 16px; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+.share-modal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.share-modal__title { font-size: 17px; font-weight: 600; color: var(--direct-color-1); }
+.share-modal__close { border: none; background: transparent; color: var(--base-color-1); cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.share-modal__close svg { width: 18px; height: 18px; }
+.share-modal__close:hover { background: var(--background-hover); }
+.share-modal__thread { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--base-color-4); margin-bottom: 12px; }
+.share-modal__glyph { width: 20px; height: 20px; color: var(--primary-color-1); display: inline-flex; flex-shrink: 0; }
+.share-modal__glyph svg { width: 20px; height: 20px; }
+.share-modal__name { font-size: var(--font-size-primary); font-weight: 500; color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.share-modal__linkrow { display: flex; gap: 8px; }
+.share-modal__link { flex: 1; min-width: 0; border: 1px solid var(--base-color-2); border-radius: 10px; background: var(--base-color-4); color: var(--direct-color-4); padding: 9px 12px; font-family: var(--font-family-base); font-size: var(--font-size-additional); outline: none; }
+.share-modal__copy { flex-shrink: 0; border: none; border-radius: 10px; background: var(--primary-color-1); color: #fff; font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; padding: 0 16px; cursor: pointer; }
+.share-modal__copy.done { background: var(--success-color-1, #23A26D); }
