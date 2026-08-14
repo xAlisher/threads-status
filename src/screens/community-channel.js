@@ -167,7 +167,7 @@ function renderInfoBody(tab, surface = 'channel') {
     if (!list.length) return `<div class="info-empty">No threads yet</div>`
     return list.map(t => `<button class="info-item info-thread" data-info-item data-search="${t.title.toLowerCase()}" data-open-thread="${t.id}" data-surface="${t.surface}" title="Open thread">
       <span class="info-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
-      <span class="info-thread__body"><span class="info-thread__title">${t.title}</span><span class="info-thread__meta">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.closed ? ' · closed' : ''}</span></span>
+      <span class="info-thread__body"><span class="info-thread__title">${t.title}</span><span class="info-thread__meta">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.closed ? ' · archived' : ''}</span></span>
       <span class="info-thread__count">${t.messages.length}</span>
     </button>`).join('')
   }
@@ -258,6 +258,8 @@ export function bindCommunityChannel(view, ver) {
 const THREAD_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 9.5 11 12l2.5 2.5M11 12h3.2a2.3 2.3 0 0 1 0 4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // lock.svg (Status asset) — closed-thread glyph, so a closed card/row reads differently from an open one
 const LOCK_GLYPH = `<svg viewBox="0 0 10 12" fill="none"><path clip-rule="evenodd" d="m2 5.5v-1.74359c0-1.78315 1.32593-3.25641 3-3.25641s3 1.47326 3 3.25641v1.74359h.5c.82843 0 1.5.67157 1.5 1.5v3c0 .8284-.67157 1.5-1.5 1.5h-7c-.828427 0-1.5-.6716-1.5-1.5v-3c0-.82843.671573-1.5 1.5-1.5zm1.38462 0h3.23076v-1.74359c0-1.04908-.74044-1.87179-1.61538-1.87179s-1.61538.82271-1.61538 1.87179z" fill="currentColor" fill-rule="evenodd"/></svg>`
+// archive box — an archived thread is tucked away but NOT locked (still repliable)
+const ARCHIVE_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.7"/><path d="M5 8.5v9.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5" stroke="currentColor" stroke-width="1.7"/><path d="M10 12.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
 // trash / bin — for the "X deleted this thread" tombstone (Status delete_message pattern)
 const TRASH_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 4h4M6 7l1 12.5A2 2 0 0 0 9 21.4h6a2 2 0 0 0 2-1.9L18 7M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // "#←" — a channel-hash with a back arrow, for the thread reply "Also sent to the channel" tag
@@ -336,7 +338,7 @@ function threadCard(t) {
         </span>` : ''
   // top-right badge: closed → reply count + lock icon; open+unread → new-message counter
   const badge = closed
-    ? `<span class="thread-card__tr"><span class="thread-card__count thread-card__count--muted">${t.messages.length}</span><span class="thread-card__lock" title="Closed">${LOCK_GLYPH}</span></span>`
+    ? `<span class="thread-card__tr"><span class="thread-card__count thread-card__count--muted">${t.messages.length}</span><span class="thread-card__lock" title="Archived">${ARCHIVE_GLYPH}</span></span>`
     : (t.followed && t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : '')
   return `
     <button class="thread-card${closed ? ' thread-card--closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}">

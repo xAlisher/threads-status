@@ -152,7 +152,7 @@
 .thread-card__tr { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
 .thread-card__count--muted { background: var(--base-color-2); color: var(--base-color-1); margin-left: 0; }
 .thread-card__lock { display: inline-flex; align-items: center; color: var(--base-color-1); }
-.thread-card__lock svg { width: 11px; height: 13px; }
+.thread-card__lock svg { width: 14px; height: 14px; }
 /* deleted tombstone showing WHO deleted it (Status delete-message pattern) — #21932 §4 */
 .thread-card--deleted { cursor: default; align-items: center; gap: 10px; }
 .thread-card--deleted:hover { background: var(--base-color-3); }

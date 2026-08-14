@@ -27,6 +27,8 @@ export const THREAD_ICONS = {
   lock: `<svg viewBox="0 0 10 12" fill="none"><path clip-rule="evenodd" d="m2 5.5v-1.74359c0-1.78315 1.32593-3.25641 3-3.25641s3 1.47326 3 3.25641v1.74359h.5c.82843 0 1.5.67157 1.5 1.5v3c0 .8284-.67157 1.5-1.5 1.5h-7c-.828427 0-1.5-.6716-1.5-1.5v-3c0-.82843.671573-1.5 1.5-1.5zm1.38462 0h3.23076v-1.74359c0-1.04908-.74044-1.87179-1.61538-1.87179s-1.61538.82271-1.61538 1.87179z" fill="currentColor" fill-rule="evenodd"/></svg>`,
   // close-circle.svg — "close thread" action
   closeCircle: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m16.0303 7.96955c.2929.29289.2929.76776 0 1.06066l-2.6161 2.61619c-.1953.1952-.1953.5118 0 .7071l2.6161 2.6162c.2929.2929.2929.7677 0 1.0606s-.7677.2929-1.0606 0l-2.6162-2.6161c-.1953-.1953-.5119-.1953-.7071 0l-2.61607 2.616c-.29289.2929-.76777.2929-1.06066 0s-.29289-.7678 0-1.0607l2.61603-2.616c.1953-.1953.1953-.5119 0-.7071l-2.61603-2.61607c-.29289-.29289-.29289-.76777 0-1.06066s.76777-.29289 1.06066 0l2.61607 2.61603c.1952.1953.5118.1953.7071 0l2.6162-2.61615c.2929-.2929.7677-.2929 1.0606 0z"/><path clip-rule="evenodd" d="m12 22c5.5228 0 10-4.4772 10-10 0-5.52285-4.4772-10-10-10-5.52285 0-10 4.47715-10 10 0 5.5228 4.47715 10 10 10zm0-1.5c4.6944 0 8.5-3.8056 8.5-8.5 0-4.69442-3.8056-8.5-8.5-8.5-4.69442 0-8.5 3.80558-8.5 8.5 0 4.6944 3.80558 8.5 8.5 8.5z" fill-rule="evenodd"/></g></svg>`,
+  // archive box — lid bar on top, body with a pull slot (Archive / Unarchive action)
+  archive: `<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" stroke="currentColor" stroke-width="1.6"/><path d="M10 12h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
   // delete.svg
   del: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m9.39286 2.25c-1.18347 0-2.14286.95939-2.14286 2.14286 0 .61145-.49568 1.10714-1.10714 1.10714h-3.14286c-.41421 0-.75.33579-.75.75s.33579.75.75.75h.73876c.25288 0 .46594.1888.49637.43983l1.33836 11.04147c.24343 2.0083 1.94796 3.5187 3.97094 3.5187h4.91117c2.023 0 3.7275-1.5104 3.9709-3.5187l1.3384-11.04147c.0304-.25103.2435-.43983.4963-.43983h.7388c.4142 0 .75-.33579.75-.75s-.3358-.75-.75-.75h-3.1429c-.6114 0-1.1071-.49568-1.1071-1.10714 0-1.18347-.9594-2.14286-2.1429-2.14286zm5.31594 3.25c.3663 0 .6146-.38913.5652-.75214-.0158-.11608-.024-.23459-.024-.355 0-.35504-.2878-.64286-.6429-.64286h-5.21424c-.35504 0-.64286.28782-.64286.64286 0 .12041-.00816.23892-.02397.355-.04942.36301.19882.75214.56518.75214zm3.1483 1.5c.2393 0 .4247.20925.3959.44679l-1.3156 10.85401c-.1521 1.2552-1.2175 2.1992-2.4818 2.1992h-4.91117c-1.26436 0-2.32969-.944-2.48184-2.1992l-1.31564-10.85401c-.02879-.23754.15663-.44679.39591-.44679z" fill="currentColor" fill-rule="evenodd"/></svg>`,
   // pin/keep-visible — pin.svg (inlined, not CHANNEL_ICONS.pinHeader: community-channel.js now imports
@@ -155,8 +157,8 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
       <div class="thread-empty">${THREAD_ICONS.thread}<div class="thread-empty__title">This thread was deleted</div><div class="thread-empty__sub">The thread and its replies are no longer available.</div><button class="thread-empty__back" data-back>Back to ${s.label}</button></div>
     </div>`
   }
-  const closedBar = t.closed ? `<div class="thread-closed-bar">${THREAD_ICONS.lock}This thread is closed — no new replies can be posted.</div>` : ''
-  const composer = t.closed ? '' : threadComposer(`Reply in #${t.title}`, mobile, { copyLabel: s.copy, copy })
+  // archiving is NOT restrictive — an archived thread is just tucked away, still repliable
+  const composer = threadComposer(`Reply in #${t.title}`, mobile, { copyLabel: s.copy, copy })
   const replyRows = t.messages.map(m => msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
@@ -166,7 +168,6 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
         <div class="thread-view__reply-sep"><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></div>
         ${replyRows || '<div class="thread-view__empty-replies">No replies yet — start the discussion.</div>'}
       </div>
-      ${closedBar}
       ${composer}
     </div>`
 }
@@ -176,8 +177,8 @@ function threadRow(t) {
   const people = store.participants(t)
   const when = relTime(t.lastActivityTs)
   return `
-    <button class="thread-row${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}" aria-label="${t.title}, ${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.followed && t.unread ? ', unread' : ''}${t.closed ? ', closed' : ''}">
-      <span class="thread-row__icon">${t.closed ? THREAD_ICONS.lock : THREAD_ICONS.thread}</span>
+    <button class="thread-row${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}" aria-label="${t.title}, ${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.followed && t.unread ? ', unread' : ''}${t.closed ? ', archived' : ''}">
+      <span class="thread-row__icon">${t.closed ? THREAD_ICONS.archive : THREAD_ICONS.thread}</span>
       <span class="thread-row__body">
         <span class="thread-row__top"><span class="thread-row__title">${t.title}</span>${t.keptVisible ? `<span class="thread-row__pin" title="Kept visible">${THREAD_ICONS.pin}</span>` : ''}${t.followed ? '<span class="thread-row__followed" title="Following">·</span>' : ''}${t.followed && t.unread ? `<span class="thread-row__count" title="New messages">${t.newCount || 1}</span>` : ''}</span>
         <span class="thread-row__meta"><span class="thread-row__channel">${t.channelLabel}</span><span class="thread-row__sep">·</span><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span><span class="thread-row__sep">·</span><span class="thread-row__when">${THREAD_ICONS.clock}${when}</span></span>
@@ -194,8 +195,8 @@ function renderList(surface) {
       <div class="thread-list__header"><button class="thread-view__back" data-back title="Back" aria-label="Back">${THREAD_ICONS.back}</button><span class="thread-list__title">Threads${surface ? ` — ${SURFACES[surface].label}` : ''}</span></div>
       <div class="thread-list__section">Active — ${active.length}</div>
       ${active.map(threadRow).join('') || '<div class="thread-list__empty">No active threads.</div>'}
-      <div class="thread-list__section">Past — ${past.length}</div>
-      ${past.map(threadRow).join('') || '<div class="thread-list__empty">No past threads.</div>'}
+      <div class="thread-list__section">Archived — ${past.length}</div>
+      ${past.map(threadRow).join('') || '<div class="thread-list__empty">No archived threads.</div>'}
     </div>`
 }
 
@@ -367,7 +368,7 @@ export function openThreadMenu(root, threadId, anchor) {
   menu.innerHTML =
     item(THREAD_ICONS.check, t.followed ? 'Unfollow' : 'Follow', 'follow') +
     item(THREAD_ICONS.pin, t.keptVisible ? 'Unpin from list' : 'Keep visible', 'keep') +
-    (t.closed ? item(THREAD_ICONS.thread, 'Reopen', 'reopen') : item(THREAD_ICONS.closeCircle, 'Close', 'close')) +
+    (t.closed ? item(THREAD_ICONS.archive, 'Unarchive', 'reopen') : item(THREAD_ICONS.archive, 'Archive', 'close')) +
     item(THREAD_ICONS.del, 'Delete', 'delete', ' msg-cmenu__item--danger')
   // position under the anchor
   const rect = anchor.getBoundingClientRect(); const rootRect = root.getBoundingClientRect()

@@ -243,7 +243,7 @@ export function createThread({ surface = 'channel', parentMsgId = null, parentMs
 }
 
 export function postReply(threadId, text, { copyToParent = false } = {}) {
-  const t = getThread(threadId); if (!t || t.closed || t.deleted) return null
+  const t = getThread(threadId); if (!t || t.deleted) return null   // archived threads stay repliable
   const now = Date.now()
   const m = { id: nid('r'), name: 'You', initial: 'A', color: '#4360DF', time: timeNow(), text: escapeText(text.trim()), own: true, ts: now, opts: { delivery: 'sent', alsoSent: copyToParent } }
   t.messages.push(m)
@@ -294,7 +294,7 @@ export function setMuted(threadId, muted) {
 export function closeThread(threadId) {
   const t = getThread(threadId); if (!t) return
   t.closed = true; t.unread = false
-  ensure().toast = 'Thread closed'
+  ensure().toast = 'Thread archived'
   emit()
 }
 export function reopenThread(threadId) {
@@ -302,7 +302,7 @@ export function reopenThread(threadId) {
   // reopen must NOT refresh activity — only a real reply does; otherwise a long-stale thread
   // would jump back into the active channel list (§6.1) with no new message
   t.closed = false
-  ensure().toast = 'Thread reopened'
+  ensure().toast = 'Thread unarchived'
   emit()
 }
 export function deleteThread(threadId) {
