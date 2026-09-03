@@ -7,18 +7,21 @@
 import { msg, CHANNEL_ICONS, formatGroup, INFO_ICON } from './community-channel.js'
 import * as store from '../thread-store.js'
 import { SURFACES } from '../thread-store.js'
+import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 
 // ---- real Status icons lifted from StatusQ/src/assets/img/icons (recoloured → currentColor) ----
 // Net-new thread glyph + clock have no source asset, so those stay hand-drawn (Status line style).
 export const THREAD_ICONS = {
   // arrow-right.svg — flipped to point left for "back" via CSS (.thread-view__back svg)
   back: `<svg viewBox="0 0 24 24" fill="none"><path d="m13.4697 6.53033c-.2929-.29289-.2929-.76777 0-1.06066s.7677-.29289 1.0606 0l6 6.00003c.2929.2929.2929.7677 0 1.0606l-6 6c-.2929.2929-.7677.2929-1.0606 0s-.2929-.7677 0-1.0606l3.8661-3.8661c.315-.315.0919-.8536-.3536-.8536h-12.9822c-.41421 0-.75-.3358-.75-.75s.33579-.75.75-.75h12.9822c.4455 0 .6686-.5386.3536-.8536z" fill="currentColor"/></svg>`,
-  // net-new reply-in-thread glyph (no QML source) — speech bubble with return arrow
-  thread: `<svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 9.5 11 12l2.5 2.5M11 12h3.2a2.3 2.3 0 0 1 0 4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  // the shared thread glyph (src/icons/thread-glyph.js) — one swap-point for the official icon
+  thread: THREAD_GLYPH,
   // notification.svg
   bell: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 2.89941C13.2302 2.89946 14.6959 3.18992 15.8916 4.3877C17.077 5.57542 17.8869 7.54647 18.0635 10.6621C18.1092 11.4696 18.1292 11.7975 18.168 12C18.207 12.204 18.2817 12.4312 18.4746 13.0098L19.8643 17.1787L20.1709 18.0996H16.2412C16.0958 18.9805 15.6795 19.801 15.04 20.4404C14.2336 21.2468 13.1394 21.7002 11.999 21.7002C10.8589 21.7 9.76522 21.2466 8.95898 20.4404C8.31969 19.801 7.90424 18.9804 7.75879 18.0996H3.82812L4.13574 17.1787L5.52539 13.0098C5.71818 12.4314 5.79198 12.2039 5.83105 12C5.86979 11.7975 5.89078 11.4695 5.93652 10.6621C6.11306 7.54653 6.92203 5.57543 8.10742 4.3877C9.3032 3.18971 10.7697 2.89941 12 2.89941ZM9.18848 18.0996C9.31463 18.6063 9.57389 19.0748 9.94922 19.4502C10.4929 19.9938 11.2302 20.2996 11.999 20.2998C12.7681 20.2998 13.506 19.994 14.0498 19.4502C14.4252 19.0748 14.6834 18.6063 14.8096 18.0996H9.18848ZM12 4.2998C10.9825 4.2998 9.93753 4.53654 9.09863 5.37695C8.2494 6.22787 7.50018 7.80812 7.33398 10.7412C7.29148 11.4915 7.26708 11.9436 7.20605 12.2627C7.14528 12.5801 7.0333 12.9128 6.85352 13.4521L5.77148 16.6992H18.2285L17.1465 13.4521C16.9667 12.9127 16.8537 12.5802 16.793 12.2627C16.732 11.9436 16.7085 11.4914 16.666 10.7412C16.4998 7.80834 15.7505 6.22792 14.9014 5.37695C14.0625 4.53655 13.0174 4.29985 12 4.2998Z" fill="currentColor"/></svg>`,
   // notification-muted.svg
   bellOff: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m14.9386 19c-.3363 0-.5779.3279-.5466.6628.01.1075.0155.2199.0155.3372 0 1.3889-1.2063 2.75-2.75 2.75-1.5436 0-2.74998-1.3611-2.74998-2.75 0-.1173.0055-.2297.01555-.3372.0313-.3349-.21032-.6628-.54661-.6628h-2.08457l-2.01156 2.0116c-.29289.2929-.76777.2929-1.06066 0s-.29289-.7678 0-1.0607l15.90993-15.9099c.2929-.29289.7677-.29289 1.0606 0s.2929.76777 0 1.06066l-3.4017 3.40169.6699 3.85145c.13.748.4703 1.4435.981 2.0053l1.1769 1.2946c1.168 1.2847.2564 3.3453-1.4799 3.3453zm.553-9.19969-7.69971 7.69969h10.34451c.4341 0 .662-.5151.37-.8363l-1.1769-1.2946c-.7022-.7724-1.1701-1.7288-1.349-2.7573zm-7.95352 1.64099-2.07314 2.0731c.18837-.3624.32108-.7532.39175-1.1596l1.11547-6.41395c.39616-2.27792 2.37325-3.94085 4.68534-3.94085 1.4427 0 2.755.64744 3.6341 1.68774l-1.0662 1.0662c-.6006-.7696-1.5354-1.25394-2.5679-1.25394-1.5828 0-2.93632 1.13842-3.20752 2.69786zm3.16102 7.5775c.011-.0115.0266-.0188.0425-.0188h1.8319c.0159 0 .031.0068.042.0183.0029.0034.01.0119.0201.0255.023.0306.0609.0862.1011.1666.0791.1583.1708.4192.1708.7896 0 .6111-.5845 1.25-1.25 1.25s-1.25-.6389-1.25-1.25c0-.3704.0917-.6313.1708-.7896.0402-.0804.0781-.136.1011-.1666.0102-.0136.0168-.0216.0197-.025z" fill="currentColor" fill-rule="evenodd"/></svg>`,
+  // edit_pencil.svg — rename affordance on the thread title (#22275)
+  edit: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m16.187 3.24584c1.2612-1.26112 3.3058-1.26112 4.567.00001 1.2611 1.26112 1.2611 3.3058 0 4.56692l-11.75175 11.75173c-.42718.4272-.95618.7384-1.53706.9044l-4.20764 1.2022c-.26236.0749-.54473.0018-.73767-.1912-.19294-.1929-.26611-.4753-.19115-.7376l1.20219-4.2077c.16596-.5809.47723-1.1099.90441-1.5371zm3.5044 1.06253c-.6743-.6743-1.7675-.6743-2.4418 0l-11.75175 11.75173c-.24661.2466-.4263.552-.52211.8873-.36205 1.2672.80948 2.4387 2.07664 2.0767.33534-.0958.64073-.2755.88734-.5222l11.75168-11.75166c.6743-.6743.6743-1.76756 0-2.44187z" fill="currentColor" fill-rule="evenodd"/></svg>`,
   // checkmark.svg
   check: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m21.416 2.37592c.3447.22976.4378.69542.208 1.04006l-11.99996 18.00002c-.12464.1869-.32654.3082-.55014.3303s-.44535-.0571-.60423-.216l-6-6c-.29289-.2929-.29289-.7678 0-1.0607s.76777-.2929 1.06066 0l5.3531 5.3531 11.49257-17.23877c.2297-.34464.6954-.43777 1.04-.20801z" fill="currentColor" fill-rule="evenodd"/></svg>`,
   // net-new clock (no source) — thread-list "when"
@@ -108,18 +111,20 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
 // close (X) — desktop side-panel dismiss (net-new; the full-screen view uses the back arrow instead)
 const CLOSE_X = `<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
 
-function threadHeader({ title, sub, muted, back = true, menu = false, close = false }) {
+function threadHeader({ title, sub, muted, back = true, menu = false, close = false, editable = false }) {
   return `
     <div class="thread-view__header">
       ${back && !close ? `<button class="thread-view__back" data-back title="Back" aria-label="Back to conversation">${THREAD_ICONS.back}</button>` : ''}
       ${close ? `<span class="thread-view__lead-icon" aria-hidden="true">${THREAD_ICONS.thread}</span>` : ''}
       <div class="thread-view__titles">
-        <span class="thread-view__title">${title}</span>
-        <span class="thread-view__sub">${sub}</span>
+        <span class="thread-view__title-row">
+          <span class="thread-view__title" data-thread-title>${title}</span>
+          ${editable ? `<button class="thread-view__title-edit" data-edit-title title="Rename thread" aria-label="Rename thread">${THREAD_ICONS.edit}</button>` : ''}
+        </span>
+        <span class="thread-view__sub">${sub}${muted ? `<span class="thread-view__muted" title="Muted" aria-label="Muted">${THREAD_ICONS.bellOff}</span>` : ''}</span>
       </div>
       <div class="thread-view__actions">
         <button class="chat-header__action-btn" title="Search" aria-label="Search thread">${CHANNEL_ICONS.search}</button>
-        ${menu ? `<button class="chat-header__action-btn" data-mute title="${muted ? 'Unmute' : 'Mute'}" aria-label="${muted ? 'Unmute thread' : 'Mute thread'}" aria-pressed="${muted}">${muted ? THREAD_ICONS.bellOff : THREAD_ICONS.bell}</button>` : ''}
         ${menu ? `<button class="chat-header__action-btn" data-thread-more title="More" aria-label="Thread options" aria-haspopup="true">${CHANNEL_ICONS.more}</button>` : ''}
         ${close ? `<button class="chat-header__action-btn thread-view__close" data-back title="Close" aria-label="Close thread panel">${CLOSE_X}</button>` : ''}
       </div>
@@ -133,19 +138,18 @@ export function resolveParent(surface, parentMsgId) {
   if (parentMsgId) return store.getPendingParent(parentMsgId)
   return null // composer-initiated new thread: no parent message to pin
 }
-// prefill the thread name from the start of the parent message (trimmed to a word boundary)
-function nameFromParent(text) {
-  const t = (text || '').trim().replace(/\s+/g, ' ')
-  if (t.length <= 48) return t
-  const cut = t.slice(0, 48), sp = cut.lastIndexOf(' ')
-  return sp > 20 ? cut.slice(0, sp) : cut
+// ONE prefill rule, shared by both start-a-thread entry points: the first 50 characters of the
+// source message — the existing message for #22274 §1.1.2, the message being typed for #22273 §2.3.
+export const TITLE_PREFILL_CHARS = 50
+export function titleFromText(text) {
+  return (text || '').trim().replace(/\s+/g, ' ').slice(0, TITLE_PREFILL_CHARS)
 }
 const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 export function renderCreate(surface, parentMsgId, { panel = false, mobile = false } = {}) {
   const s = SURFACES[surface] || SURFACES.channel
   const parent = resolveParent(surface, parentMsgId)
-  const prefillName = parent ? escAttr(nameFromParent(parent[4])) : ''
+  const prefillName = parent ? escAttr(titleFromText(parent[4])) : ''
   return `
     <div class="thread-view thread-create">
       ${threadHeader({ title: 'Creating Thread', sub: s.in, back: !panel, close: panel, menu: false })}
@@ -174,7 +178,7 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
   const replyRows = t.messages.map(m => msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
-      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel })}
+      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel, editable: store.isCreator(t) })}
       <div class="thread-view__messages">
         <div class="thread-view__parent">${msg(...t.parentMsg)}</div>
         <div class="thread-view__reply-sep"><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></div>
@@ -307,16 +311,14 @@ export function bindThreads() {
     }
     bindComposerSend(root, send)
 
-    // mute toggle (epic §18) — durable in model, suppresses UC5 notifications
-    root.querySelector('[data-mute]')?.addEventListener('click', () => {
-      const t = store.getThread(threadId); store.setMuted(threadId, !t.muted)
-    })
-    // more menu → follow/unfollow · keep-visible · close · delete (epic §18/§21/§23)
+    // more menu → follow · mute · keep-visible · archive · delete (epic §18/§21/§23, #22282)
     root.querySelector('[data-thread-more]')?.addEventListener('click', (e) => {
       e.stopPropagation(); openThreadMenu(root, threadId, e.currentTarget)
     })
     // inline edit of own thread messages (epic §16/UC2)
     bindInlineEdit(root, threadId)
+    // inline rename of the thread title, creator-only (#22275)
+    bindTitleEdit(root, threadId)
   }
 
   // back → return to the originating surface (epic §24/UC10)
@@ -347,6 +349,45 @@ export function bindComposerSend(root, send) {
   const input = root.querySelector('[data-thread-input]')
   btn?.addEventListener('click', send)
   input?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } })
+}
+
+// #22275 — inline rename of the thread title, in place in the header (no modal). Creator-only:
+// the pencil is rendered only when store.isCreator(t), so binding is a no-op elsewhere.
+// The current value is read from the rendered `textContent`, which decodes the stored (escaped)
+// title back to plain text — writing it straight into the input would show raw entities.
+export function bindTitleEdit(root, threadId) {
+  const titleEl = root.querySelector('[data-thread-title]')
+  const pencil = root.querySelector('[data-edit-title]')
+  if (!titleEl || !pencil) return
+  const start = () => {
+    if (root.querySelector('.thread-view__title-input')) return
+    const current = titleEl.textContent.trim()
+    const input = document.createElement('input')
+    input.className = 'thread-view__title-input'
+    input.type = 'text'
+    input.value = current
+    input.maxLength = store.TITLE_MAX
+    input.setAttribute('aria-label', 'Thread name')
+    titleEl.style.display = 'none'; pencil.style.display = 'none'
+    titleEl.after(input)
+    input.focus(); input.setSelectionRange(current.length, current.length)
+    let done = false
+    const restore = () => { done = true; input.remove(); titleEl.style.display = ''; pencil.style.display = '' }
+    const commit = () => {
+      if (done) return
+      const next = input.value.trim()
+      restore()
+      // renameThread ignores an empty or unchanged title, so cancelling by clearing is safe
+      store.renameThread(threadId, next)
+    }
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); commit() }
+      else if (e.key === 'Escape') { e.preventDefault(); restore() }
+    })
+    input.addEventListener('blur', commit)
+  }
+  pencil.addEventListener('click', (e) => { e.stopPropagation(); start() })
+  titleEl.addEventListener('dblclick', start)
 }
 
 // inline edit: click the hover Edit quick-action on an own message → editable field
@@ -413,6 +454,7 @@ export function openThreadMenu(root, threadId, anchor) {
   const item = (icon, label, act, cls = '') => `<button class="msg-cmenu__item${cls}" role="menuitem" data-act="${act}">${icon}<span>${label}</span></button>`
   menu.innerHTML =
     item(THREAD_ICONS.check, t.followed ? 'Unfollow' : 'Follow', 'follow') +
+    item(t.muted ? THREAD_ICONS.bell : THREAD_ICONS.bellOff, t.muted ? 'Unmute thread' : 'Mute thread', 'mute') +
     item(THREAD_ICONS.link, 'Share link', 'share') +
     item(THREAD_ICONS.pin, t.keptVisible ? 'Unpin from list' : 'Keep visible', 'keep') +
     (t.closed ? item(THREAD_ICONS.archive, 'Unarchive', 'reopen') : item(THREAD_ICONS.archive, 'Archive', 'close')) +
@@ -423,6 +465,7 @@ export function openThreadMenu(root, threadId, anchor) {
   root.appendChild(menu)
   const acts = {
     follow: () => store.setFollowed(threadId, !t.followed),
+    mute: () => store.setMuted(threadId, !t.muted),
     share: () => openShareModal(t),
     keep: () => store.setKeptVisible(threadId, !t.keptVisible),
     close: () => store.closeThread(threadId),

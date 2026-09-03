@@ -2,9 +2,11 @@
 // Hardcoded fill/stroke colors replaced with currentColor
 
 import * as store from '../thread-store.js'
+// the one thread glyph (swap-point for Vadym's official icon)
+import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 import { SURFACES } from '../thread-store.js'
 // desktop thread side-panel reuses the thread renderers + binders (epic §1)
-import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindInlineEdit, floatToast } from './threads.js'
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindInlineEdit, bindTitleEdit, titleFromText, floatToast } from './threads.js'
 
 export const CHANNEL_ICONS = {
   // tiny/channel.svg (viewBox="0 0 16 17") — community channel type icon
@@ -263,8 +265,10 @@ export function bindCommunityChannel(view, ver) {
   }
 }
 
-// Thread glyph — reply-in-thread bubble (net-new; Status line style)
-const THREAD_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 9.5 11 12l2.5 2.5M11 12h3.2a2.3 2.3 0 0 1 0 4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+// close.svg — clears the thread-name field (#22273 §2.2)
+const CLEAR_X = `<svg viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
+// #22273 §2.3 — shown when there is no message text to derive a name from
+const THREAD_NAME_PLACEHOLDER = 'Add thread name here'
 // lock.svg (Status asset) — closed-thread glyph, so a closed card/row reads differently from an open one
 const LOCK_GLYPH = `<svg viewBox="0 0 10 12" fill="none"><path clip-rule="evenodd" d="m2 5.5v-1.74359c0-1.78315 1.32593-3.25641 3-3.25641s3 1.47326 3 3.25641v1.74359h.5c.82843 0 1.5.67157 1.5 1.5v3c0 .8284-.67157 1.5-1.5 1.5h-7c-.828427 0-1.5-.6716-1.5-1.5v-3c0-.82843.671573-1.5 1.5-1.5zm1.38462 0h3.23076v-1.74359c0-1.04908-.74044-1.87179-1.61538-1.87179s-1.61538.82271-1.61538 1.87179z" fill="currentColor" fill-rule="evenodd"/></svg>`
 // archive box — an archived thread is tucked away but NOT locked (still repliable)
@@ -478,9 +482,14 @@ function bindThreadPanel(p, cfg = {}) {
         if (copyOn) floatToast(document.querySelector(rootSel), 'Reply also posted to ' + (SURFACES[surface]?.label || 'channel'))
       })
     })
-    panel.querySelector('[data-mute]')?.addEventListener('click', () => { const t = store.getThread(threadId); store.setMuted(threadId, !t.muted) })
     panel.querySelector('[data-thread-more]')?.addEventListener('click', (e) => { e.stopPropagation(); openThreadMenu(panel, threadId, e.currentTarget) })
     bindInlineEdit(panel, threadId)
+    bindTitleEdit(panel, threadId)   // #22275 — creator renames the title in place
+    // saved state ?tmenu=1 — auto-open the "…" menu (shows Mute/Unmute, #22282)
+    if (p.get('tmenu') === '1') {
+      const anchor = panel.querySelector('[data-thread-more]')
+      if (anchor) requestAnimationFrame(() => openThreadMenu(panel, threadId, anchor))
+    }
   }
 
   // spec: move focus to the thread input. Focus synchronously (the panel DOM is already in place at
@@ -490,28 +499,34 @@ function bindThreadPanel(p, cfg = {}) {
   requestAnimationFrame(() => { if (document.activeElement !== focusTarget()) focusTarget()?.focus() })
 }
 
+// #22274 §1 — starting a thread from an EXISTING message. Both entry points (context menu on
+// desktop + mobile, hover bar on desktop) route here so they can never drift apart. An existing
+// thread on that message opens it; otherwise the create flow opens, prefilled from the message.
+function startThreadFromMessage(msgEl, surface, before) {
+  const parentMsgId = msgEl.dataset.msgId
+  const parentMsg = readMsg(msgEl)
+  const existing = parentMsgId ? store.threadForParent(parentMsgId, surface) : null
+  before?.()
+  if (isDesktop()) {
+    // §1.1.1 — the new thread view opens in the RIGHT SIDEBAR, not full-screen
+    if (existing) openThreadPanel({ threadId: existing.id, surface })
+    else openThreadPanel({ create: true, parentMsgId, parentMsg, surface })
+  } else {
+    if (existing) goToThread(existing.id, surface)
+    else goToCreate(parentMsgId, parentMsg, surface)
+  }
+}
+
 // open the message context menu on a specific message (real trigger — from the hover "More"
 // quick-action or the deep-link). Gates Edit/Delete on message ownership.
-function openContextMenu(msgEl) {
+function openContextMenu(msgEl, surface = 'channel') {
   document.querySelectorAll('.message--menu-open').forEach(m => { m.classList.remove('message--menu-open'); m.querySelector('.msg-cmenu')?.remove() })
   const isSelf = msgEl.querySelector('.message__sender')?.textContent === 'You'
   msgEl.classList.add('message--menu-open')
   msgEl.insertAdjacentHTML('beforeend', msgContextMenu(isSelf))
   const menu = msgEl.querySelector('.msg-cmenu')
-  const surface = 'channel'
-  const parentMsgId = msgEl.dataset.msgId
-  const parentMsg = readMsg(msgEl)
-  menu.querySelector('[data-reply-in-thread]')?.addEventListener('click', () => {
-    const existing = parentMsgId ? store.threadForParent(parentMsgId, surface) : null
-    if (isDesktop()) {
-      close()  // dismiss the context menu + its listeners before the panel re-render
-      if (existing) openThreadPanel({ threadId: existing.id, surface })
-      else openThreadPanel({ create: true, parentMsgId, parentMsg, surface })
-    } else {
-      if (existing) goToThread(existing.id, surface)
-      else goToCreate(parentMsgId, parentMsg, surface)
-    }
-  })
+  // dismiss the context menu + its listeners before the panel re-render
+  menu.querySelector('[data-reply-in-thread]')?.addEventListener('click', () => startThreadFromMessage(msgEl, surface, close))
   menu.querySelector('.msg-cmenu__item')?.focus()
   const trigger = msgEl.querySelector('.message__qa-btn[aria-label="More"]')
   const close = () => { menu.remove(); msgEl.classList.remove('message--menu-open'); document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
@@ -591,6 +606,23 @@ function bindThreadAffordances(p, view) {
     if (t) mEl.insertAdjacentHTML('afterend', threadCard(t))
   })
 
+  // hover quick-actions: thread icon immediately after Reply (#22274 §1.1), mirroring its position
+  // in the context menu. Injected here (revamp-only bind path) so `quickActions()` stays certified.
+  scope.querySelectorAll('.messages .message[data-msg-id]').forEach(mEl => {
+    const bar = mEl.querySelector('.message__quick-actions')
+    const replyBtn = bar?.querySelector('.message__qa-btn[aria-label="Reply"]')
+    if (!bar || !replyBtn || bar.querySelector('[data-qa-thread]')) return
+    const existing = store.threadForParent(mEl.dataset.msgId, surface)
+    const btn = document.createElement('button')
+    btn.className = 'message__qa-btn message__qa-btn--thread'
+    btn.setAttribute('data-qa-thread', '')
+    const label = existing ? 'Open thread' : 'Reply in thread'
+    btn.title = label; btn.setAttribute('aria-label', label)
+    btn.innerHTML = THREAD_GLYPH
+    replyBtn.after(btn)
+    btn.addEventListener('click', (e) => { e.stopPropagation(); startThreadFromMessage(mEl, surface) })
+  })
+
   // connector spine: line from the parent message's avatar down to the centre of its thread card (#21932)
   const drawSpines = () => scope.querySelectorAll('.thread-card').forEach(card => {
     const av = card.previousElementSibling?.querySelector('.message__avatar')
@@ -615,22 +647,77 @@ function bindThreadAffordances(p, view) {
   // real trigger: the hover quick-actions "More" opens the context menu for THAT message (epic §1.1)
   scope.querySelectorAll('.messages .message').forEach(mEl => {
     const moreBtn = mEl.querySelector('.message__qa-btn[aria-label="More"]')
-    moreBtn?.addEventListener('click', (e) => { e.stopPropagation(); openContextMenu(mEl) })
+    moreBtn?.addEventListener('click', (e) => { e.stopPropagation(); openContextMenu(mEl, surface) })
   })
 
   // deep-link: ?menu=thread auto-opens the context menu on the first message (saved-state)
-  if (p.get('menu') === 'thread' && msgs[0]) { msgs[0].classList.add('message--peek'); openContextMenu(msgs[0]) }
+  if (p.get('menu') === 'thread' && msgs[0]) { msgs[0].classList.add('message--peek'); openContextMenu(msgs[0], surface) }
   // deep-link: ?thread=card[-closed] highlights the seeded card (already rendered from the store)
 
-  // composer thread icon (epic §1.2) — starts a NEW thread (→ create flow). Highlight on ?qa=thread
-  const actions = scope.querySelector('.chat-input .chat-input__actions')
+  // ---- #22273: start a thread from a NEW message, entirely inside the chat composer ----
+  // The thread icon in the quick-actions bar is a TOGGLE (§1): on → the thread-name field appears
+  // inside the input box; off → its content is cleared and it disappears (§1.1.1). Sending with the
+  // toggle on creates the thread and opens it in the right sidebar (§3).
+  const composer = scope.querySelector('.chat-input')
+  const actions = composer?.querySelector('.chat-input__actions')
   if (actions) {
+    const field = composer.querySelector('[data-chat-input]')
+    const nameRow = composer.querySelector('[data-thread-name-row]')
+    const nameInput = composer.querySelector('[data-chat-thread-name]')
+    const clearBtn = composer.querySelector('[data-chat-thread-clear]')
+
     const btn = document.createElement('button')
-    btn.className = 'chat-input__btn chat-input__thread-btn' + (p.get('qa') === 'thread' ? ' checked' : '')
-    btn.title = 'New thread'; btn.setAttribute('aria-label', 'Start a new thread'); btn.innerHTML = THREAD_GLYPH
+    btn.className = 'chat-input__btn chat-input__thread-btn'
+    btn.type = 'button'
+    btn.title = 'New thread'; btn.setAttribute('aria-label', 'Start a new thread')
+    btn.setAttribute('aria-pressed', 'false')
+    btn.innerHTML = THREAD_GLYPH
     actions.insertBefore(btn, actions.firstChild)
-    // desktop: open the create flow in the side panel; mobile: full-screen create
-    btn.addEventListener('click', () => desktop ? openThreadPanel({ create: true, surface }) : goToCreate(null, null, surface))
+
+    // §2.3 — the placeholder tracks the message being typed (first 50 chars), falling back to the
+    // default prompt. It stays a PLACEHOLDER, never a value, so an untouched field means "no name
+    // chosen" and Send can derive the title itself.
+    const syncPlaceholder = () => {
+      if (!nameInput) return
+      nameInput.placeholder = titleFromText(field?.value || '') || THREAD_NAME_PLACEHOLDER
+    }
+    // §2.2 — the clear button exists only while there is content to clear
+    const syncClear = () => { if (clearBtn) clearBtn.hidden = !(nameInput?.value || '') }
+
+    let threadOn = false
+    const setThreadMode = (on, { focus = true } = {}) => {
+      threadOn = on
+      btn.classList.toggle('checked', on)
+      btn.setAttribute('aria-pressed', String(on))
+      composer.classList.toggle('chat-input--threading', on)
+      if (nameRow) nameRow.hidden = !on
+      if (!on && nameInput) nameInput.value = ''    // §1.1.1 — toggling off clears the content
+      syncClear()
+      if (on) { syncPlaceholder(); if (focus) nameInput?.focus() }
+    }
+    btn.addEventListener('click', () => setThreadMode(!threadOn))
+    nameInput?.addEventListener('input', syncClear)
+    clearBtn?.addEventListener('click', () => { nameInput.value = ''; syncClear(); nameInput.focus() })
+    field?.addEventListener('input', syncPlaceholder)
+
+    const send = () => {
+      const text = (field?.value || '').trim()
+      if (!text) { field?.focus(); return }
+      if (!threadOn) { store.postChannelMessage(surface, text); field.value = ''; return }
+      // §3 — thread icon on + something typed + Send → the thread is created and opened
+      const title = (nameInput?.value || '').trim() || titleFromText(text)
+      const t = store.createThread({ surface, title, firstMessage: text })
+      field.value = ''
+      setThreadMode(false, { focus: false })
+      // drop the saved-state param so the re-render doesn't reopen the toggle behind the new thread
+      try { const u = new URL(location.href); u.searchParams.delete('qa'); history.replaceState(null, '', u) } catch {}
+      desktop ? openThreadPanel({ threadId: t.id, surface }) : goToThread(t.id, surface)
+    }
+    composer.querySelector('[data-chat-send]')?.addEventListener('click', send)
+    field?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } })
+
+    // saved state ?qa=thread opens the composer already toggled on
+    if (p.get('qa') === 'thread') setThreadMode(true, { focus: false })
   }
 
   // open a thread from its in-chat card (in the chat → back returns to the chat)
@@ -708,19 +795,26 @@ const THREADS_HIDDEN_KEY = 'threadsHidden'
 const areThreadsHidden = () => { try { return sessionStorage.getItem(THREADS_HIDDEN_KEY) === '1' } catch { return false } }
 const setThreadsHidden = (v) => { try { v ? sessionStorage.setItem(THREADS_HIDDEN_KEY, '1') : sessionStorage.removeItem(THREADS_HIDDEN_KEY) } catch {} }
 
+// a thread row in a LIST view (community channel list + Messages chat list). Clicking one opens the
+// thread in the MAIN pane (#22279 §1) — that routing lives in bindThreadAffordances, keyed off
+// data-open-thread, so both lists inherit it from this one markup.
+function listThreadRow(t, surface) {
+  return `
+    <button class="channel-thread${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="${surface}" title="Open thread">
+      <span class="channel-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
+      <span class="channel-thread__name">${t.title}</span>
+      ${t.keptVisible ? `<span class="channel-thread__pin" title="Kept visible">${CHANNEL_ICONS.pinHeader}</span>` : ''}
+      ${t.followed && t.unread ? `<span class="channel-thread__count channel-thread__count--unread" title="New messages">${t.newCount || 1}</span>` : `<span class="channel-thread__count">${t.messages.length}</span>`}
+    </button>`
+}
+
 function renderLeftPanel(revamp) {
   // epic §6: active/followed channel threads surface under their parent channel in the left list,
   // with an unread indicator, honouring §6.1 disappear rules (closed / 1-week-inactive / keep-visible).
   // channelListThreads already applies §6.1 (surface/closed/1-week/keep-visible) + the #22 followed
   // rule — trust it; a secondary parentMsgId filter here wrongly dropped kept-visible/active threads.
   const genThreads = (revamp && !areThreadsHidden()) ? store.channelListThreads('channel') : []
-  const threadRows = genThreads.map(t => `
-    <button class="channel-thread${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="channel" title="Open thread">
-      <span class="channel-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
-      <span class="channel-thread__name">${t.title}</span>
-      ${t.keptVisible ? `<span class="channel-thread__pin" title="Kept visible">${CHANNEL_ICONS.pinHeader}</span>` : ''}
-      ${t.followed && t.unread ? `<span class="channel-thread__count channel-thread__count--unread" title="New messages">${t.newCount || 1}</span>` : `<span class="channel-thread__count">${t.messages.length}</span>`}
-    </button>`).join('')
+  const threadRows = genThreads.map(t => listThreadRow(t, 'channel')).join('')
   return `
     <div class="community-header">
       <div class="community-header__info">
@@ -904,7 +998,9 @@ function renderCopiedGroups(copied, surface) {
     // deleted thread → the copy persists but its link is gone: show "from a deleted thread"
     const tagInner = deleted
       ? `<span class="message__thread-ref-deleted">from a deleted thread</span>`
-      : `replied to a thread: <button type="button" class="message__thread-ref-link" data-open-thread="${g.threadId}" data-surface="${surface}">#${g.threadTitle}</button>`
+      // read the title LIVE from the store, never the parentPost snapshot — the creator can rename
+      // the thread (#22275) and a stale cached name here would silently disagree with the header
+      : `replied to a thread: <button type="button" class="message__thread-ref-link" data-open-thread="${g.threadId}" data-surface="${surface}">#${t.title}</button>`
     const texts = g.posts.map(pp => `<div class="message__text">${pp.text}</div>`).join('')
     // sits above the avatar, same style as the "Also sent" tag but with the thread glyph
     return `
@@ -927,24 +1023,36 @@ function renderCenterPanel(revamp, panelOpen = false, mobile = false, chat = 'co
   const copied = revamp && ctx.surface === 'channel' ? store.parentPosts('channel') : []
   const copiedHtml = renderCopiedGroups(copied, ctx.surface)
   const header = mobile ? chatHeaderMobile(ctx) : chatHeaderDesktop(ctx, panelOpen)
+  // messages the user has sent from the live composer, appended to the end of the stream
+  const ownHtml = revamp ? store.ownPosts(ctx.surface).map(m =>
+    msg('You', 'A', '#4360DF', m.time, m.text, { id: m.id, delivery: 'sent' })).join('') : ''
+  // #22273 §1.1 — the thread-name field lives INSIDE the input box, above the message row, and is
+  // rendered hidden: the composer thread toggle reveals it (§1.1) and hides + clears it (§1.1.1).
+  const threadNameRow = revamp ? `
+          <div class="chat-thread-name" data-thread-name-row hidden>
+            <span class="chat-thread-name__glyph">${THREAD_GLYPH}</span>
+            <input class="chat-thread-name__input" data-chat-thread-name type="text" maxlength="${store.TITLE_MAX}" placeholder="${THREAD_NAME_PLACEHOLDER}" aria-label="Thread name" />
+            <button class="chat-thread-name__clear" data-chat-thread-clear title="Clear thread name" aria-label="Clear thread name" hidden>${CLEAR_X}</button>
+          </div>` : ''
   return `
     ${header}
     <div class="messages">
-      ${ctx.messages(copiedHtml)}
+      ${ctx.messages(copiedHtml)}${ownHtml}
     </div>
     <div class="chat-input">
       ${replyPreview()}
       <div class="chat-input__row">
         <button class="chat-input__cmd-btn" title="Commands">${CHANNEL_ICONS.chatCommands}</button>
         <div class="chat-input__box">
+          ${threadNameRow}
           <div class="chat-input__input-row">
-            <textarea class="chat-input__field" placeholder="Type a message..." rows="1" readonly></textarea>
+            <textarea class="chat-input__field" data-chat-input placeholder="Type a message..." rows="1"${revamp ? '' : ' readonly'}></textarea>
             <div class="chat-input__actions">
               ${formatGroup()}
               <button class="chat-input__btn" title="Emoji">${CHANNEL_ICONS.emojis}</button>
               <button class="chat-input__btn" title="GIF">${CHANNEL_ICONS.gif}</button>
               <button class="chat-input__btn" title="Stickers">${CHANNEL_ICONS.stickers}</button>
-              <button class="chat-input__btn chat-input__btn--send" title="Send">${CHANNEL_ICONS.send}</button>
+              <button class="chat-input__btn chat-input__btn--send" data-chat-send title="Send">${CHANNEL_ICONS.send}</button>
             </div>
           </div>
         </div>
@@ -955,14 +1063,21 @@ function renderCenterPanel(revamp, panelOpen = false, mobile = false, chat = 'co
 
 // minimal Messenger left panel for the DM/group demo — 2 chats, active highlighted, clickable to switch
 function renderMessengerLeft(active) {
-  const item = (key, name, avatar, color, sub) => `
+  // #22279 §1 — a DM/group thread needs a row in the CHAT list too, not only in a channel list.
+  // Same §6.1 lifecycle rules and the same row markup as the community channel list.
+  const threadsOf = (surface) => {
+    if (areThreadsHidden()) return ''
+    const rows = store.channelListThreads(surface).map(t => listThreadRow(t, surface)).join('')
+    return rows ? `<div class="channel-threads msgr-threads">${rows}</div>` : ''
+  }
+  const item = (key, name, avatar, color, sub, surface) => `
     <button class="msgr-chat${active === key ? ' active' : ''}" data-open-chat="${key}" title="Open ${name}">
       <span class="msgr-chat__avatar" style="background:${color}">${avatar}</span>
       <span class="msgr-chat__text">
         <span class="msgr-chat__name">${name}</span>
         <span class="msgr-chat__sub">${sub}</span>
       </span>
-    </button>`
+    </button>${threadsOf(surface)}`
   return `
     <div class="community-header">
       <div class="community-header__info">
@@ -971,8 +1086,8 @@ function renderMessengerLeft(active) {
       </div>
     </div>
     <div class="msgr-list">
-      ${item('dm', 'carmen.eth', 'C', '#887AF9', 'Two topics at once — let me thread…')}
-      ${item('group', 'Design Team', 'D', '#4E77F5', 'Should the send-copy toggle default…')}
+      ${item('dm', 'carmen.eth', 'C', '#887AF9', 'Two topics at once — let me thread…', 'dm')}
+      ${item('group', 'Design Team', 'D', '#4E77F5', 'Should the send-copy toggle default…', 'group')}
     </div>`
 }
 

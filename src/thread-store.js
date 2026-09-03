@@ -5,7 +5,7 @@
 // subscribers, which re-render. Persisted to sessionStorage so state is durable across the
 // deep-link navigations (which do a full reload) within a tab.
 
-const KEY = 'threads-status-store-v3'
+const KEY = 'threads-status-store-v4'
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 // ---- surfaces: consistent thread experience across chat types (epic: Communities/Group/DM) ----
@@ -34,13 +34,17 @@ function seed() {
       ],
       group: [], dm: [],
     },
+    // plain messages the user sent into a conversation from the channel composer. The composer is
+    // live in the Threads version (#22273 §3 sends from it), so a non-thread send has to land
+    // somewhere real — otherwise Send reads as broken.
+    posts: { channel: [], group: [], dm: [] },
     // toast queue drained by the renderer
     toast: null,
     threads: [
       {
         id: 't-m1', surface: 'channel', channelLabel: '# general', parentMsgId: 'cc-1',
         parentMsg: ['Marcus', 'M', '#26A69A', '10:25', '11 themes built in one session — Nord, Dracula, Solarized, even a hacker green-on-black one. All live-swappable.', { senderId: '0x04d7e1...a92b05' }],
-        title: 'Threads MVP',
+        title: 'Threads MVP', createdBy: 'You',
         messages: [
           { id: 'r1', name: 'Volo', initial: 'V', color: '#D37EF4', time: '10:31', text: "Nice. What's the main goal — better conversations or more engagement?", own: false, ts: now - 40 * min, opts: { ensName: 'volo.eth', senderId: '0x04zQ39...9d4Gs0' } },
           { id: 'r2', name: 'You', initial: 'A', color: '#4360DF', time: '10:33', text: 'Thinking 3 levels max. Beyond that we collapse older replies.', own: true, ts: now - 38 * min, opts: { delivery: 'delivered', alsoSent: true } },
@@ -52,7 +56,7 @@ function seed() {
       {
         id: 't-design', surface: 'channel', channelLabel: '# design', parentMsgId: 'm3',
         parentMsg: ['Elena', 'E', '#D37EF4', '09:12', 'Starting the design-tokens migration today — moving every hardcoded colour to a CSS var.', { ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' }],
-        title: 'Design tokens migration',
+        title: 'Design tokens migration', createdBy: 'Elena',
         messages: [
           { id: 'd1', name: 'Elena', initial: 'E', color: '#D37EF4', time: '09:20', text: 'Base palette is done. Semantic layer next.', own: false, ts: now - 12 * hr, opts: {} },
           { id: 'd2', name: 'Marcus', initial: 'M', color: '#26A69A', time: '09:44', text: 'Nice — I can restyle a whole screen from one file now.', own: false, ts: now - 11 * hr, opts: {} },
@@ -63,7 +67,7 @@ function seed() {
       {
         id: 't-roadmap', surface: 'channel', channelLabel: '# announcements', parentMsgId: 'm6',
         parentMsg: ['Marcus', 'M', '#26A69A', '08:00', 'Q3 roadmap is up for review — threads, wallet revamp, and the new activity center.', { senderId: '0x04d7e1...a92b05' }],
-        title: 'Q3 roadmap',
+        title: 'Q3 roadmap', createdBy: 'Marcus',
         messages: [
           { id: 'q1', name: 'Dana', initial: 'D', color: '#2A799B', time: '08:15', text: 'Can we pull the activity center forward?', own: false, ts: now - 3 * hr, opts: {} },
         ],
@@ -73,7 +77,7 @@ function seed() {
       {
         id: 't-release', surface: 'channel', channelLabel: '# status-go', parentMsgId: 'm7',
         parentMsg: ['Kai', 'K', '#FE8F59', 'Mon', 'Release notes for v2.30 — anyone remember the exact migration order?', { senderId: '0x04f3c8...7d1e02' }],
-        title: 'Old release notes',
+        title: 'Old release notes', createdBy: 'Kai',
         messages: [
           { id: 'x1', name: 'Sam', initial: 'S', color: '#C4A052', time: 'Mon', text: 'Archived — see the wiki.', own: false, ts: now - 15 * day, opts: {} },
         ],
@@ -83,7 +87,7 @@ function seed() {
       {
         id: 't-group', surface: 'group', channelLabel: 'Design Team', parentMsgId: 'g1',
         parentMsg: ['Elena', 'E', '#D37EF4', '11:02', 'Should the send-copy toggle default on or off?', { ensName: 'elena.eth' }],
-        title: 'Copy-to-parent default',
+        title: 'Copy-to-parent default', createdBy: 'You',
         messages: [
           { id: 'gr1', name: 'You', initial: 'A', color: '#4360DF', time: '11:05', text: 'Off by default — least surprise.', own: true, ts: now - 20 * min, opts: { delivery: 'delivered' } },
         ],
@@ -93,18 +97,18 @@ function seed() {
       {
         id: 't-dm', surface: 'dm', channelLabel: 'carmen.eth', parentMsgId: 'dm1',
         parentMsg: ['carmen.eth', 'C', '#887AF9', '14:20', 'Two topics at once — let me thread the design one.', {}],
-        title: 'Avatar sizes',
+        title: 'Avatar sizes', createdBy: 'carmen.eth',
         messages: [
           { id: 'dm_r1', name: 'carmen.eth', initial: 'C', color: '#887AF9', time: '14:21', text: '32px in the member list, 24 in the channel list.', own: false, ts: now - 2 * hr, opts: {} },
         ],
-        followed: false, muted: false, closed: false, deleted: false, keptVisible: false,
+        followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
         unread: false, lastActivityTs: now - 2 * hr,
       },
       {
         // deleted thread — still depicted in-chat as a tombstone under its parent (#21932 §4)
         id: 't-deleted', surface: 'channel', channelLabel: '# general', parentMsgId: 'cc-3',
         parentMsg: ['Elena', 'E', '#D37EF4', '10:30', 'Exactly. The design system lives in the browser now, not in Figma. Agent-readable and human-visible at the same time.', { ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' }],
-        title: 'Figma vs browser',
+        title: 'Figma vs browser', createdBy: 'Kai',
         messages: [
           { id: 'del1', name: 'Kai', initial: 'K', color: '#FE8F59', time: '10:31', text: 'Does this kill the Figma handoff entirely?', own: false, ts: now - 5 * hr, opts: {} },
         ],
@@ -116,7 +120,7 @@ function seed() {
         // closed thread — shown in-chat with a lock after the reply-count badge (no new replies)
         id: 't-closed-chat', surface: 'channel', channelLabel: '# general', parentMsgId: 'cc-6',
         parentMsg: ['Marcus', 'M', '#26A69A', '10:36', 'About 3 hours with two agents running — builder writes code, auditor verifies against QML. Cost maybe $25 in API tokens.', { senderId: '0x04d7e1...a92b05' }],
-        title: 'Token cost breakdown',
+        title: 'Token cost breakdown', createdBy: 'Dana',
         messages: [
           { id: 'tc1', name: 'Dana', initial: 'D', color: '#2A799B', time: '10:40', text: 'Is that per run or per day?', own: false, ts: now - 4 * hr, opts: {} },
           { id: 'tc2', name: 'Marcus', initial: 'M', color: '#26A69A', time: '10:42', text: 'Per full run. Wrapping this one up.', own: false, ts: now - 4 * hr, opts: {} },
@@ -200,6 +204,17 @@ export function channelListThreads(surface = 'channel') {
 // posts the user copied into a parent conversation (epic §3.1)
 export function parentPosts(surface = 'channel') { return ensure().parentPosts[surface] || [] }
 
+// plain composer messages for a surface (rendered at the end of the stream)
+export function ownPosts(surface = 'channel') { return (ensure().posts || {})[surface] || [] }
+export function postChannelMessage(surface, text) {
+  const s = ensure()
+  const body = escapeText(String(text || '').trim()); if (!body) return null
+  const m = { id: nid('cp'), text: body, time: timeNow() }
+  ;(s.posts = s.posts || {})[surface] = [...(s.posts[surface] || []), m]
+  emit()
+  return m
+}
+
 // unread count on followed, non-muted threads (epic §5 notifications badge)
 export function unreadCount() {
   return ensure().threads.filter(t => !t.deleted && t.followed && !t.muted && t.unread).length
@@ -228,9 +243,9 @@ export function createThread({ surface = 'channel', parentMsgId = null, parentMs
   const sc = SURFACES[surface] || SURFACES.channel
   const now = Date.now()
   const t = {
-    id: nid('t-'), surface, channelLabel: sc.label, parentMsgId,
+    id: nid('t-'), surface, channelLabel: sc.label, parentMsgId, createdBy: 'You',
     parentMsg: parentMsg || ['You', 'A', '#4360DF', 'now', 'New thread', { own: true }],
-    title: title.trim() || (firstMessage.trim().slice(0, 40)) || 'New thread',
+    title: cleanTitle(title) || cleanTitle(firstMessage.slice(0, TITLE_MAX)) || 'New thread',
     messages: [], followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
     unread: false, lastActivityTs: now,
   }
@@ -258,6 +273,20 @@ export function postReply(threadId, text, { copyToParent = false } = {}) {
   emit()
   return m
 }
+
+// #22275 — the thread CREATOR renames their thread in place. The title is stored escaped (like
+// message text) because every surface interpolates it straight into HTML; inline edit reads the
+// rendered `textContent` back, so entities round-trip instead of double-escaping.
+export function renameThread(threadId, title) {
+  const t = getThread(threadId); if (!t) return
+  const next = cleanTitle(title)
+  if (!next || next === t.title) return
+  t.title = next
+  ensure().toast = 'Thread renamed'
+  emit()
+}
+// only the creator gets the edit affordance (#22275 §1)
+export function isCreator(t) { return !!t && t.createdBy === 'You' }
 
 export function editMessage(threadId, msgId, text) {
   const t = getThread(threadId); if (!t) return
@@ -324,6 +353,11 @@ export function markRead(threadId, { silent = false } = {}) {
 }
 
 // ---- helpers ----
+// thread titles share one rule everywhere they are set (create + rename): trimmed, single-spaced,
+// capped at the product limit (#22273 §2.1) and HTML-escaped once at the boundary
+export const TITLE_MAX = 100
+function cleanTitle(s) { return escapeText(String(s || '').trim().replace(/\s+/g, ' ').slice(0, TITLE_MAX)) }
+
 function timeNow() {
   const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
@@ -335,4 +369,5 @@ function escapeText(s) {
 if (typeof window !== 'undefined') window.__threadStore = {
   getThread, allThreads, ensure, simulateActivity, unreadCount,
   channelListThreads, threadsForSurface, setFollowed, setMuted, closeThread, deleteThread, setKeptVisible,
+  renameThread, isCreator, createThread,
 }

@@ -28,7 +28,19 @@
 .thread-view__back svg { width: 22px; height: 22px; }
 .thread-view__titles { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .thread-view__title { font-family: var(--font-family-base); font-size: var(--font-size-primary); font-weight: 600; color: var(--direct-color-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.thread-view__sub { font-size: var(--font-size-aside); color: var(--base-color-1); }
+.thread-view__sub { font-size: var(--font-size-aside); color: var(--base-color-1); display: flex; align-items: center; gap: 5px; }
+/* muted state used to live on a header bell; the bell moved into the "…" menu (#22282), so the
+   state reads as a passive glyph beside the subtitle instead of a control */
+.thread-view__muted { display: inline-flex; width: 14px; height: 14px; color: var(--base-color-1); }
+.thread-view__muted svg { width: 100%; height: 100%; }
+
+/* #22275 — inline rename: pencil appears on hover/focus, input replaces the title in place */
+.thread-view__title-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.thread-view__title-edit { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--base-color-1); cursor: pointer; opacity: 0; transition: opacity .12s ease, background-color .12s ease; flex-shrink: 0; }
+.thread-view__title-edit svg { width: 14px; height: 14px; }
+.thread-view__header:hover .thread-view__title-edit, .thread-view__title-edit:focus-visible { opacity: 1; }
+.thread-view__title-edit:hover { background: var(--base-color-3); color: var(--direct-color-1); }
+.thread-view__title-input { font-family: var(--font-family-base); font-size: var(--font-size-primary); font-weight: 600; color: var(--direct-color-1); background: var(--base-color-3); border: 1px solid var(--primary-color-1); border-radius: 6px; padding: 1px 6px; min-width: 0; flex: 1; outline: none; }
 .thread-view__actions { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .thread-view__actions .chat-header__action-btn svg { width: 22px; height: 22px; }
 .thread-view__follow { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border: 1px solid var(--primary-color-1); border-radius: 8px; background: transparent; color: var(--primary-color-1); font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; cursor: pointer; }
@@ -163,8 +175,22 @@
 .thread-card__del-text strong { font-weight: 600; }
 .thread-card__del-time { font-size: var(--font-size-aside); color: var(--base-color-1); margin-left: 2px; }
 
-/* composer thread button */
-.chat-input__thread-btn.checked { color: var(--primary-color-1); }
+/* composer thread button — a TOGGLE (#22273 §1), so the on-state has to read as pressed, not hovered */
+.chat-input__thread-btn.checked { color: var(--primary-color-1); background: var(--primary-color-3); }
+
+/* #22273 §1.1 — thread-name field inside the input box, sitting above the message row.
+   Its separator matches the box's own surface split rather than the panel separator so it reads as
+   one composer, not two stacked inputs. */
+.chat-thread-name { display: flex; align-items: center; gap: 8px; padding: 7px 10px 7px 12px; border-bottom: 1px solid var(--separator); }
+.chat-thread-name__glyph { display: inline-flex; width: 16px; height: 16px; color: var(--primary-color-1); flex-shrink: 0; }
+.chat-thread-name__glyph svg { width: 100%; height: 100%; }
+.chat-thread-name__input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font-family: var(--font-family-base); font-size: var(--font-size-primary); font-weight: 600; color: var(--direct-color-1); padding: 0; }
+.chat-thread-name__input::placeholder { color: var(--base-color-1); font-weight: 400; }
+/* §2.2 — always visible while the field has content, hidden (via [hidden]) when it is empty */
+.chat-thread-name__clear { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--base-color-3); color: var(--base-color-1); cursor: pointer; flex-shrink: 0; }
+.chat-thread-name__clear:hover { color: var(--direct-color-1); }
+.chat-thread-name__clear svg { width: 12px; height: 12px; }
+.chat-thread-name[hidden], .chat-thread-name__clear[hidden] { display: none; }
 
 /* ---- message context menu (Figma; epic 1.1 entry) ---- */
 .message--menu-open { position: relative; z-index: 40; }
@@ -205,6 +231,9 @@
 
 /* ---- channel-list thread rows (epic §6) ---- */
 .channel-threads { display: flex; flex-direction: column; margin: 2px 0 4px 0; }
+/* threads nested under a Messages chat row: indent past the 32px avatar, not the 20px channel icon */
+.msgr-threads { padding: 0 8px; }
+.msgr-threads .channel-thread { padding-left: 44px; }
 .channel-thread { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; padding: 5px 8px 5px 30px; border: none; background: transparent; cursor: pointer; text-align: left; border-radius: 8px; color: var(--base-color-1); position: relative; }
 .channel-thread:hover { background: var(--chat-list-item-hover-bg, var(--base-color-2)); }
 .channel-thread__glyph { width: 15px; height: 15px; flex-shrink: 0; display: inline-flex; }

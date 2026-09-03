@@ -25,13 +25,39 @@ assume they persist). Cache-bust every navigation with `&cb=xxx`; `&reset=1` res
   `chat` equivalent (thread → side panel or centre column), so there is **no standalone full-screen
   thread on desktop**. The desktop shell is a flex row: nav · left · center · right, with resizable
   dividers (widths persisted in `localStorage panelWidths`).
-- `src/thread-store.js` — sessionStorage-persisted, seeded. `closed` flag = **archived** (see below).
+- `src/thread-store.js` — sessionStorage-persisted, seeded (key `…-v4`; **bump the key when adding
+  a field to seeded threads**, or a resumed session renders with it undefined). `closed` flag =
+  **archived** (see below).
 - `src/screens/community-channel.js` — the chat, in-chat thread cards, Details panel, copied-post
   rendering, and MOST binding (`bindThreadAffordances`, `bindThreadPanel`). Threads UI is
   `version=revamp` only.
 - `src/screens/threads.js` — thread view, create flow, thread menu, composer. Imports `msg`,
   `CHANNEL_ICONS`, `INFO_ICON` from community-channel.js.
 - URL params carry all view state (`chat`, `tpanel`, `tmain`, `info`, `surface`, `copy`, `mlist`).
+
+### Starting a thread (#22273 / #22274)
+Two entry points, deliberately different shapes:
+- **From a NEW message (#22273)** — the composer thread icon is a **toggle**, not a link. On, a
+  thread-name row appears *inside* `.chat-input__box` above the message row; off, it clears and
+  hides. The name field is a **placeholder-only** prefill (first 50 chars of the message being
+  typed, else "Add thread name here") so an untouched field means "no name chosen" and Send derives
+  the title itself; `maxlength` = `store.TITLE_MAX` (100). Send → `createThread` → right sidebar.
+  This is why the revamp channel composer is **live** (not `readonly`): a non-thread send calls
+  `store.postChannelMessage`, otherwise Send would read as broken.
+- **From an EXISTING message (#22274)** — context menu *and* hover quick-actions, thread icon
+  immediately after Reply. Both call `startThreadFromMessage()`; the hover-bar button is **injected
+  at bind time** (revamp-only path) so `quickActions()` keeps its certified 5-button set.
+
+### Thread title (#22275)
+Titles are **stored escaped** (like message text) because every surface interpolates them into HTML.
+Inline rename reads the rendered `textContent` back, so entities round-trip instead of double-
+escaping. Only `store.isCreator(t)` (`createdBy === 'You'`) gets the pencil. **Anything that caches a
+title is a rename bug** — `parentPosts[].threadTitle` is a snapshot, so the "replied to a thread:
+#name" header reads `store.getThread(id).title` live instead.
+
+### Mute (#22282)
+Mute lives **only in the thread "…" menu**, never as a header bell. The muted *state* still has to
+read somewhere, so it is a passive glyph beside the header subtitle.
 
 ### Thread open surfaces (desktop)
 - **in-chat card** → right **side panel** (`tpanel`).
@@ -66,6 +92,11 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
 - **`:focus-within`-revealed rows hide mid-click.** Pressing non-focusable label text blurs the
   input on `mousedown` → the row `display:none`s before the click lands. Fix: `preventDefault` the
   row's `mousedown` to keep focus.
+- **The one thread glyph** is `src/icons/thread-glyph.js` — a leaf module with no imports, because
+  community-channel.js ⇄ threads.js is a **circular pair** and reading an icon across it at module-
+  eval time hits a TDZ. Vadym's official icon replaces that one string.
+- **`channelListThreads` filters to followed threads**, so a seeded thread with `followed: false`
+  silently has no list row anywhere. That is why the DM thread is seeded followed.
 - **Two composer bind paths.** `bindThread` (threads.js) and `bindThreadPanel` (community-channel.js)
   both wire the thread composer — keep send-copy / edit / menu logic in sync across both.
 - **`.thread-view__back svg` is flipped** (`transform: scaleX(-1)`). Reusing an already-left arrow
