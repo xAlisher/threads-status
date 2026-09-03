@@ -889,7 +889,8 @@
   outline: none;
   padding: 9px 12px;
   min-height: 20px;
-  max-height: 200px;
+  max-height: 200px;      /* autosize() grows the field to this, then lets it scroll */
+  overflow-y: hidden;     /* set to auto by autosize() only once the content passes max-height */
   line-height: 1.4;
 }
 
@@ -920,6 +921,19 @@
 .chat-input__btn svg { width: 20px; height: 20px; }
 .chat-input__btn:hover { background: var(--background-hover); }
 .chat-input__btn--send { color: var(--primary-color-1); }
+
+/* Mobile: the chat composer carries the desktop icon row, which is ~53px wider than the phone
+   frame — the Send button ended up clipped off the right edge (invisible while the composer sat
+   below the fold; a real dead end once it is pinned above the tab bar). Let every flex level shrink
+   and tighten the buttons so the whole row fits. */
+.shell--mobile .chat-input__row,
+.shell--mobile .chat-input__box,
+.shell--mobile .chat-input__input-row,
+.shell--mobile .chat-input__field { min-width: 0; }
+.shell--mobile .chat-input__actions { flex-shrink: 0; gap: 0; margin-right: 2px; }
+.shell--mobile .chat-input__btn { width: 28px; height: 28px; }
+.shell--mobile .chat-input__btn svg { width: 18px; height: 18px; }
+.shell--mobile .chat-input__cmd-btn { flex-shrink: 0; }
 
 /* Composer reply-preview — StatusChatInputReplyArea.qml (radius 16, baseColor3; ↪user Medium 13 + elided quote + 20px close) */
 .chat-input__reply {

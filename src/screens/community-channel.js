@@ -6,7 +6,7 @@ import * as store from '../thread-store.js'
 import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 import { SURFACES } from '../thread-store.js'
 // desktop thread side-panel reuses the thread renderers + binders (epic §1)
-import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindInlineEdit, bindTitleEdit, titleFromText, floatToast } from './threads.js'
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindInlineEdit, bindTitleEdit, titleFromText, autosize, floatToast } from './threads.js'
 
 export const CHANNEL_ICONS = {
   // tiny/channel.svg (viewBox="0 0 16 17") — community channel type icon
@@ -575,7 +575,7 @@ function bindThreadAffordances(p, view) {
   const scope = document.querySelector('.shell__center, .shell__mobile-content')
   if (!scope) return
   // community "…" menu: Invite member / Hide-Show threads
-  document.querySelector('[data-community-more]')?.addEventListener('click', (e) => { e.stopPropagation(); openCommunityMenu(e.currentTarget) })
+  document.querySelectorAll('[data-community-more]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openCommunityMenu(e.currentTarget) }))
   // "All info" panel (#21971): open/close/switch tab (in-place rerender) + search-filter the active tab
   const setInfo = (tab) => { const u = new URL(location.href); tab ? u.searchParams.set('info', tab) : u.searchParams.delete('info'); history.replaceState(null, '', u); rerender() }
   document.querySelectorAll('[data-open-info]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); setInfo(el.dataset.openInfo) }))
@@ -666,6 +666,8 @@ function bindThreadAffordances(p, view) {
     const nameInput = composer.querySelector('[data-chat-thread-name]')
     const clearBtn = composer.querySelector('[data-chat-thread-clear]')
 
+    const fitField = autosize(field)
+
     const btn = document.createElement('button')
     btn.className = 'chat-input__btn chat-input__thread-btn'
     btn.type = 'button'
@@ -703,11 +705,11 @@ function bindThreadAffordances(p, view) {
     const send = () => {
       const text = (field?.value || '').trim()
       if (!text) { field?.focus(); return }
-      if (!threadOn) { store.postChannelMessage(surface, text); field.value = ''; return }
+      if (!threadOn) { store.postChannelMessage(surface, text); field.value = ''; fitField(); return }
       // §3 — thread icon on + something typed + Send → the thread is created and opened
       const title = (nameInput?.value || '').trim() || titleFromText(text)
       const t = store.createThread({ surface, title, firstMessage: text })
-      field.value = ''
+      field.value = ''; fitField()
       setThreadMode(false, { focus: false })
       // drop the saved-state param so the re-render doesn't reopen the toggle behind the new thread
       try { const u = new URL(location.href); u.searchParams.delete('qa'); history.replaceState(null, '', u) } catch {}
@@ -1083,6 +1085,7 @@ function renderMessengerLeft(active) {
       <div class="community-header__info">
         <div><div class="community-header__name">Messages</div></div>
         <button class="community-header__invite-btn" data-open-chat="community" title="Back to community">${ARROW_LEFT}</button>
+        <button class="community-header__invite-btn" data-community-more title="Chat options" aria-label="Chat options" aria-haspopup="true">${CHANNEL_ICONS.more}</button>
       </div>
     </div>
     <div class="msgr-list">

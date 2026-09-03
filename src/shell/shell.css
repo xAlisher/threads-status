@@ -315,11 +315,28 @@ html, body, #app {
   overflow-y: auto;
 }
 
+/* The whole mobile column used to scroll as one block, so the chat header scrolled off the top and
+   the composer sat below the fold instead of above the tab bar. Make it a real app frame: the
+   mounted screen fills the column, and only the message list inside it scrolls. */
 .shell__mobile-content {
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--app-layout-right-panel-bg);
 }
+
+/* chat screen: header pinned top, composer pinned bottom (right above .shell__mobile-tabs) */
+.shell__mobile-content > .chat-header,
+.shell__mobile-content > .chat-input { flex-shrink: 0; }
+.shell__mobile-content > .messages { flex: 1; min-height: 0; overflow-y: auto; }
+
+/* full-screen children (channel/thread list, thread view, Details) already run their own internal
+   header + scroll body; they just need to be told to fill the column, not to grow past it */
+.shell__mobile-content > .mobile-list,
+.shell__mobile-content > .thread-screen,
+.shell__mobile-content > .info-panel { flex: 1; min-height: 0; }
 
 .shell__mobile-tabs {
   height: 52px;

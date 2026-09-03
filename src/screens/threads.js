@@ -343,10 +343,27 @@ function goBack() {
   location.search = q.toString()
 }
 
+// The composer is a single-row textarea by default, so a long message scrolls inside one line of
+// height. Grow it with the content up to the CSS max-height (past which it scrolls). Returns the
+// measure fn so callers can re-fit after clearing the field programmatically (send).
+export function autosize(el) {
+  if (!el) return () => {}
+  const max = parseInt(getComputedStyle(el).maxHeight, 10) || 200
+  const fit = () => {
+    el.style.height = 'auto'                                  // shrink first, or it can only grow
+    el.style.height = Math.min(el.scrollHeight, max) + 'px'
+    el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden'
+  }
+  el.addEventListener('input', fit)
+  fit()
+  return fit
+}
+
 // wire Send button + Enter-to-send on a composer
 export function bindComposerSend(root, send) {
   const btn = root.querySelector('[data-thread-send]')
   const input = root.querySelector('[data-thread-input]')
+  autosize(input)
   btn?.addEventListener('click', send)
   input?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } })
 }
@@ -355,38 +372,43 @@ export function bindComposerSend(root, send) {
 // the pencil is rendered only when store.isCreator(t), so binding is a no-op elsewhere.
 // The current value is read from the rendered `textContent`, which decodes the stored (escaped)
 // title back to plain text — writing it straight into the input would show raw entities.
+// Opens the editor. Standalone (not tied to the pencil) because the pencil is a HOVER affordance:
+// on touch there is no hover, so mobile reaches the same flow through the "…" menu's Edit name.
+export function startTitleEdit(root, threadId) {
+  const titleEl = root.querySelector('[data-thread-title]')
+  if (!titleEl || root.querySelector('.thread-view__title-input')) return
+  const pencil = root.querySelector('[data-edit-title]')
+  const current = titleEl.textContent.trim()
+  const input = document.createElement('input')
+  input.className = 'thread-view__title-input'
+  input.type = 'text'
+  input.value = current
+  input.maxLength = store.TITLE_MAX
+  input.setAttribute('aria-label', 'Thread name')
+  titleEl.style.display = 'none'; if (pencil) pencil.style.display = 'none'
+  titleEl.after(input)
+  input.focus(); input.setSelectionRange(current.length, current.length)
+  let done = false
+  const restore = () => { done = true; input.remove(); titleEl.style.display = ''; if (pencil) pencil.style.display = '' }
+  const commit = () => {
+    if (done) return
+    const next = input.value.trim()
+    restore()
+    // renameThread ignores an empty or unchanged title, so cancelling by clearing is safe
+    store.renameThread(threadId, next)
+  }
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit() }
+    else if (e.key === 'Escape') { e.preventDefault(); restore() }
+  })
+  input.addEventListener('blur', commit)
+}
+
 export function bindTitleEdit(root, threadId) {
   const titleEl = root.querySelector('[data-thread-title]')
-  const pencil = root.querySelector('[data-edit-title]')
-  if (!titleEl || !pencil) return
-  const start = () => {
-    if (root.querySelector('.thread-view__title-input')) return
-    const current = titleEl.textContent.trim()
-    const input = document.createElement('input')
-    input.className = 'thread-view__title-input'
-    input.type = 'text'
-    input.value = current
-    input.maxLength = store.TITLE_MAX
-    input.setAttribute('aria-label', 'Thread name')
-    titleEl.style.display = 'none'; pencil.style.display = 'none'
-    titleEl.after(input)
-    input.focus(); input.setSelectionRange(current.length, current.length)
-    let done = false
-    const restore = () => { done = true; input.remove(); titleEl.style.display = ''; pencil.style.display = '' }
-    const commit = () => {
-      if (done) return
-      const next = input.value.trim()
-      restore()
-      // renameThread ignores an empty or unchanged title, so cancelling by clearing is safe
-      store.renameThread(threadId, next)
-    }
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); commit() }
-      else if (e.key === 'Escape') { e.preventDefault(); restore() }
-    })
-    input.addEventListener('blur', commit)
-  }
-  pencil.addEventListener('click', (e) => { e.stopPropagation(); start() })
+  if (!titleEl) return
+  const start = () => startTitleEdit(root, threadId)
+  root.querySelector('[data-edit-title]')?.addEventListener('click', (e) => { e.stopPropagation(); start() })
   titleEl.addEventListener('dblclick', start)
 }
 
@@ -453,6 +475,7 @@ export function openThreadMenu(root, threadId, anchor) {
   menu.setAttribute('role', 'menu')
   const item = (icon, label, act, cls = '') => `<button class="msg-cmenu__item${cls}" role="menuitem" data-act="${act}">${icon}<span>${label}</span></button>`
   menu.innerHTML =
+    (store.isCreator(t) ? item(THREAD_ICONS.edit, 'Edit name', 'rename') : '') +
     item(THREAD_ICONS.check, t.followed ? 'Unfollow' : 'Follow', 'follow') +
     item(t.muted ? THREAD_ICONS.bell : THREAD_ICONS.bellOff, t.muted ? 'Unmute thread' : 'Mute thread', 'mute') +
     item(THREAD_ICONS.link, 'Share link', 'share') +
@@ -464,6 +487,8 @@ export function openThreadMenu(root, threadId, anchor) {
   menu.style.position = 'absolute'; menu.style.top = (rect.bottom - rootRect.top + 4) + 'px'; menu.style.right = (rootRect.right - rect.right) + 'px'; menu.style.left = 'auto'
   root.appendChild(menu)
   const acts = {
+    // the menu is removed before acts run, so the header is back in place for the editor to take
+    rename: () => startTitleEdit(root, threadId),
     follow: () => store.setFollowed(threadId, !t.followed),
     mute: () => store.setMuted(threadId, !t.muted),
     share: () => openShareModal(t),

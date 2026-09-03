@@ -97,6 +97,14 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
   eval time hits a TDZ. Vadym's official icon replaces that one string.
 - **`channelListThreads` filters to followed threads**, so a seeded thread with `followed: false`
   silently has no list row anywhere. That is why the DM thread is seeded followed.
+- **Mobile is an app frame, not a scrolling page.** `.shell__mobile-content` is a flex column with
+  `overflow: hidden`; the mounted screen fills it and only its own body scrolls, so the chat header
+  pins top and the composer pins to `.shell__mobile-tabs`. Any new mobile screen must be added to
+  the `> .mobile-list, > .thread-screen, > .info-panel { flex: 1; min-height: 0 }` rule or it will
+  grow past the frame.
+- **The chat composer is the DESKTOP markup on mobile too** (`renderCenterPanel` is shared) and its
+  icon row is wider than the phone frame — Send was clipped off-screen. `.shell--mobile` rules give
+  every flex level `min-width: 0` and shrink the buttons. Adding an icon there can re-break Send.
 - **Two composer bind paths.** `bindThread` (threads.js) and `bindThreadPanel` (community-channel.js)
   both wire the thread composer — keep send-copy / edit / menu logic in sync across both.
 - **`.thread-view__back svg` is flipped** (`transform: scaleX(-1)`). Reusing an already-left arrow
