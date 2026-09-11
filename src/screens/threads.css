@@ -287,5 +287,18 @@
 .share-modal__copy { flex-shrink: 0; border: none; border-radius: 10px; background: var(--primary-color-1); color: #fff; font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; padding: 0 16px; cursor: pointer; }
 .share-modal__copy.done { background: var(--success-color-1, #23A26D); }
 
+/* destructive-action confirmation (ConfirmationDialog.qml: body text, optional "do not show again",
+   right-aligned flat Cancel + Danger confirm) */
+.confirm-modal { width: 420px; }
+.confirm-modal__body { margin: 0 0 16px; font-size: var(--font-size-primary); line-height: 1.45; color: var(--direct-color-1); }
+.confirm-modal__check { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: var(--font-size-additional); color: var(--base-color-1); cursor: pointer; }
+.confirm-modal__check input { width: 16px; height: 16px; accent-color: var(--primary-color-1); cursor: pointer; }
+.confirm-modal__actions { display: flex; justify-content: flex-end; gap: 8px; }
+.confirm-modal__btn { border: none; border-radius: 8px; padding: 0 16px; height: 38px; font-family: var(--font-family-base); font-size: var(--font-size-primary); font-weight: 500; cursor: pointer; }
+.confirm-modal__btn--cancel { background: transparent; color: var(--danger-color-1, #E95460); }
+.confirm-modal__btn--cancel:hover { background: var(--danger-color-3, rgba(233,84,96,.1)); }
+.confirm-modal__btn--danger { background: var(--danger-color-1, #E95460); color: #fff; }
+.confirm-modal__btn--danger:hover { filter: brightness(1.08); }
+
 /* thread opened in the centre column (from the channel list) */
 .thread-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }

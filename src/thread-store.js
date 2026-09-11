@@ -260,9 +260,17 @@ export function createThread({ surface = 'channel', parentMsgId = null, parentMs
 export function postReply(threadId, text, { copyToParent = false } = {}) {
   const t = getThread(threadId); if (!t || t.deleted) return null   // archived threads stay repliable
   const now = Date.now()
+  // posting is the un-archive gesture (epic #21090, Volo on jrainville §4) — a reply brings the
+  // thread back into the active roster instead of leaving it archived with fresh messages in it
+  const wasArchived = t.closed
+  t.closed = false
+  // ...and it auto-follows (§5: manually, or automatically if you enter the conversation), which is
+  // what actually puts it back on the left chat list
+  t.followed = true
   const m = { id: nid('r'), name: 'You', initial: 'A', color: '#4360DF', time: timeNow(), text: escapeText(text.trim()), own: true, ts: now, opts: { delivery: 'sent', alsoSent: copyToParent } }
   t.messages.push(m)
   t.lastActivityTs = now
+  if (wasArchived) ensure().toast = 'Thread unarchived — you replied to it'
   if (copyToParent) {
     const s = ensure()
     ;(s.parentPosts[t.surface] = s.parentPosts[t.surface] || []).push({

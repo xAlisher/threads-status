@@ -73,7 +73,10 @@ export function renderCommunityChannel(view, ver) {
   // mobile = full-screen overlay opened only via (i). info=closed hides it.
   const infoParam = revamp ? p.get('info') : null
   const explicitInfo = infoParam === 'closed' ? null : infoTabOf(p)
-  const infoTab = explicitInfo || (revamp && !mobile && !tpanel ? 'members' : null)
+  // `info=closed` has to WIN over the desktop "Details is the persistent right column" default,
+  // otherwise the fallback immediately reopens it and the panel can never be dismissed (the old
+  // close X was dead for exactly this reason — the toggle inherited the bug).
+  const infoTab = infoParam === 'closed' ? null : (explicitInfo || (revamp && !mobile && !tpanel ? 'members' : null))
   // mobile: Details takes over the full screen when opened
   if (mobile && explicitInfo) {
     const sub = ctx.channelIcon ? '# ' + ctx.title : ctx.title
@@ -133,7 +136,6 @@ function renderRightPanel() {
     </div>`
 }
 // ---- "All info" panel (#21971): Members · Media · Pins · Links, viewable + searchable ----
-const INFO_CLOSE = `<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
 // info.svg (Status) — "i" in a circle, opens the Details panel
 export const INFO_ICON = `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor"/></svg>`
 const LINK_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M9.5 14.5 14.5 9.5M8 12l-2 2a3 3 0 1 0 4.24 4.24l2-2M16 12l2-2a3 3 0 1 0-4.24-4.24l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
@@ -164,7 +166,27 @@ const INFO_LINKS = [
   { title: 'StatusQ · QML source', url: 'github.com/status-im/StatusQ', name: 'Kai', time: '10:34' },
   { title: 'Threads epic #21090', url: 'github.com/status-im/status-app/issues/21090', name: 'Marcus', time: '10:36' },
 ]
-const INFO_TABS = [['members', 'Members'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links'], ['threads', 'Threads']]
+const INFO_TABS = [['members', 'Members'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links'], ['threads', 'Threads'], ['about', 'About']]
+// About describes a COMMUNITY, so it is only offered on the community surface — a DM or group chat
+// has no description or tags to show.
+const infoTabsFor = (surface) => INFO_TABS.filter(([k]) => k !== 'about' || surface === 'channel')
+
+// Community profile shown in the About tab.
+// Rendering follows the source: ProfilePopupOverviewPanel.qml pins the description at
+// Theme.primaryTextFontSize / directColor1 / Text.Wrap with 16px side margins; the tags come from
+// StatusCommunityTags -> StatusCommunityTag (a 32px-high pill, radius height/2, 1px baseColor2
+// border, transparent fill, primaryColor2 on hover; inside it an 18px emoji, a 5px gap, then the
+// name in primaryTextFontSize / DemiBold / AllLowercase / primaryColor1). Flow spacing is 10.
+const COMMUNITY_ABOUT = {
+  description: 'Status is an open-source, privacy-first communication network. This community is where the people building it talk in the open — protocol work, desktop and mobile clients, the design system, and everything in between. Anyone can read; members can post.',
+  tags: [
+    { emoji: '🔐', name: 'Privacy' },
+    { emoji: '🛡️', name: 'Security' },
+    { emoji: '🌐', name: 'Web3' },
+    { emoji: '💻', name: 'Software dev' },
+    { emoji: '🎨', name: 'Design' },
+  ],
+}
 
 function infoMemberRow(m, online) {
   return `<div class="info-item member-item" data-info-item data-search="${m.name.toLowerCase()}">
@@ -173,6 +195,19 @@ function infoMemberRow(m, online) {
   </div>`
 }
 function renderInfoBody(tab, surface = 'channel') {
+  if (tab === 'about') {
+    // AllLowercase in the source is a FONT property, not a data change — keep the real casing in the
+    // markup (search, copy-paste and screen readers get the proper name) and lowercase it in CSS.
+    const tags = COMMUNITY_ABOUT.tags.map(t =>
+      `<span class="community-tag" data-info-item data-search="${t.name.toLowerCase()}"><span class="community-tag__emoji">${t.emoji}</span><span class="community-tag__name">${t.name}</span></span>`).join('')
+    return `
+      <div class="info-about">
+        <p class="info-about__description">${COMMUNITY_ABOUT.description}</p>
+        <div class="info-about__divider"></div>
+        <div class="info-about__label">Tags</div>
+        <div class="community-tags">${tags}</div>
+      </div>`
+  }
   if (tab === 'threads') {
     const list = store.threadsForSurface(surface)
     if (!list.length) return `<div class="info-empty">No threads yet</div>`
@@ -201,7 +236,12 @@ function renderInfoBody(tab, surface = 'channel') {
   </a>`).join('')
 }
 function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
-  const nav = INFO_TABS.map(([k, label]) => `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}">${label}</button>`).join('')
+  const tabs = infoTabsFor(surface)
+  if (!tabs.some(([k]) => k === tab)) tab = 'members'   // e.g. a deep-linked info=about on a DM
+  const nav = tabs.map(([k, label]) => `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}">${label}</button>`).join('')
+  // About is a single profile card, not a list — there is nothing to filter
+  const search = tab === 'about' ? '' :
+    `<div class="info-panel__search">${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>`
   // mobile: same layout as the thread header (back arrow + title/subtitle); desktop: title + close (X)
   const header = mobile
     ? `<div class="thread-view__header info-panel__mheader">
@@ -210,13 +250,12 @@ function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
       </div>`
     : `<div class="info-panel__header">
         <span class="info-panel__title">Details</span>
-        <button class="info-panel__close" data-close-info title="Close" aria-label="Close">${INFO_CLOSE}</button>
       </div>`
   return `
     <div class="info-panel">
       ${header}
       <div class="info-panel__tabs">${nav}</div>
-      <div class="info-panel__search">${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>
+      ${search}
       <div class="info-panel__body" data-info-body>${renderInfoBody(tab, surface)}</div>
     </div>`
 }
@@ -578,9 +617,19 @@ function bindThreadAffordances(p, view) {
   document.querySelectorAll('[data-community-more]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openCommunityMenu(e.currentTarget) }))
   // "All info" panel (#21971): open/close/switch tab (in-place rerender) + search-filter the active tab
   const setInfo = (tab) => { const u = new URL(location.href); tab ? u.searchParams.set('info', tab) : u.searchParams.delete('info'); history.replaceState(null, '', u); rerender() }
-  document.querySelectorAll('[data-open-info]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); setInfo(el.dataset.openInfo) }))
+  // the header buttons TOGGLE the Details panel (it no longer carries its own close X): pressing the
+  // one whose tab is already showing closes the panel, anything else opens it / switches tab.
+  const infoOpen = () => !!document.querySelector('.info-panel')
+  const openInfoTab = () => infoOpen() ? (document.querySelector('.info-tab.on')?.dataset.infoTab || null) : null
+  document.querySelectorAll('[data-open-info]').forEach(el => el.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const close = el.hasAttribute('data-info-toggle') ? infoOpen() : openInfoTab() === el.dataset.openInfo
+    setInfo(close ? 'closed' : el.dataset.openInfo)
+  }))
   document.querySelector('[data-close-info]')?.addEventListener('click', () => setInfo('closed'))
   document.querySelectorAll('[data-info-tab]').forEach(el => el.addEventListener('click', () => setInfo(el.dataset.infoTab)))
+  // the tab row scrolls when it overflows — make sure the active tab is actually on screen
+  document.querySelector('.info-tab.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   const infoSearch = document.querySelector('[data-info-search]')
   if (infoSearch) {
     infoSearch.addEventListener('input', () => {
@@ -923,7 +972,7 @@ function chatHeaderMobile(ctx) {
       </button>
       <div class="chat-header__actions chat-header__actions--mobile">
         <button class="chat-header__round-btn" data-open-info="media" title="Search" aria-label="Search">${CHANNEL_ICONS.search}</button>
-        <button class="chat-header__round-btn" data-open-info="members" title="Details" aria-label="Details">${INFO_ICON}</button>
+        <button class="chat-header__round-btn" data-open-info="members" data-info-toggle title="Details" aria-label="Details">${INFO_ICON}</button>
       </div>
     </div>`
 }
@@ -979,7 +1028,7 @@ function chatHeaderDesktop(ctx, panelOpen) {
       </div>
       <div class="chat-header__actions">
         <button class="chat-header__action-btn" data-open-info="media" title="Search">${CHANNEL_ICONS.search}</button>
-        <button class="chat-header__action-btn" data-open-info="members" title="Details (Members · Media · Pins · Links)" aria-label="Details">${INFO_ICON}</button>
+        <button class="chat-header__action-btn" data-open-info="members" data-info-toggle title="Details (Members · Media · Pins · Links · Threads · About)" aria-label="Details">${INFO_ICON}</button>
       </div>
     </div>`
 }

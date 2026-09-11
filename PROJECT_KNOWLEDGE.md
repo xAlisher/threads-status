@@ -59,6 +59,22 @@ title is a rename bug** — `parentPosts[].threadTitle` is a snapshot, so the "r
 Mute lives **only in the thread "…" menu**, never as a header bell. The muted *state* still has to
 read somewhere, so it is a passive glyph beside the header subtitle.
 
+### Details panel: toggle + About
+The **(i)** header button is a *pure panel toggle* (open → close, whatever tab is showing); the
+search button is tab-aware (switches to Media, closes if Media is already up). The panel has **no
+close X**. `info=closed` must be checked BEFORE the desktop "Details is the persistent right column"
+fallback — otherwise the fallback reopens it instantly and the panel can never be dismissed (the old
+close X was dead for exactly this reason). The tab row **scrolls horizontally**: six tabs do not fit
+a narrow resizable panel, so the active tab is `scrollIntoView`d after every render.
+
+**About** (last tab, community surface only — `infoTabsFor(surface)`) is built from source:
+`ProfilePopupOverviewPanel.qml` for the description (primaryTextFontSize / directColor1 / wrap /
+16px side margins) and `StatusCommunityTag.qml` for the pills (32px high, radius height/2, 1px
+baseColor2 border, transparent fill → primaryColor2 on hover, 18px emoji + 5px gap + DemiBold
+**AllLowercase** primaryColor1 name, content + 20 wide; Flow spacing 10). Lowercasing is a *font*
+property in the source, so the markup keeps real casing and CSS does `text-transform: lowercase` —
+search, copy-paste and screen readers still get the proper name.
+
 ### Thread open surfaces (desktop)
 - **in-chat card** → right **side panel** (`tpanel`).
 - **channel-list row** → thread in the **centre column** (`tmain`) + its Details in the third column.
@@ -74,6 +90,11 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
 
 ## Semantics / conventions
 
+- **Replying un-archives and auto-follows.** Per Volo on the epic (#21090, answering jrainville §4
+  and §5), a thread archives on inactivity and "clicking on it, you can send a new message to it and
+  it reappears on the left chat list". `postReply` therefore clears `closed` and sets `followed` —
+  without the follow the thread still would not show in the channel list (`channelListThreads`
+  filters on it), so the two have to move together.
 - **Archived ≠ closed/locked.** The `closed` store flag means *archived*: tucked out of the active
   roster, but **still repliable** (composer stays, no lock, no "no new replies" bar). `postReply`
   must not block on `closed`. UI: archive-box icon, never a lock. Menu: Archive / Unarchive.
@@ -105,6 +126,10 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
 - **The chat composer is the DESKTOP markup on mobile too** (`renderCenterPanel` is shared) and its
   icon row is wider than the phone frame — Send was clipped off-screen. `.shell--mobile` rules give
   every flex level `min-width: 0` and shrink the buttons. Adding an icon there can re-break Send.
+- **Destructive actions confirm first.** Thread delete goes through `confirmDeleteThread()`, shaped
+  like `ConfirmationDialog.qml` / `DeleteMessageConfirmationPopup.qml`: title, body, "Do not show
+  this again", flat Cancel + Danger confirm. Focus lands on **Cancel**, never the destructive button.
+  The skip pref is only written when the user actually confirms, never on cancel.
 - **Two composer bind paths.** `bindThread` (threads.js) and `bindThreadPanel` (community-channel.js)
   both wire the thread composer — keep send-copy / edit / menu logic in sync across both.
 - **`.thread-view__back svg` is flipped** (`transform: scaleX(-1)`). Reusing an already-left arrow

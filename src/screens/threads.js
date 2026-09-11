@@ -466,6 +466,50 @@ function openShareModal(t) {
   document.addEventListener('keydown', onEsc)
 }
 
+// Destructive-action confirmation, shaped like the source's ConfirmationDialog.qml /
+// DeleteMessageConfirmationPopup.qml: a header title, body copy at primaryTextFontSize/directColor1,
+// an optional "Do not show this again" checkbox, and right-aligned Cancel (flat) + Danger confirm.
+// Status warns that other clients are not guaranteed to delete too — a thread deletion carries the
+// same caveat, so the copy says it rather than implying a guaranteed wipe.
+const DONT_WARN_KEY = 'threadsSkipDeleteWarning'
+const skipDeleteWarning = () => { try { return localStorage.getItem(DONT_WARN_KEY) === '1' } catch { return false } }
+
+export function confirmDeleteThread(t, onConfirm) {
+  if (skipDeleteWarning()) { onConfirm(); return }
+  document.querySelector('.confirm-modal-overlay')?.remove()
+  const overlay = document.createElement('div')
+  overlay.className = 'share-modal-overlay confirm-modal-overlay'
+  overlay.innerHTML = `
+    <div class="share-modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-body">
+      <div class="share-modal__head">
+        <span class="share-modal__title" id="confirm-title">Confirm deleting this thread</span>
+      </div>
+      <div class="share-modal__thread"><span class="share-modal__glyph">${THREAD_ICONS.thread}</span><span class="share-modal__name">${t.title}</span></div>
+      <p class="confirm-modal__body" id="confirm-body">Are you sure you want to delete this thread? Its ${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'} will be removed for everyone. Be aware that other clients are not guaranteed to delete the thread as well.</p>
+      <label class="confirm-modal__check">
+        <input type="checkbox" data-confirm-skip />
+        <span>Do not show this again</span>
+      </label>
+      <div class="confirm-modal__actions">
+        <button class="confirm-modal__btn confirm-modal__btn--cancel" data-confirm-cancel>Cancel</button>
+        <button class="confirm-modal__btn confirm-modal__btn--danger" data-confirm-ok>Delete thread</button>
+      </div>
+    </div>`
+  document.body.appendChild(overlay)
+  const close = () => { overlay.remove(); document.removeEventListener('keydown', onKey) }
+  const onKey = (e) => { if (e.key === 'Escape') close() }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close() })
+  overlay.querySelector('[data-confirm-cancel]').addEventListener('click', close)
+  overlay.querySelector('[data-confirm-ok]').addEventListener('click', () => {
+    if (overlay.querySelector('[data-confirm-skip]').checked) { try { localStorage.setItem(DONT_WARN_KEY, '1') } catch {} }
+    close()
+    onConfirm()
+  })
+  // focus the SAFE action, not the destructive one — Enter must not delete by reflex
+  overlay.querySelector('[data-confirm-cancel]').focus()
+  document.addEventListener('keydown', onKey)
+}
+
 // thread "more" menu — follow · share · keep-visible · archive · delete (epic §18/§21/§23)
 export function openThreadMenu(root, threadId, anchor) {
   root.querySelector('.thread-more-menu')?.remove()
@@ -495,7 +539,7 @@ export function openThreadMenu(root, threadId, anchor) {
     keep: () => store.setKeptVisible(threadId, !t.keptVisible),
     close: () => store.closeThread(threadId),
     reopen: () => store.reopenThread(threadId),
-    delete: () => store.deleteThread(threadId),
+    delete: () => confirmDeleteThread(t, () => store.deleteThread(threadId)),
   }
   menu.querySelectorAll('.msg-cmenu__item').forEach(btn => btn.addEventListener('click', () => {
     menu.remove(); document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', onKey)

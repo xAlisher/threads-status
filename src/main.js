@@ -235,6 +235,7 @@ const USE_CASES = [
     { id: 'th-rename',  label: 'Thread title · inline rename (#22275)', screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&tpanel=t-m1&surface=channel' },
     { id: 'th-tmenu',   label: 'Thread "…" menu · Mute (#22282)',     screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&tpanel=t-m1&surface=channel&tmenu=1' },
     { id: 'th-tmain',   label: 'Thread in the main pane (#22279)',    screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&tmain=t-m1&surface=channel&info=members' },
+    { id: 'th-about',   label: 'Details ▸ About (description + tags)', screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&info=about' },
     { id: 'th-dm',      label: 'DM chat · thread (carmen.eth)',       screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&chat=dm' },
     { id: 'th-dmlist',  label: 'Chat list · DM thread row (#22279)',  screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&chat=dm' },
     { id: 'th-grpchat', label: 'Group chat · thread (Design Team)',   screen: 'chat', params: 'version=revamp&theme=dark&view=desktop&chat=group' },
