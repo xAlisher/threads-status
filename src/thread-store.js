@@ -321,13 +321,44 @@ export function setFollowed(threadId, followed) {
   if (!followed) { t.unread = false; ensure().toast = 'You unfollowed this thread' }
   emit()
 }
-export function setMuted(threadId, muted) {
+// #22282 — "reuse our standard mute/unmute feature": MuteChatMenuItem.qml offers durations, not a
+// plain on/off, so muting carries the interval it was muted for.
+export const MUTE_INTERVALS = [
+  ['15min', 'For 15 mins', 15 * 60 * 1000],
+  ['1hr', 'For 1 hour', 60 * 60 * 1000],
+  ['8hr', 'For 8 hours', 8 * 60 * 60 * 1000],
+  ['24hr', 'For 24 hours', 24 * 60 * 60 * 1000],
+  ['1week', 'For 7 days', 7 * 24 * 60 * 60 * 1000],
+  ['forever', 'Until I turn it back on', null],
+]
+export function setMuted(threadId, muted, interval = 'forever') {
   const t = getThread(threadId); if (!t) return
   t.muted = muted
-  if (muted) t.unread = false // muting suppresses the notification (epic §5)
-  ensure().toast = muted ? 'Thread muted' : 'Thread unmuted'
+  if (muted) {
+    t.unread = false // muting suppresses the notification (epic §5)
+    const spec = MUTE_INTERVALS.find(([k]) => k === interval) || MUTE_INTERVALS[MUTE_INTERVALS.length - 1]
+    t.mutedUntil = spec[2] ? Date.now() + spec[2] : null
+    ensure().toast = interval === 'forever' ? 'Thread muted' : 'Thread muted ' + spec[1].toLowerCase()
+  } else {
+    t.mutedUntil = null
+    ensure().toast = 'Thread unmuted'
+  }
   emit()
 }
+
+// #22402 — Mark as read: clear every unread message in the thread for this user
+export function markAllRead(threadId) {
+  const t = getThread(threadId); if (!t) return
+  t.unread = false; t.newCount = 0
+  ensure().toast = 'Thread marked as read'
+  emit()
+}
+
+// #22275 / #22280 — "the thread creator OR a community admin". In this prototype "You" is the owner
+// of the community (the members list gives You the crown), so admin rights apply on the community
+// surface only; a DM or group chat has no admin, leaving creator-only there.
+export function isCommunityAdmin(surface) { return surface === 'channel' }
+export function canManageThread(t) { return !!t && (isCreator(t) || isCommunityAdmin(t.surface)) }
 export function closeThread(threadId) {
   const t = getThread(threadId); if (!t) return
   t.closed = true; t.unread = false
@@ -377,5 +408,5 @@ function escapeText(s) {
 if (typeof window !== 'undefined') window.__threadStore = {
   getThread, allThreads, ensure, simulateActivity, unreadCount,
   channelListThreads, threadsForSurface, setFollowed, setMuted, closeThread, deleteThread, setKeptVisible,
-  renameThread, isCreator, createThread,
+  renameThread, isCreator, canManageThread, createThread, markAllRead,
 }

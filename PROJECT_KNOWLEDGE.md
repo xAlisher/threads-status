@@ -59,6 +59,23 @@ title is a rename bug** — `parentPosts[].threadTitle` is a snapshot, so the "r
 Mute lives **only in the thread "…" menu**, never as a header bell. The muted *state* still has to
 read somewhere, so it is a passive glyph beside the header subtitle.
 
+### Thread context menu (#22401)
+One menu, two ways in: the **"…"** button on the thread view, and **right-click / long-press on a
+thread row** in the channel or Messages list (`bindThreadRowMenu`, which passes `opts.at` so the menu
+opens at the pointer and flips to stay in the viewport). Contents, each traced to its story:
+`Edit name` (#22275) · `Follow/Unfollow` (#22283) · `Mute thread ›` (#22282) · `Mark as read`
+(#22402) · `Copy link` desktop / `Share link` mobile (#22285) · `Pin to list` / `Unpin from list`
+(#22284) · `Archive` · `Delete` (#22280).
+
+- **Mute is a duration submenu**, not a toggle — `MuteChatMenuItem.qml` offers For 15 mins / 1 hour /
+  8 hours / 24 hours / 7 days / Until I turn it back on. Once muted the row collapses to a single
+  `Unmute thread`.
+- **"Creator OR community admin"** gates Edit name and Delete (`store.canManageThread`). "You" own
+  this community (the members list gives You the crown), so on the **channel** surface you can manage
+  every thread; a DM/group has no admin, so it stays creator-only there. Test both.
+- **Opening a thread auto-clears its unread**, so "Mark as read" cannot be observed from inside an
+  open thread — verify it from the row context menu instead.
+
 ### Details panel: toggle + About
 The **(i)** header button is a *pure panel toggle* (open → close, whatever tab is showing); the
 search button is tab-aware (switches to Media, closes if Media is already up). The panel has **no

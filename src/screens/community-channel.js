@@ -6,7 +6,7 @@ import * as store from '../thread-store.js'
 import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 import { SURFACES } from '../thread-store.js'
 // desktop thread side-panel reuses the thread renderers + binders (epic §1)
-import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindInlineEdit, bindTitleEdit, titleFromText, autosize, floatToast } from './threads.js'
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, bindTitleEdit, titleFromText, autosize, floatToast } from './threads.js'
 
 export const CHANNEL_ICONS = {
   // tiny/channel.svg (viewBox="0 0 16 17") — community channel type icon
@@ -777,6 +777,12 @@ function bindThreadAffordances(p, view) {
   scope.querySelectorAll('.message__thread-ref-link[data-open-thread]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface) }))
   // Details → Threads tab: clicking a thread opens it (openThreadPanel closes Details)
   document.querySelectorAll('.info-thread[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
+
+  // #22401 §1.2 — right-click (desktop) / long-press (mobile) on a thread row in the channel list or
+  // the Messages chat list opens the thread context menu at the pointer. The menu is appended to the
+  // left panel so it is positioned and clipped with the list it belongs to.
+  bindThreadRowMenu('.shell__left .channel-thread[data-open-thread], .shell__mobile-content .channel-thread[data-open-thread]',
+    (row) => row.closest('.shell__left, .mobile-list, .shell__mobile-content'))
 
   // channel-list thread rows (epic §22): desktop → thread in the CENTRE column + Details in the
   // third column; mobile → full-screen thread that returns to the mobile channel+thread list

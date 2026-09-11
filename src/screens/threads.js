@@ -22,6 +22,12 @@ export const THREAD_ICONS = {
   bellOff: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m14.9386 19c-.3363 0-.5779.3279-.5466.6628.01.1075.0155.2199.0155.3372 0 1.3889-1.2063 2.75-2.75 2.75-1.5436 0-2.74998-1.3611-2.74998-2.75 0-.1173.0055-.2297.01555-.3372.0313-.3349-.21032-.6628-.54661-.6628h-2.08457l-2.01156 2.0116c-.29289.2929-.76777.2929-1.06066 0s-.29289-.7678 0-1.0607l15.90993-15.9099c.2929-.29289.7677-.29289 1.0606 0s.2929.76777 0 1.06066l-3.4017 3.40169.6699 3.85145c.13.748.4703 1.4435.981 2.0053l1.1769 1.2946c1.168 1.2847.2564 3.3453-1.4799 3.3453zm.553-9.19969-7.69971 7.69969h10.34451c.4341 0 .662-.5151.37-.8363l-1.1769-1.2946c-.7022-.7724-1.1701-1.7288-1.349-2.7573zm-7.95352 1.64099-2.07314 2.0731c.18837-.3624.32108-.7532.39175-1.1596l1.11547-6.41395c.39616-2.27792 2.37325-3.94085 4.68534-3.94085 1.4427 0 2.755.64744 3.6341 1.68774l-1.0662 1.0662c-.6006-.7696-1.5354-1.25394-2.5679-1.25394-1.5828 0-2.93632 1.13842-3.20752 2.69786zm3.16102 7.5775c.011-.0115.0266-.0188.0425-.0188h1.8319c.0159 0 .031.0068.042.0183.0029.0034.01.0119.0201.0255.023.0306.0609.0862.1011.1666.0791.1583.1708.4192.1708.7896 0 .6111-.5845 1.25-1.25 1.25s-1.25-.6389-1.25-1.25c0-.3704.0917-.6313.1708-.7896.0402-.0804.0781-.136.1011-.1666.0102-.0136.0168-.0216.0197-.025z" fill="currentColor" fill-rule="evenodd"/></svg>`,
   // edit_pencil.svg — rename affordance on the thread title (#22275)
   edit: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m16.187 3.24584c1.2612-1.26112 3.3058-1.26112 4.567.00001 1.2611 1.26112 1.2611 3.3058 0 4.56692l-11.75175 11.75173c-.42718.4272-.95618.7384-1.53706.9044l-4.20764 1.2022c-.26236.0749-.54473.0018-.73767-.1912-.19294-.1929-.26611-.4753-.19115-.7376l1.20219-4.2077c.16596-.5809.47723-1.1099.90441-1.5371zm3.5044 1.06253c-.6743-.6743-1.7675-.6743-2.4418 0l-11.75175 11.75173c-.24661.2466-.4263.552-.52211.8873-.36205 1.2672.80948 2.4387 2.07664 2.0767.33534-.0958.64073-.2755.88734-.5222l11.75168-11.75166c.6743-.6743.6743-1.76756 0-2.44187z" fill="currentColor" fill-rule="evenodd"/></svg>`,
+  // checkmark-circle.svg — "Mark as read" (#22402), the same icon the chat menu uses
+  checkCircle: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m20.5 12c0 4.6944-3.8056 8.5-8.5 8.5-4.69442 0-8.5-3.8056-8.5-8.5 0-4.69442 3.80558-8.5 8.5-8.5 4.6944 0 8.5 3.80558 8.5 8.5zm1.5 0c0 5.5228-4.4772 10-10 10-5.52285 0-10-4.4772-10-10 0-5.52285 4.47715-10 10-10 5.5228 0 10 4.47715 10 10zm-5.2272-1.8839c.2929-.29292.2929-.76779 0-1.06069-.2929-.29289-.7677-.29289-1.0606 0l-5.1266 5.12649-2.29806-2.2981c-.29289-.2929-.76777-.2929-1.06066 0-.2929.2929-.29289.7678 0 1.0607l2.82842 2.8284c.2929.2929.7678.2929 1.0607 0z" fill="currentColor" fill-rule="evenodd"/></svg>`,
+  // copy.svg — "Copy link" on desktop (#22285)
+  copy: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m6.25 10.5c.41421 0 .75-.3358.75-.75 0-.41421-.33579-.75-.75-.75h-.25c-2.20914 0-4 1.7909-4 4v5c0 2.2091 1.79086 4 4 4h5c2.2091 0 4-1.7909 4-4v-.25c0-.4142-.3358-.75-.75-.75s-.75.3358-.75.75v.25c0 1.3807-1.1193 2.5-2.5 2.5h-5c-1.38071 0-2.5-1.1193-2.5-2.5v-5c0-1.3807 1.11929-2.5 2.5-2.5z"/><path clip-rule="evenodd" d="m9 6c0-2.20914 1.7909-4 4-4h5c2.2091 0 4 1.79086 4 4v5c0 2.2091-1.7909 4-4 4h-5c-2.2091 0-4-1.7909-4-4zm4-2.5h5c1.3807 0 2.5 1.11929 2.5 2.5v5c0 1.3807-1.1193 2.5-2.5 2.5h-5c-1.3807 0-2.5-1.1193-2.5-2.5v-5c0-1.38071 1.1193-2.5 2.5-2.5z" fill-rule="evenodd"/></g></svg>`,
+  // chevron-right — submenu affordance
+  chevron: `<svg viewBox="0 0 24 24" fill="none"><path d="M9.5 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   // checkmark.svg
   check: `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m21.416 2.37592c.3447.22976.4378.69542.208 1.04006l-11.99996 18.00002c-.12464.1869-.32654.3082-.55014.3303s-.44535-.0571-.60423-.216l-6-6c-.29289-.2929-.29289-.7678 0-1.0607s.76777-.2929 1.06066 0l5.3531 5.3531 11.49257-17.23877c.2297-.34464.6954-.43777 1.04-.20801z" fill="currentColor" fill-rule="evenodd"/></svg>`,
   // net-new clock (no source) — thread-list "when"
@@ -479,20 +485,24 @@ export function confirmDeleteThread(t, onConfirm) {
   document.querySelector('.confirm-modal-overlay')?.remove()
   const overlay = document.createElement('div')
   overlay.className = 'share-modal-overlay confirm-modal-overlay'
+  // Layout copied from the app's delete-message popup: title + close X, divider, body, "Do not show
+  // this again", divider, a SINGLE danger Confirm on the right. There is no Cancel button — the X
+  // (and Escape / click-outside) is the way out, so focus lands there rather than on Confirm.
   overlay.innerHTML = `
     <div class="share-modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-body">
-      <div class="share-modal__head">
+      <div class="confirm-modal__head">
         <span class="share-modal__title" id="confirm-title">Confirm deleting this thread</span>
+        <button class="share-modal__close" data-confirm-cancel title="Close" aria-label="Close">${CLOSE_X}</button>
       </div>
-      <div class="share-modal__thread"><span class="share-modal__glyph">${THREAD_ICONS.thread}</span><span class="share-modal__name">${t.title}</span></div>
-      <p class="confirm-modal__body" id="confirm-body">Are you sure you want to delete this thread? Its ${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'} will be removed for everyone. Be aware that other clients are not guaranteed to delete the thread as well.</p>
-      <label class="confirm-modal__check">
-        <input type="checkbox" data-confirm-skip />
-        <span>Do not show this again</span>
-      </label>
+      <div class="confirm-modal__main">
+        <p class="confirm-modal__body" id="confirm-body">Are you sure you want to delete this thread? Be aware that other clients are not guaranteed to delete the thread as well.</p>
+        <label class="confirm-modal__check">
+          <input type="checkbox" data-confirm-skip />
+          <span>Do not show this again</span>
+        </label>
+      </div>
       <div class="confirm-modal__actions">
-        <button class="confirm-modal__btn confirm-modal__btn--cancel" data-confirm-cancel>Cancel</button>
-        <button class="confirm-modal__btn confirm-modal__btn--danger" data-confirm-ok>Delete thread</button>
+        <button class="confirm-modal__btn confirm-modal__btn--danger" data-confirm-ok>Confirm</button>
       </div>
     </div>`
   document.body.appendChild(overlay)
@@ -505,51 +515,157 @@ export function confirmDeleteThread(t, onConfirm) {
     close()
     onConfirm()
   })
-  // focus the SAFE action, not the destructive one — Enter must not delete by reflex
   overlay.querySelector('[data-confirm-cancel]').focus()
   document.addEventListener('keydown', onKey)
 }
 
-// thread "more" menu — follow · share · keep-visible · archive · delete (epic §18/§21/§23)
-export function openThreadMenu(root, threadId, anchor) {
+// thread context menu (#22401) — Edit name · Follow · Mute › · Mark as read · Copy/Share link ·
+// Pin to list · Archive · Delete. Opened by the "…" button on the thread view, or by right-click /
+// long-press on a thread row in the channel or chat list (then `opts.at` positions it at the pointer).
+export function openThreadMenu(root, threadId, anchor, opts = {}) {
   root.querySelector('.thread-more-menu')?.remove()
   const t = store.getThread(threadId); if (!t) return
+  const mobile = !!document.querySelector('.shell--mobile')
+  const manage = store.canManageThread(t)          // creator OR community admin (#22275 / #22280)
+
   const menu = document.createElement('div')
   menu.className = 'msg-cmenu thread-more-menu'
   menu.setAttribute('role', 'menu')
-  const item = (icon, label, act, cls = '') => `<button class="msg-cmenu__item${cls}" role="menuitem" data-act="${act}">${icon}<span>${label}</span></button>`
+  const item = (icon, label, act, cls = '', extra = '') =>
+    `<button class="msg-cmenu__item${cls}" role="menuitem" data-act="${act}" ${extra}>${icon}<span>${label}</span></button>`
+
+  // Mute is a DURATION submenu while unmuted, a single action once muted (#22282)
+  const muteItem = t.muted
+    ? item(THREAD_ICONS.bell, 'Unmute thread', 'unmute')
+    : item(THREAD_ICONS.bellOff, 'Mute thread', 'mute-menu', ' msg-cmenu__item--submenu', 'aria-haspopup="true"')
+
   menu.innerHTML =
-    (store.isCreator(t) ? item(THREAD_ICONS.edit, 'Edit name', 'rename') : '') +
+    (manage ? item(THREAD_ICONS.edit, 'Edit name', 'rename') : '') +
     item(THREAD_ICONS.check, t.followed ? 'Unfollow' : 'Follow', 'follow') +
-    item(t.muted ? THREAD_ICONS.bell : THREAD_ICONS.bellOff, t.muted ? 'Unmute thread' : 'Mute thread', 'mute') +
-    item(THREAD_ICONS.link, 'Share link', 'share') +
-    item(THREAD_ICONS.pin, t.keptVisible ? 'Unpin from list' : 'Keep visible', 'keep') +
+    muteItem +
+    item(THREAD_ICONS.checkCircle, 'Mark as read', 'read') +
+    // #22285 — desktop copies the link outright; mobile opens the OS share sheet
+    (mobile ? item(THREAD_ICONS.link, 'Share link', 'share') : item(THREAD_ICONS.copy, 'Copy link', 'copy')) +
+    // #22284 — the options are "Pin to list" / "Unpin from list"
+    item(THREAD_ICONS.pin, t.keptVisible ? 'Unpin from list' : 'Pin to list', 'keep') +
     (t.closed ? item(THREAD_ICONS.archive, 'Unarchive', 'reopen') : item(THREAD_ICONS.archive, 'Archive', 'close')) +
-    item(THREAD_ICONS.del, 'Delete', 'delete', ' msg-cmenu__item--danger')
-  // position under the anchor
-  const rect = anchor.getBoundingClientRect(); const rootRect = root.getBoundingClientRect()
-  menu.style.position = 'absolute'; menu.style.top = (rect.bottom - rootRect.top + 4) + 'px'; menu.style.right = (rootRect.right - rect.right) + 'px'; menu.style.left = 'auto'
+    (manage ? item(THREAD_ICONS.del, 'Delete', 'delete', ' msg-cmenu__item--danger') : '')
+
+  // position: under the anchor by default, or at the pointer for a right-click / long-press
+  const rootRect = root.getBoundingClientRect()
+  menu.style.position = 'absolute'
+  if (opts.at) {
+    menu.style.top = (opts.at.y - rootRect.top) + 'px'
+    menu.style.left = (opts.at.x - rootRect.left) + 'px'
+    menu.style.right = 'auto'
+  } else {
+    const rect = anchor.getBoundingClientRect()
+    menu.style.top = (rect.bottom - rootRect.top + 4) + 'px'
+    menu.style.right = (rootRect.right - rect.right) + 'px'
+    menu.style.left = 'auto'
+  }
   root.appendChild(menu)
+  // keep it inside the viewport when opened at the pointer near an edge
+  if (opts.at) {
+    const mr = menu.getBoundingClientRect()
+    if (mr.bottom > innerHeight - 8) menu.style.top = (opts.at.y - rootRect.top - mr.height) + 'px'
+    if (mr.right > innerWidth - 8) menu.style.left = (opts.at.x - rootRect.left - mr.width) + 'px'
+  }
+
+  const teardown = () => {
+    menu.remove(); root.querySelector('.thread-mute-menu')?.remove()
+    document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', onKey)
+  }
+
   const acts = {
     // the menu is removed before acts run, so the header is back in place for the editor to take
     rename: () => startTitleEdit(root, threadId),
     follow: () => store.setFollowed(threadId, !t.followed),
-    mute: () => store.setMuted(threadId, !t.muted),
+    unmute: () => store.setMuted(threadId, false),
+    read: () => store.markAllRead(threadId),
+    copy: () => copyThreadLink(root, t),
     share: () => openShareModal(t),
     keep: () => store.setKeptVisible(threadId, !t.keptVisible),
     close: () => store.closeThread(threadId),
     reopen: () => store.reopenThread(threadId),
     delete: () => confirmDeleteThread(t, () => store.deleteThread(threadId)),
   }
+
+  // ---- mute duration flyout (MuteChatMenuItem.qml) ----
+  const muteBtn = menu.querySelector('[data-act="mute-menu"]')
+  const openMuteFlyout = () => {
+    if (root.querySelector('.thread-mute-menu')) return
+    const fly = document.createElement('div')
+    fly.className = 'msg-cmenu thread-mute-menu'
+    fly.setAttribute('role', 'menu')
+    fly.innerHTML = store.MUTE_INTERVALS.map(([key, label]) =>
+      `<button class="msg-cmenu__item" role="menuitem" data-mute-interval="${key}"><span>${label}</span></button>`).join('')
+    const br = muteBtn.getBoundingClientRect()
+    fly.style.position = 'absolute'
+    fly.style.top = (br.top - rootRect.top) + 'px'
+    root.appendChild(fly)
+    // flip to the left of the menu when there is no room on the right (it usually hugs a panel edge)
+    const mr = menu.getBoundingClientRect(), fr = fly.getBoundingClientRect()
+    const fitsRight = mr.right + fr.width + 8 < innerWidth
+    fly.style.left = ((fitsRight ? mr.right + 4 : mr.left - fr.width - 4) - rootRect.left) + 'px'
+    if (fly.getBoundingClientRect().bottom > innerHeight - 8) fly.style.top = (innerHeight - 8 - fr.height - rootRect.top) + 'px'
+    fly.querySelectorAll('[data-mute-interval]').forEach(b => b.addEventListener('click', () => {
+      const key = b.dataset.muteInterval
+      teardown()
+      store.setMuted(threadId, true, key)
+    }))
+  }
+  muteBtn?.addEventListener('mouseenter', openMuteFlyout)
+  muteBtn?.addEventListener('click', (e) => { e.stopPropagation(); openMuteFlyout() })
+  muteBtn?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); openMuteFlyout() } })
+  // hovering any other row closes the flyout
+  menu.querySelectorAll('.msg-cmenu__item:not([data-act="mute-menu"])').forEach(b =>
+    b.addEventListener('mouseenter', () => root.querySelector('.thread-mute-menu')?.remove()))
+
   menu.querySelectorAll('.msg-cmenu__item').forEach(btn => btn.addEventListener('click', () => {
-    menu.remove(); document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', onKey)
+    if (btn.dataset.act === 'mute-menu') return      // opens the flyout, does not act
+    teardown()
     acts[btn.dataset.act]?.()
   }))
   // a11y: focus first, Escape + outside-click dismiss
   menu.querySelector('.msg-cmenu__item')?.focus()
-  const dismiss = (e) => { if (!menu.contains(e.target) && e.target !== anchor) { menu.remove(); document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', onKey) } }
-  const onKey = (e) => { if (e.key === 'Escape') { menu.remove(); anchor.focus(); document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', onKey) } }
+  const dismiss = (e) => {
+    if (menu.contains(e.target) || e.target === anchor) return
+    if (root.querySelector('.thread-mute-menu')?.contains(e.target)) return
+    teardown()
+  }
+  const onKey = (e) => { if (e.key === 'Escape') { teardown(); anchor?.focus?.() } }
   setTimeout(() => { document.addEventListener('mousedown', dismiss); document.addEventListener('keydown', onKey) }, 0)
+}
+
+// #22285 §1 — on Desktop "Copy link" copies straight to the clipboard, no modal
+function copyThreadLink(root, t) {
+  const link = `https://status.app/t/${t.id}`
+  navigator.clipboard?.writeText(link).catch(() => {})
+  floatToast(root.closest('.shell__right, .shell__center, .thread-screen') || root, 'Thread link copied')
+}
+
+// #22401 §1.2 — right-click (desktop) / long-press (mobile) on a thread row opens the same menu
+export function bindThreadRowMenu(rowSelector, resolveRoot) {
+  document.querySelectorAll(rowSelector).forEach(row => {
+    const id = row.dataset.openThread
+    if (!id) return
+    const open = (x, y) => {
+      const host = resolveRoot(row)
+      if (!host) return
+      if (getComputedStyle(host).position === 'static') host.style.position = 'relative'
+      openThreadMenu(host, id, row, { at: { x, y } })
+    }
+    row.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); open(e.clientX, e.clientY) })
+    let timer = null, moved = false
+    row.addEventListener('touchstart', (e) => {
+      moved = false
+      const tch = e.touches[0]
+      timer = setTimeout(() => { if (!moved) open(tch.clientX, tch.clientY) }, 500)
+    }, { passive: true })
+    row.addEventListener('touchmove', () => { moved = true; clearTimeout(timer) }, { passive: true })
+    row.addEventListener('touchend', () => clearTimeout(timer))
+  })
 }
 
 export function floatToast(root, text) {
