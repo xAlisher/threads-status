@@ -65,23 +65,67 @@ const MCOMPOSER_ICONS = {
   wallet: `<svg viewBox="0 0 24 24" fill="none"><path d="M12.0005 1.7998C14.1269 1.79981 15.8372 1.86152 17.1919 2.09961C18.5524 2.33875 19.6344 2.76869 20.4331 3.56738C21.2317 4.36609 21.6618 5.44808 21.9009 6.80859C22.1153 8.0288 22.1828 9.53754 22.1948 11.3789C22.1977 11.4185 22.2007 11.4589 22.2007 11.5H22.1958C22.1966 11.664 22.2007 11.8308 22.2007 12C22.2007 12.0992 22.198 12.1976 22.1978 12.2949C22.1981 12.3628 22.2007 12.4313 22.2007 12.5H22.1958C22.1861 14.3965 22.12 15.9446 21.9009 17.1914C21.6617 18.5519 21.2318 19.6339 20.4331 20.4326C19.6344 21.2313 18.5524 21.6613 17.1919 21.9004C15.8372 22.1385 14.1269 22.2002 12.0005 22.2002C9.87405 22.2002 8.1638 22.1385 6.80908 21.9004C5.44857 21.6613 4.36658 21.2312 3.56787 20.4326C2.76919 19.6339 2.33924 18.5519 2.1001 17.1914C1.88096 15.9446 1.81487 14.3965 1.80518 12.5H1.80029C1.80029 12.4313 1.80292 12.3628 1.80322 12.2949C1.80294 12.1976 1.8003 12.0992 1.80029 12C1.80029 11.8308 1.80434 11.664 1.80518 11.5H1.80029C1.80029 11.4589 1.8033 11.4185 1.80615 11.3789C1.81818 9.53752 1.88566 8.02881 2.1001 6.80859C2.33923 5.44801 2.76917 4.3661 3.56787 3.56738C4.36659 2.76866 5.44848 2.33875 6.80908 2.09961C8.16381 1.86153 9.87402 1.7998 12.0005 1.7998ZM15.4663 10.2109C15.3571 10.4289 15.1969 10.6951 14.9644 10.9609C14.4034 11.6019 13.4661 12.2002 12.0005 12.2002C10.5349 12.2002 9.59758 11.6019 9.03662 10.9609C8.80394 10.695 8.64289 10.429 8.53369 10.2109C8.38903 10.2154 8.21566 10.2205 8.021 10.2305C7.42516 10.261 6.63774 10.3213 5.85693 10.4414C5.0647 10.5633 4.3288 10.7396 3.80908 10.9795C3.3918 11.1721 3.25923 11.3328 3.21826 11.4268C3.20972 11.6614 3.20494 11.9099 3.20264 12.1729C3.20608 14.2106 3.26987 15.7593 3.479 16.9492C3.693 18.1666 4.04437 18.9286 4.55811 19.4424C5.07187 19.9561 5.83391 20.3075 7.05127 20.5215C8.27462 20.7365 9.87713 20.7998 12.0005 20.7998C14.1239 20.7998 15.7264 20.7365 16.9497 20.5215C18.1671 20.3075 18.9291 19.9561 19.4429 19.4424C19.9566 18.9286 20.308 18.1666 20.522 16.9492C20.7311 15.7593 20.7949 14.2106 20.7983 12.1729C20.796 11.9099 20.7903 11.6614 20.7817 11.4268C20.7406 11.3328 20.6085 11.1719 20.1919 10.9795C19.6722 10.7396 18.9362 10.5633 18.144 10.4414C17.3633 10.3213 16.5758 10.261 15.98 10.2305C15.7849 10.2205 15.6112 10.2154 15.4663 10.2109ZM12.0005 6.7002C9.88157 6.7002 8.2655 6.7629 7.02686 6.93555C5.78284 7.10895 4.99188 7.38436 4.47021 7.75684C3.91812 8.15119 3.58523 8.71574 3.3999 9.63184C4.06853 9.35418 4.88002 9.17614 5.64404 9.05859C6.48803 8.92875 7.32591 8.86398 7.94873 8.83203C8.26106 8.81602 8.52212 8.80774 8.70557 8.80371C8.7973 8.8017 8.87028 8.8013 8.92041 8.80078C8.94518 8.80053 8.96459 8.79987 8.97803 8.7998H9.54736L9.67822 9.3252V9.32324C9.6784 9.32377 9.67882 9.32486 9.6792 9.32617C9.68082 9.33176 9.68416 9.34428 9.68994 9.36133C9.70172 9.39598 9.72271 9.45136 9.75439 9.52051C9.81867 9.6607 9.9245 9.85061 10.0894 10.0391C10.4035 10.398 10.9665 10.7998 12.0005 10.7998C13.0345 10.7998 13.5976 10.398 13.9116 10.0391C14.0765 9.85057 14.1823 9.66071 14.2466 9.52051C14.2783 9.45131 14.2993 9.39598 14.311 9.36133C14.3168 9.34422 14.3202 9.33173 14.3218 9.32617V9.3252L14.4536 8.7998H15.0229C15.0364 8.79988 15.0558 8.80053 15.0806 8.80078C15.1307 8.80129 15.2037 8.8017 15.2954 8.80371C15.4789 8.80775 15.7399 8.81602 16.0522 8.83203C16.6751 8.86398 17.513 8.92875 18.3569 9.05859C19.1206 9.17609 19.9317 9.35438 20.6001 9.63184C20.4148 8.71594 20.0827 8.15116 19.5308 7.75684C19.0091 7.38437 18.2181 7.10896 16.9741 6.93555C15.7355 6.76289 14.1194 6.7002 12.0005 6.7002ZM12.0005 3.2002C9.87709 3.2002 8.27463 3.26351 7.05127 3.47852C5.83379 3.69251 5.07187 4.04385 4.55811 4.55762C4.09604 5.01969 3.76684 5.68283 3.54932 6.69727C3.58417 6.67057 3.61953 6.64405 3.65576 6.61816C4.4466 6.05328 5.49969 5.73475 6.8335 5.54883C8.17295 5.36213 9.86953 5.2998 12.0005 5.2998C14.1314 5.29981 15.828 5.36212 17.1675 5.54883C18.5012 5.73476 19.5544 6.0533 20.3452 6.61816C20.3812 6.64386 20.4161 6.67077 20.4507 6.69727C20.2332 5.68303 19.9048 5.01966 19.4429 4.55762C18.9291 4.04387 18.1671 3.69251 16.9497 3.47852C15.7264 3.2635 14.1239 3.2002 12.0005 3.2002Z" fill="currentColor"/></svg>`,
 }
 
+// #22273 §1.1 / #22274 §1.2.3.2 — the thread-name row that sits INSIDE the composer's input box,
+// above the message row. One implementation, two callers: the chat composer (where the thread toggle
+// reveals it) and the thread-creation view (where it is already open and pre-filled from the message
+// the thread starts from). The name is always a PLACEHOLDER, never a value, so an untouched field
+// means "no name chosen" and Send derives the title itself.
+export const THREAD_NAME_PLACEHOLDER = 'Add thread name here'
+export function threadNameRow({ hidden = true, placeholder = THREAD_NAME_PLACEHOLDER } = {}) {
+  return `
+          <div class="chat-thread-name" data-thread-name-row${hidden ? ' hidden' : ''}>
+            <span class="chat-thread-name__glyph">${THREAD_GLYPH}</span>
+            <input class="chat-thread-name__input" data-chat-thread-name data-thread-name type="text" maxlength="${store.TITLE_MAX}" placeholder="${escAttr(placeholder)}" aria-label="Thread name" />
+            <button class="chat-thread-name__clear" data-chat-thread-clear title="Clear thread name" aria-label="Clear thread name" hidden>${CLOSE_X}</button>
+          </div>`
+}
+
+// wire the row: clear button visibility + the toggle that shows/hides it (#22273 §1.1.1 clears on off)
+export function bindThreadNameRow(root) {
+  const row = root.querySelector('[data-thread-name-row]')
+  const input = root.querySelector('[data-chat-thread-name]')
+  const clear = root.querySelector('[data-chat-thread-clear]')
+  const toggle = root.querySelector('[data-thread-toggle]')
+  if (!row || !input) return
+  const syncClear = () => { if (clear) clear.hidden = !input.value }
+  input.addEventListener('input', syncClear)
+  clear?.addEventListener('click', () => { input.value = ''; syncClear(); input.focus() })
+  toggle?.addEventListener('click', () => {
+    const on = row.hidden            // currently hidden → turning on
+    row.hidden = !on
+    toggle.classList.toggle('checked', on)
+    toggle.setAttribute('aria-pressed', String(on))
+    if (!on) { input.value = ''; syncClear() }
+    else input.focus()
+  })
+  syncClear()
+}
+
 // editable composer — reuses .chat-input structure; NOT readonly (epic §3 post/edit).
 // mobile = the Figma DS two-row layout (text on top, outlined icon toolbar + blue send below).
-function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = false } = {}) {
+function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = false, nameRow = null } = {}) {
   // Slack-style "Send copy to #channel" — a checkbox row INSIDE the composer box, revealed on :focus-within
   const copyInline = copyLabel ? `
             <label class="thread-copy--inline">
               <input type="checkbox" class="thread-copy__check" data-copy${copy ? ' checked' : ''} aria-label="${copyLabel}" />
               <span class="thread-copy__label">${copyLabel}</span>
             </label>` : ''
+  // #22274 §1.2.3.3 — in the thread-creation view the composer's thread icon is already toggled on
+  const nameRowHtml = nameRow ? threadNameRow(nameRow) : ''
+  const toggleOn = nameRow && nameRow.hidden === false
+  const threadToggle = (cls) => nameRow
+    ? `<button class="${cls} chat-input__thread-btn${toggleOn ? ' checked' : ''}" data-thread-toggle type="button" title="Thread name" aria-label="Thread name" aria-pressed="${!!toggleOn}">${THREAD_GLYPH}</button>`
+    : ''
   if (mobile) {
     return `
     <div class="chat-input thread-view__composer mcomposer">
       <div class="mcomposer__handle" aria-hidden="true"></div>
+      ${nameRowHtml}
       <textarea class="chat-input__field mcomposer__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
       ${copyInline}
       <div class="mcomposer__bar">
         <div class="mcomposer__actions">
+          ${threadToggle('mcomposer__btn')}
           <button class="mcomposer__btn mcomposer__btn--text" title="Format" aria-label="Format text">Aa</button>
           <button class="mcomposer__btn" title="Camera" aria-label="Camera">${MCOMPOSER_ICONS.camera}</button>
           <button class="mcomposer__btn" title="Image" aria-label="Image">${MCOMPOSER_ICONS.image}</button>
@@ -97,12 +141,14 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
     <div class="chat-input thread-view__composer">
       <div class="chat-input__row">
         <div class="chat-input__box">
+          ${nameRowHtml}
           <div class="chat-input__input-row">
             <textarea class="chat-input__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
             <button class="chat-input__btn chat-input__btn--send" data-thread-send title="Send" aria-label="Send">${CHANNEL_ICONS.send}</button>
           </div>
           ${copyInline}
           <div class="chat-input__actions chat-input__actions--below">
+            ${threadToggle('chat-input__btn')}
             <button class="chat-input__btn" title="Commands" aria-label="Commands">${CHANNEL_ICONS.chatCommands}</button>
             ${formatGroup()}
             <button class="chat-input__btn" title="Emoji" aria-label="Emoji">${CHANNEL_ICONS.emojis}</button>
@@ -154,7 +200,9 @@ const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').
 export function renderCreate(surface, parentMsgId, { panel = false, mobile = false } = {}) {
   const s = SURFACES[surface] || SURFACES.channel
   const parent = resolveParent(surface, parentMsgId)
-  const prefillName = parent ? escAttr(titleFromText(parent[4])) : ''
+  // §1.2.2 / §1.2.3.2 — the title is prefilled from the first 50 characters of the initiating
+  // message, as the placeholder of the name row inside the composer
+  const prefillName = parent ? titleFromText(parent[4]) : ''
   return `
     <div class="thread-view thread-create">
       ${threadHeader({ title: 'Creating Thread', sub: s.in, back: !panel, close: panel, menu: false })}
@@ -162,8 +210,7 @@ export function renderCreate(surface, parentMsgId, { panel = false, mobile = fal
         ${parent ? `<div class="thread-view__parent-label">Starting a thread from</div><div class="thread-view__parent">${msg(...parent)}</div>` : `<div class="thread-view__parent-label">New thread ${s.in}</div>`}
       </div>
       <div class="thread-create__foot">
-        <input class="thread-create__name" data-thread-name type="text" placeholder="Thread name (optional)" aria-label="Thread name (optional)" value="${prefillName}" />
-        ${threadComposer('Type message', mobile)}
+        ${threadComposer('Type message', mobile, { nameRow: { hidden: false, placeholder: prefillName || THREAD_NAME_PLACEHOLDER } })}
       </div>
     </div>`
 }
@@ -301,20 +348,24 @@ export function bindThreads() {
 
   // ---- create flow: Send creates a thread in the model (epic §15/UC1) ----
   if (p.get('tview') === 'create') {
+    bindThreadNameRow(root)          // #22274 §1.2.3 — clear button + the composer's thread toggle
     const send = () => {
-      const nameEl = root.querySelector('[data-thread-name]')
+      const nameEl = root.querySelector('[data-chat-thread-name]')
       const inputEl = root.querySelector('[data-thread-input]')
       const text = (inputEl?.value || '').trim()
       if (!text) { inputEl?.focus(); return }
       const parentMsgId = p.get('parent')
       const parent = resolveParent(surface, parentMsgId)
-      const t = store.createThread({ surface, parentMsgId, parentMsg: parent, title: nameEl?.value || '', firstMessage: text })
+      const typed = (nameEl?.value || '').trim()
+      const ph = nameEl?.placeholder || ''
+      const title = typed || (ph && ph !== THREAD_NAME_PLACEHOLDER ? ph : '')
+      const t = store.createThread({ surface, parentMsgId, parentMsg: parent, title, firstMessage: text })
       const q = new URLSearchParams(location.search)
       q.set('screen', 'threads'); q.set('tview', 'thread'); q.set('t', t.id); q.set('surface', surface); q.set('from', p.get('from') || 'chat'); q.set('created', '1'); q.delete('parent')
       location.search = q.toString()
     }
     bindComposerSend(root, send)
-    if (p.get('created') !== '1') root.querySelector('[data-thread-name]')?.focus()
+    if (p.get('created') !== '1') root.querySelector('[data-thread-input]')?.focus()
   }
 
   // ---- thread view: post reply (epic §16/UC2) + copy-to-parent (epic §17/UC3) ----

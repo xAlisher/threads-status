@@ -36,6 +36,11 @@ assume they persist). Cache-bust every navigation with `&cb=xxx`; `&reset=1` res
 - URL params carry all view state (`chat`, `tpanel`, `tmain`, `info`, `surface`, `copy`, `mlist`).
 
 ### Starting a thread (#22273 / #22274)
+**Both entry points share one composer treatment** — `threadNameRow()` + `bindThreadNameRow()` in
+threads.js, used by the chat composer and by the thread-creation view. #22274 §1.2.3 made this
+explicit: the create view must show the *same* name row and a thread icon that is already toggled
+on. Do not fork them again.
+
 Two entry points, deliberately different shapes:
 - **From a NEW message (#22273)** — the composer thread icon is a **toggle**, not a link. On, a
   thread-name row appears *inside* `.chat-input__box` above the message row; off, it clears and
@@ -46,7 +51,12 @@ Two entry points, deliberately different shapes:
   `store.postChannelMessage`, otherwise Send would read as broken.
 - **From an EXISTING message (#22274)** — context menu *and* hover quick-actions, thread icon
   immediately after Reply. Both call `startThreadFromMessage()`; the hover-bar button is **injected
-  at bind time** (revamp-only path) so `quickActions()` keeps its certified 5-button set.
+  at bind time** (revamp-only path) so `quickActions()` keeps its certified 5-button set. The story
+  says "context menu (Desktop **and Mobile**)" — the hover bar is invisible on touch, so messages
+  also take a **long-press** (and right-click); without it mobile had no way to reach the menu at
+  all. The create view then opens with the name row already open, its placeholder set to the first
+  50 characters of the initiating message, the composer's thread icon toggled on, and focus in the
+  **chat input** (§1.2.3.1) — not the name field.
 
 ### Thread title (#22275)
 Titles are **stored escaped** (like message text) because every surface interpolates them into HTML.

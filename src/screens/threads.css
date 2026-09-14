@@ -98,8 +98,6 @@
 
 /* ---- Creating Thread: name field ---- */
 .thread-create__foot { flex-shrink: 0; border-top: 1px solid var(--separator); }
-.thread-create__name { width: 100%; box-sizing: border-box; border: none; background: transparent; outline: none; padding: 14px 16px 6px; color: var(--direct-color-1); font-family: var(--font-family-base); font-size: var(--font-size-primary); }
-.thread-create__name::placeholder { color: var(--base-color-1); }
 
 /* ---- closed / deleted conditions (epic 4.1/4.2) ---- */
 .thread-closed-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--base-color-3); color: var(--base-color-1); font-size: var(--font-size-additional); flex-shrink: 0; }

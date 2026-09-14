@@ -6,7 +6,8 @@ import * as store from '../thread-store.js'
 import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 import { SURFACES } from '../thread-store.js'
 // desktop thread side-panel reuses the thread renderers + binders (epic §1)
-import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, titleFromText, autosize, floatToast } from './threads.js'
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, titleFromText, autosize, floatToast,
+         threadNameRow, bindThreadNameRow, THREAD_NAME_PLACEHOLDER } from './threads.js'
 
 export const CHANNEL_ICONS = {
   // tiny/channel.svg (viewBox="0 0 16 17") — community channel type icon
@@ -304,10 +305,6 @@ export function bindCommunityChannel(view, ver) {
   }
 }
 
-// close.svg — clears the thread-name field (#22273 §2.2)
-const CLEAR_X = `<svg viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
-// #22273 §2.3 — shown when there is no message text to derive a name from
-const THREAD_NAME_PLACEHOLDER = 'Add thread name here'
 // trash / bin — for the "X deleted this thread" tombstone (Status delete_message pattern)
 const TRASH_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 4h4M6 7l1 12.5A2 2 0 0 0 9 21.4h6a2 2 0 0 0 2-1.9L18 7M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // "#←" — a channel-hash with a back arrow, for the thread reply "Also sent to the channel" tag
@@ -453,6 +450,15 @@ function closeThreadMain() {
   rerender()
 }
 
+// #22274 §1.2.2 — the name row carries the title as a placeholder, so an untouched field still
+// yields the intended title. The generic prompt is not a title, so it never becomes one.
+function threadTitleFrom(nameEl) {
+  const typed = (nameEl?.value || '').trim()
+  if (typed) return typed
+  const ph = nameEl?.placeholder || ''
+  return ph && ph !== THREAD_NAME_PLACEHOLDER ? ph : ''
+}
+
 // wire a thread view (right-side panel OR centre column): close, composer send (create/reply),
 // mute/more/edit, focus. cfg lets the centre-column variant reuse this same binder.
 function bindThreadPanel(p, cfg = {}) {
@@ -492,12 +498,13 @@ function bindThreadPanel(p, cfg = {}) {
   }
 
   if (isCreate) {
+    bindThreadNameRow(panel)          // #22274 §1.2.3 — clear button + the composer's thread toggle
     bindComposerSend(panel, () => {
-      const nameEl = panel.querySelector('[data-thread-name]')
+      const nameEl = panel.querySelector('[data-chat-thread-name]')
       const inputEl = panel.querySelector('[data-thread-input]')
       const text = (inputEl?.value || '').trim(); if (!text) { inputEl?.focus(); return }
       const parentMsgId = p.get('tparent')
-      const t = store.createThread({ surface, parentMsgId, parentMsg: resolveParent(surface, parentMsgId), title: nameEl?.value || '', firstMessage: text })
+      const t = store.createThread({ surface, parentMsgId, parentMsg: resolveParent(surface, parentMsgId), title: threadTitleFrom(nameEl), firstMessage: text })
       const u = new URL(location.href); u.searchParams.set('tpanel', t.id); u.searchParams.delete('tparent'); history.replaceState(null, '', u)
       rerender() // swap the create panel for the freshly-created thread
     })
@@ -689,6 +696,16 @@ function bindThreadAffordances(p, view) {
   scope.querySelectorAll('.messages .message').forEach(mEl => {
     const moreBtn = mEl.querySelector('.message__qa-btn[aria-label="More"]')
     moreBtn?.addEventListener('click', (e) => { e.stopPropagation(); openContextMenu(mEl, surface) })
+    // #22274 §1 asks for the context menu on Desktop AND Mobile. The hover bar is invisible on
+    // touch, so a long-press is the only way in there; right-click is the desktop equivalent.
+    mEl.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openContextMenu(mEl, surface) })
+    let pressTimer = null, moved = false
+    mEl.addEventListener('touchstart', () => {
+      moved = false
+      pressTimer = setTimeout(() => { if (!moved) openContextMenu(mEl, surface) }, 500)
+    }, { passive: true })
+    mEl.addEventListener('touchmove', () => { moved = true; clearTimeout(pressTimer) }, { passive: true })
+    mEl.addEventListener('touchend', () => clearTimeout(pressTimer))
   })
 
   // deep-link: ?menu=thread auto-opens the context menu on the first message (saved-state)
@@ -1086,12 +1103,7 @@ function renderCenterPanel(revamp, panelOpen = false, mobile = false, chat = 'co
     msg('You', 'A', '#4360DF', m.time, m.text, { id: m.id, delivery: 'sent' })).join('') : ''
   // #22273 §1.1 — the thread-name field lives INSIDE the input box, above the message row, and is
   // rendered hidden: the composer thread toggle reveals it (§1.1) and hides + clears it (§1.1.1).
-  const threadNameRow = revamp ? `
-          <div class="chat-thread-name" data-thread-name-row hidden>
-            <span class="chat-thread-name__glyph">${THREAD_GLYPH}</span>
-            <input class="chat-thread-name__input" data-chat-thread-name type="text" maxlength="${store.TITLE_MAX}" placeholder="${THREAD_NAME_PLACEHOLDER}" aria-label="Thread name" />
-            <button class="chat-thread-name__clear" data-chat-thread-clear title="Clear thread name" aria-label="Clear thread name" hidden>${CLEAR_X}</button>
-          </div>` : ''
+  const nameRowHtml = revamp ? threadNameRow() : ''
   return `
     ${header}
     <div class="messages">
@@ -1102,7 +1114,7 @@ function renderCenterPanel(revamp, panelOpen = false, mobile = false, chat = 'co
       <div class="chat-input__row">
         <button class="chat-input__cmd-btn" title="Commands">${CHANNEL_ICONS.chatCommands}</button>
         <div class="chat-input__box">
-          ${threadNameRow}
+          ${nameRowHtml}
           <div class="chat-input__input-row">
             <textarea class="chat-input__field" data-chat-input placeholder="Type a message..." rows="1"${revamp ? '' : ' readonly'}></textarea>
             <div class="chat-input__actions">
