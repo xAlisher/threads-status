@@ -104,12 +104,13 @@ export function bindThreadNameRow(root) {
 // editable composer — reuses .chat-input structure; NOT readonly (epic §3 post/edit).
 // mobile = the Figma DS two-row layout (text on top, outlined icon toolbar + blue send below).
 function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = false, nameRow = null } = {}) {
-  // Slack-style "Send copy to #channel" — a checkbox row INSIDE the composer box, revealed on :focus-within
-  const copyInline = copyLabel ? `
-            <label class="thread-copy--inline">
-              <input type="checkbox" class="thread-copy__check" data-copy${copy ? ' checked' : ''} aria-label="${copyLabel}" />
-              <span class="thread-copy__label">${copyLabel}</span>
-            </label>` : ''
+  // #21935 — "also send to the parent" is a TOGGLE ICON on the composer's quick-icon bar, not a
+  // checkbox row. Volo asked for this explicitly; it also removes the two focus/click workarounds
+  // the revealed checkbox row needed.
+  const copyToggle = (cls) => copyLabel
+    ? `<button class="${cls} chat-input__copy-btn${copy ? ' checked' : ''}" data-copy-toggle type="button" title="${copyLabel}" aria-label="${copyLabel}" aria-pressed="${!!copy}">${ALSO_SEND_GLYPH}</button>`
+    : ''
+  const copyInline = ''
   // #22274 §1.2.3.3 — in the thread-creation view the composer's thread icon is already toggled on
   const nameRowHtml = nameRow ? threadNameRow(nameRow) : ''
   const toggleOn = nameRow && nameRow.hidden === false
@@ -126,6 +127,7 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
       <div class="mcomposer__bar">
         <div class="mcomposer__actions">
           ${threadToggle('mcomposer__btn')}
+          ${copyToggle('mcomposer__btn')}
           <button class="mcomposer__btn mcomposer__btn--text" title="Format" aria-label="Format text">Aa</button>
           <button class="mcomposer__btn" title="Camera" aria-label="Camera">${MCOMPOSER_ICONS.camera}</button>
           <button class="mcomposer__btn" title="Image" aria-label="Image">${MCOMPOSER_ICONS.image}</button>
@@ -149,6 +151,7 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
           ${copyInline}
           <div class="chat-input__actions chat-input__actions--below">
             ${threadToggle('chat-input__btn')}
+            ${copyToggle('chat-input__btn')}
             <button class="chat-input__btn" title="Commands" aria-label="Commands">${CHANNEL_ICONS.chatCommands}</button>
             ${formatGroup()}
             <button class="chat-input__btn" title="Emoji" aria-label="Emoji">${CHANNEL_ICONS.emojis}</button>
@@ -160,6 +163,8 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
     </div>`
 }
 
+// "#←" — channel hash + arrow: the composer toggle uses the same mark that tags the sent message
+const ALSO_SEND_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M9.5 4 8 20M15.5 4 14 20M4.8 9h13M4.2 15h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
 // close (X) — desktop side-panel dismiss (net-new; the full-screen view uses the back arrow instead)
 const CLOSE_X = `<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
 
@@ -230,7 +235,7 @@ function newMessagesMarker(count, sinceLabel) {
 }
 
 // ---- Thread view (parent + replies + composer + "Send copy" toggle) ----
-export function renderThread(t, { copy, panel = false, mobile = false }) {
+export function renderThread(t, { copy, panel = false, mobile = false, highlight = '' }) {
   const s = SURFACES[t.surface] || SURFACES.channel
   const title = t.title
   if (t.deleted) {
@@ -246,7 +251,8 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
   const unreadFrom = t.newCount > 0 ? Math.max(0, t.messages.length - t.newCount) : -1
   const replyRows = t.messages.map((m, i) =>
     (i === unreadFrom ? newMessagesMarker(t.newCount, m.time) : '') +
-    msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
+    // #21935 §2 — the reply a copied channel message came from gets flashed when you jump to it
+    msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own, highlight: m.id === highlight })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
       ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel })}
@@ -328,23 +334,7 @@ export function bindThreads() {
   // "Send copy to #channel" checkbox (epic §3.1).
   // Persist the choice into the `copy` URL param (which renderThread reads) so posting a reply
   // — which triggers a re-render — doesn't silently snap the checkbox back on/off.
-  root.querySelector('[data-copy]')?.addEventListener('change', function () {
-    const on = this.checked
-    try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
-  })
-  // the row is revealed via :focus-within; pressing the (non-focusable) label text would blur the
-  // textarea on mousedown → row hides mid-click → toggle lost. Keep the textarea focused (row stays
-  // visible) and drive the toggle ourselves so a click anywhere on the row reliably flips the box.
-  const copyRow = root.querySelector('.thread-copy--inline')
-  if (copyRow) {
-    copyRow.addEventListener('mousedown', (e) => e.preventDefault())
-    copyRow.addEventListener('click', function (e) {
-      const chk = this.querySelector('[data-copy]'); if (!chk || e.target === chk) return  // keyboard Space on the box is native-handled
-      e.preventDefault()
-      chk.checked = !chk.checked
-      chk.dispatchEvent(new Event('change', { bubbles: true }))
-    })
-  }
+  bindCopyToggle(root)
 
   // ---- create flow: Send creates a thread in the model (epic §15/UC1) ----
   if (p.get('tview') === 'create') {
@@ -377,7 +367,7 @@ export function bindThreads() {
       const inputEl = root.querySelector('[data-thread-input]')
       const text = (inputEl?.value || '').trim()
       if (!text) return
-      const copyOn = !!root.querySelector('[data-copy]')?.checked
+      const copyOn = isCopyOn(root)
       store.postReply(threadId, text, { copyToParent: copyOn })
       // store.emit → main re-renders in place; focus the fresh composer + toast if copied
       requestAnimationFrame(() => {
@@ -393,6 +383,7 @@ export function bindThreads() {
     })
     // inline edit of own thread messages (epic §16/UC2)
     bindInlineEdit(root, threadId)
+    bindHighlight(root)
   }
 
   // back → return to the originating surface (epic §24/UC10)
@@ -431,6 +422,31 @@ export function autosize(el) {
   el.addEventListener('input', fit)
   fit()
   return fit
+}
+
+// #21935 §2 — scroll the jumped-to reply into view and let the flash fade, then strip `hl` so a
+// later re-render does not flash it again.
+export function bindHighlight(root) {
+  const el = root.querySelector('.message--highlight')
+  if (!el) return
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  setTimeout(() => {
+    el.classList.remove('message--highlight')
+    try { const u = new URL(location.href); u.searchParams.delete('hl'); history.replaceState(null, '', u) } catch {}
+  }, 2200)
+}
+
+// #21935 — the "also send to the parent" toggle. State lives in the `copy` URL param (which the
+// renderer reads) so posting a reply — which re-renders — cannot silently flip it back.
+export function isCopyOn(root) { return !!root.querySelector('[data-copy-toggle]')?.classList.contains('checked') }
+export function bindCopyToggle(root) {
+  const btn = root.querySelector('[data-copy-toggle]')
+  btn?.addEventListener('click', () => {
+    const on = !btn.classList.contains('checked')
+    btn.classList.toggle('checked', on)
+    btn.setAttribute('aria-pressed', String(on))
+    try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
+  })
 }
 
 // wire Send button + Enter-to-send on a composer

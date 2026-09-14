@@ -29,8 +29,8 @@ function seed() {
     // seeded example so the "replied to a thread" state is always visible in the demo
     parentPosts: {
       channel: [
-        { id: 'pp-r2', name: 'You', initial: 'A', color: '#4360DF', time: '10:33', text: 'Thinking 3 levels max. Beyond that we collapse older replies.', threadId: 't-m1', threadTitle: 'Threads MVP' },
-        { id: 'pp-r3', name: 'You', initial: 'A', color: '#4360DF', time: '10:34', text: 'Sharing the summary back to the channel too.', threadId: 't-m1', threadTitle: 'Threads MVP' },
+        { id: 'pp-r2', msgId: 'r2', name: 'You', initial: 'A', color: '#4360DF', time: '10:33', text: 'Thinking 3 levels max. Beyond that we collapse older replies.', threadId: 't-m1', threadTitle: 'Threads MVP' },
+        { id: 'pp-r3', msgId: 'r3', name: 'You', initial: 'A', color: '#4360DF', time: '10:34', text: 'Sharing the summary back to the channel too.', threadId: 't-m1', threadTitle: 'Threads MVP' },
       ],
       group: [], dm: [],
     },
@@ -278,7 +278,7 @@ export function postReply(threadId, text, { copyToParent = false } = {}) {
   if (copyToParent) {
     const s = ensure()
     ;(s.parentPosts[t.surface] = s.parentPosts[t.surface] || []).push({
-      id: nid('pp'), name: 'You', initial: 'A', color: '#4360DF', time: timeNow(),
+      id: nid('pp'), msgId: m.id, name: 'You', initial: 'A', color: '#4360DF', time: timeNow(),
       text: escapeText(text.trim()), threadId: t.id, threadTitle: t.title,
     })
   }

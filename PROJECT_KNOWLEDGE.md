@@ -155,6 +155,10 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
   only affects list visibility: an archived thread stays repliable and stays in the Threads list, and
   a reply revives it automatically (`postReply` bumps `lastActivityTs` and follows it). Never
   reintroduce a `closed` field, a lock glyph, or an Archive menu item.
+- **A copied post links back to its reply.** `parentPosts[].msgId` points at the thread message it
+  came from, so clicking the copied line (or the #name link) opens the thread and flashes that exact
+  reply (#21935 §2), carried through the open paths as the `hl` URL param. If you add a new way to
+  create a copy, set `msgId` or the jump silently lands nowhere.
 - **Send-copy → "replied to a thread: #name".** A reply with the send-copy checkbox posts to the
   thread AND appends a `parentPost` to the channel, grouped/stacked per thread under one header
   (`renderCopiedGroups`). The thread reply gets an "Also sent to the channel" tag (`opts.alsoSent`).
@@ -163,6 +167,9 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
 
 ## Gotchas (bit us; verify before repeating)
 
+- **The send-copy control is an ICON TOGGLE** on the thread composer's quick-icon bar (#21935), not
+  a checkbox row. That removed the two workarounds below — keep them recorded because the same traps
+  apply to any `:focus-within`-revealed row, but the send-copy row itself is gone.
 - **Custom checkbox double-toggle.** A `<label>`-wrapped custom checkbox toggled by BOTH the native
   click and a manual row handler → they cancel (net no change), so clicks look dead. Fix:
   `pointer-events:none` on the checkbox so every mouse click routes through the row's single manual

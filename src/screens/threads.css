@@ -61,26 +61,10 @@
 
 /* ---- composer + "Send copy to #channel" toggle (epic 3.1) ---- */
 .thread-view__composer { flex-shrink: 0; }
-.thread-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px 14px; background: var(--primary-color-2); } /* soft primary tint band under the composer (Figma #8) */
-.thread-copy__label { font-size: var(--font-size-additional); color: var(--direct-color-5); } /* dim gray until the box is checked */
-.thread-copy--inline:has(.thread-copy__check:checked) .thread-copy__label { color: var(--direct-color-1); } /* brighten once clicked/checked */
-.thread-copy__switch { width: 40px; height: 24px; border-radius: 12px; border: none; padding: 0; background: var(--base-color-2); flex-shrink: 0; position: relative; transition: background .15s; cursor: pointer; }
-.thread-copy__switch:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: 2px; }
-.thread-copy__knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--indirect-color-1); transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
-.thread-copy__switch.on { background: var(--primary-color-1); }
-.thread-copy__switch.on .thread-copy__knob { left: 19px; }
 /* Slack-style "Send copy to #channel" checkbox — inside the composer box, revealed on focus */
-.thread-copy--inline { display: none; align-items: center; gap: 8px; cursor: pointer; }
-.chat-input:focus-within .thread-copy--inline { display: flex; }
-.chat-input__box .thread-copy--inline { margin: 2px 2px 4px 12px; }   /* align checkbox with the textarea text (12px pad) */
-.mcomposer .thread-copy--inline { margin: 2px 4px 0 12px; }
 /* pointer-events:none so a mouse click never lands on the checkbox itself (which would fire the
    native toggle on top of the row's manual toggle → double-toggle → no net change). All mouse
    clicks route through the row's single toggle; keyboard Space on the focused box still works. */
-.thread-copy__check { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; margin: 0; flex-shrink: 0; border: 1.5px solid var(--direct-color-5); border-radius: 4px; background: transparent; cursor: pointer; position: relative; pointer-events: none; }
-.thread-copy__check:checked { background: var(--primary-color-1); border-color: var(--primary-color-1); }
-.thread-copy__check:checked::after { content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 8px; border: solid var(--indirect-color-1); border-width: 0 2px 2px 0; transform: rotate(45deg); }
-.thread-copy__check:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: 2px; }
 
 /* ---- mobile composer (Figma DS 13030-108833): borderless text on top, outlined icon toolbar + blue send ---- */
 .mcomposer { display: flex; flex-direction: column; gap: 6px; padding: 4px 10px 8px; flex-shrink: 0; background: var(--base-color-3); border-top: 1px solid var(--base-color-2); border-radius: 16px 16px 0 0; }
@@ -171,6 +155,18 @@
 .thread-card__del-text { font-size: var(--font-size-additional); color: var(--direct-color-1); }
 .thread-card__del-text strong { font-weight: 600; }
 .thread-card__del-time { font-size: var(--font-size-aside); color: var(--base-color-1); margin-left: 2px; }
+
+/* #21935 — "also send to the parent" toggle, sitting with the other composer quick icons */
+.chat-input__copy-btn.checked { color: var(--primary-color-1); background: var(--primary-color-3); }
+.mcomposer__btn.chat-input__copy-btn.checked { color: var(--primary-color-1); }
+
+/* #21935 §2 — flash the reply you jumped to from the channel copy, then fade back */
+.message--highlight { background: var(--mention-color-4); transition: background 1.2s ease; }
+.message--highlight::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--primary-color-1); }
+/* a copied line in the channel is clickable — hint it */
+.message__text--copied { cursor: pointer; border-radius: 4px; }
+.message__text--copied:hover { text-decoration: underline; text-underline-offset: 2px; }
+.message__text--copied:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: 2px; }
 
 /* composer thread button — a TOGGLE (#22273 §1), so the on-state has to read as pressed, not hovered */
 .chat-input__thread-btn.checked { color: var(--primary-color-1); background: var(--primary-color-3); }

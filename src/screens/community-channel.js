@@ -6,7 +6,7 @@ import * as store from '../thread-store.js'
 import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 import { SURFACES } from '../thread-store.js'
 // desktop thread side-panel reuses the thread renderers + binders (epic §1)
-import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, titleFromText, autosize, floatToast,
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, titleFromText, autosize, floatToast, isCopyOn, bindCopyToggle,
          threadNameRow, bindThreadNameRow, THREAD_NAME_PLACEHOLDER } from './threads.js'
 
 export const CHANNEL_ICONS = {
@@ -65,7 +65,7 @@ export function renderCommunityChannel(view, ver) {
   const tmain = revamp && !mobile ? p.get('tmain') : null
   const tmainThread = tmain ? store.getThread(tmain) : null
   if (tmainThread && !tmainThread.deleted) {
-    const centerThread = renderThread(tmainThread, { copy: p.get('copy') === '1', panel: false })
+    const centerThread = renderThread(tmainThread, { copy: p.get('copy') === '1', panel: false, highlight: p.get('hl') || '' })
     // #22279 §1 — with the Info menu closed the thread takes the whole centre AND right side, so
     // `info=closed` has to win here too (the `|| 'members'` fallback used to re-open Details).
     const infoTab = p.get('info') === 'closed' ? null : (infoTabOf(p) || 'members')
@@ -98,7 +98,7 @@ function renderThreadPanel(p) {
   if (tpanel === 'create') inner = renderCreate(surface, p.get('tparent'), { panel: true })
   else {
     const t = store.getThread(tpanel)
-    inner = t ? renderThread(t, { copy: p.get('copy') === '1', panel: true }) : '<div class="thread-empty">Thread not found.</div>'
+    inner = t ? renderThread(t, { copy: p.get('copy') === '1', panel: true, highlight: p.get('hl') || '' }) : '<div class="thread-empty">Thread not found.</div>'
   }
   return `<div class="thread-panel">${inner}</div>`
 }
@@ -396,9 +396,10 @@ function threadCard(t) {
     </button>`
 }
 
-function goToThread(id, surface, from = 'chat') {
+function goToThread(id, surface, from = 'chat', highlight = '') {
   const q = new URLSearchParams(location.search)
   q.set('screen', 'threads'); q.set('tview', 'thread'); q.set('t', id); q.set('surface', surface || 'channel'); q.set('from', from)
+  highlight ? q.set('hl', highlight) : q.delete('hl')
   q.delete('thread'); q.delete('menu'); q.delete('qa'); q.delete('mlist')
   location.search = q.toString()
 }
@@ -426,6 +427,7 @@ function openThreadPanel(spec) {
   } else {
     u.searchParams.set('tpanel', spec.threadId)
     u.searchParams.delete('tparent')
+    spec.highlight ? u.searchParams.set('hl', spec.highlight) : u.searchParams.delete('hl')
   }
   u.searchParams.set('surface', spec.surface || 'channel')
   history.replaceState(null, '', u)
@@ -485,23 +487,7 @@ function bindThreadPanel(p, cfg = {}) {
   if (queued) floatToast(panel, queued)
 
   // "Send copy" checkbox — persist to the URL the renderer reads, so a re-render keeps the state
-  panel.querySelector('[data-copy]')?.addEventListener('change', function () {
-    const on = this.checked
-    try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
-  })
-  // the row is revealed via :focus-within; pressing the (non-focusable) label text would blur the
-  // textarea on mousedown → row hides mid-click → toggle lost. Keep the textarea focused and drive
-  // the toggle ourselves so a click anywhere on the row reliably flips the box.
-  const copyRow = panel.querySelector('.thread-copy--inline')
-  if (copyRow) {
-    copyRow.addEventListener('mousedown', (e) => e.preventDefault())
-    copyRow.addEventListener('click', function (e) {
-      const chk = this.querySelector('[data-copy]'); if (!chk || e.target === chk) return  // keyboard Space on the box is native-handled
-      e.preventDefault()
-      chk.checked = !chk.checked
-      chk.dispatchEvent(new Event('change', { bubbles: true }))
-    })
-  }
+  bindCopyToggle(panel)
 
   if (isCreate) {
     bindThreadNameRow(panel)          // #22274 §1.2.3 — clear button + the composer's thread toggle
@@ -520,7 +506,7 @@ function bindThreadPanel(p, cfg = {}) {
     bindComposerSend(panel, () => {
       const inputEl = panel.querySelector('[data-thread-input]')
       const text = (inputEl?.value || '').trim(); if (!text) return
-      const copyOn = !!panel.querySelector('[data-copy]')?.checked
+      const copyOn = isCopyOn(panel)
       store.postReply(threadId, text, { copyToParent: copyOn }) // emit → re-render updates the view
       requestAnimationFrame(() => {
         document.querySelector(rootSel + ' [data-thread-input]')?.focus()
@@ -652,7 +638,9 @@ function bindThreadAffordances(p, view) {
   const desktop = view === 'desktop'
   const msgs = scope.querySelectorAll('.messages .message[data-msg-id]')
   // on desktop, opening an existing thread shows it in the side panel; mobile keeps the full-screen nav
-  const openThread = (id, s) => desktop ? openThreadPanel({ threadId: id, surface: s || surface }) : goToThread(id, s || surface)
+  const openThread = (id, s, highlight = '') => desktop
+    ? openThreadPanel({ threadId: id, surface: s || surface, highlight })
+    : goToThread(id, s || surface, 'chat', highlight)
 
   // in-chat thread cards — data-driven: a card under every message that has a thread (epic §4/§20)
   msgs.forEach(mEl => {
@@ -789,7 +777,11 @@ function bindThreadAffordances(p, view) {
   // open a thread from its in-chat card (in the chat → back returns to the chat)
   scope.querySelectorAll('.thread-card[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
   // "from thread <name>" tag on a copied-to-parent post → open that thread
-  scope.querySelectorAll('.message__thread-ref-link[data-open-thread]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface) }))
+  scope.querySelectorAll('.message__thread-ref-link[data-open-thread], .message__text--copied[data-open-thread]').forEach(el => {
+    const go = (e) => { e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface, el.dataset.highlight || '') }
+    el.addEventListener('click', go)
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(e) } })
+  })
   // Details → Threads tab: clicking a thread opens it (openThreadPanel closes Details)
   document.querySelectorAll('.info-thread[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
 
@@ -1081,8 +1073,11 @@ function renderCopiedGroups(copied, surface) {
       ? `<span class="message__thread-ref-deleted">from a deleted thread</span>`
       // read the title LIVE from the store, never the parentPost snapshot — the creator can rename
       // the thread (#22275) and a stale cached name here would silently disagree with the header
-      : `replied to a thread: <button type="button" class="message__thread-ref-link" data-open-thread="${g.threadId}" data-surface="${surface}">#${t.title}</button>`
-    const texts = g.posts.map(pp => `<div class="message__text">${pp.text}</div>`).join('')
+      : `replied to a thread: <button type="button" class="message__thread-ref-link" data-open-thread="${g.threadId}" data-surface="${surface}" data-highlight="${g.posts[0].msgId || ''}">#${t.title}</button>`
+    // each copied line links back to the exact thread reply it came from (#21935 §2)
+    const texts = g.posts.map(pp => deleted
+      ? `<div class="message__text">${pp.text}</div>`
+      : `<div class="message__text message__text--copied" role="button" tabindex="0" title="Open in thread" data-open-thread="${g.threadId}" data-surface="${surface}" data-highlight="${pp.msgId || ''}">${pp.text}</div>`).join('')
     // sits above the avatar, same style as the "Also sent" tag but with the thread glyph
     return `
       <div class="message message--copied" data-msg-id="${g.posts[0].id}">
@@ -1216,10 +1211,10 @@ export function formatGroup() {
    reply, pinned indicator, full header (name + delivery), text, reactions
    Options: { reactions, pinned, pinnedBy, reply, replyTo, replyText, delivery, edited, continued } */
 export function msg(name, initial, color, time, text, opts = {}) {
-  const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '', id = '', threadRef = '', threadRefId = '', threadRefSurface = 'channel', alsoSent = false, sending = false, mention = false } = opts
+  const { reactions = [], pinned = false, pinnedBy = '', reply = false, replyTo = '', replyText = '', replyColor = '#D37EF4', replyInitial = '', delivery = '', edited = false, continued = false, ensName = '', senderId = '', id = '', threadRef = '', threadRefId = '', threadRefSurface = 'channel', alsoSent = false, sending = false, mention = false, highlight = false } = opts
   // thread reply that was also posted to the parent channel — Slack-style tag above the name
   const alsoSentHtml = alsoSent ? `<span class="message__also-sent">${ALSO_SENT_GLYPH}<span>Also sent to the channel</span></span>` : ''
-  const stateClass = `${pinned ? ' message--pinned' : ''}${sending ? ' message--sending' : ''}${mention ? ' message--mention' : ''}`
+  const stateClass = `${pinned ? ' message--pinned' : ''}${sending ? ' message--sending' : ''}${mention ? ' message--mention' : ''}${highlight ? ' message--highlight' : ''}`
   const idAttr = id ? ` data-msg-id="${id}"` : ''
   // copied-from-thread tag (epic §3.1) — "replied to a thread: #<name>", the name links back to the thread
   const threadName = threadRefId
