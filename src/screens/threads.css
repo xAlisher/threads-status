@@ -201,8 +201,6 @@
 /* the flyout's rows have no icon, so drop the icon gutter */
 .thread-mute-menu .msg-cmenu__item { gap: 0; }
 
-/* the mute-duration flyout is positioned against the viewport, not stacked under the menu */
-.msg-cmenu.thread-mute-menu { top: auto; left: auto; margin-top: 0; }
 
 /* ---- reactions bar (context menu top + thread parent) — Figma frame 1 ---- */
 .msg-cmenu__reactions, .msg-reactions-bar { display: flex; align-items: center; gap: 2px; padding: 4px; margin-bottom: 4px; border-bottom: 1px solid var(--separator); }

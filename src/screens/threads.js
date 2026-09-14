@@ -510,6 +510,75 @@ export function confirmDeleteThread(t, onConfirm) {
   document.addEventListener('keydown', onKey)
 }
 
+// ---- menu placement, viewport-relative ----
+// Every thread menu is an overlay, so it is positioned with `position: fixed` against the viewport
+// rather than `absolute` against whatever container it was appended to. The containers differ per
+// surface (.thread-panel is relative, .shell__center .thread-view is static), and an absolute offset
+// computed against one but resolved against another lands the menu in the wrong place.
+const VIEWPORT_MARGIN = 8
+
+function placeMenu(menu, { anchor, at, mobile }) {
+  menu.style.position = 'fixed'
+  menu.style.margin = '0'
+  if (mobile) {
+    // a sheet spanning the PHONE FRAME, not the browser window — in this prototype the mobile shell
+    // is a phone mock inside a much wider page, and `fixed` is relative to the window
+    const top = at ? at.y : (anchor?.getBoundingClientRect().bottom ?? 0) + 4
+    sheet(menu, top)
+    return
+  }
+  menu.style.right = 'auto'
+  const w = menu.getBoundingClientRect().width
+  const h = menu.getBoundingClientRect().height
+  let top, left
+  if (at) { top = at.y; left = at.x }
+  else {
+    const r = anchor.getBoundingClientRect()
+    top = r.bottom + 4
+    left = r.right - w          // right-aligned to the trigger
+  }
+  menu.style.left = clamp(left, w) + 'px'
+  menu.style.top = clamp(top, h, true) + 'px'
+}
+
+function placeFlyout(fly, menu, row, mobile) {
+  fly.style.position = 'fixed'
+  fly.style.margin = '0'
+  const fr = fly.getBoundingClientRect()
+  if (mobile) {
+    // no hover on touch: the flyout takes over as a drill-down rather than sitting beside the menu
+    const menuTop = menu.getBoundingClientRect().top
+    menu.style.visibility = 'hidden'
+    sheet(fly, menuTop)
+    return
+  }
+  fly.style.right = 'auto'
+  const mr = menu.getBoundingClientRect()
+  // sit beside the menu, flipping to its left when the menu already hugs the right edge
+  const fitsRight = mr.right + fr.width + VIEWPORT_MARGIN < innerWidth
+  fly.style.left = clamp(fitsRight ? mr.right + 4 : mr.left - fr.width - 4, fr.width) + 'px'
+  fly.style.top = clamp(row.getBoundingClientRect().top, fr.height, true) + 'px'
+}
+
+// lay a menu out as a sheet inside the mobile phone frame (falling back to the window if absent)
+function sheet(el, top) {
+  const frame = document.querySelector('.shell--mobile')?.getBoundingClientRect()
+  const left = (frame ? frame.left : 0) + VIEWPORT_MARGIN
+  const width = (frame ? frame.width : innerWidth) - VIEWPORT_MARGIN * 2
+  const bottomLimit = (frame ? frame.bottom : innerHeight) - VIEWPORT_MARGIN
+  const topLimit = (frame ? frame.top : 0) + VIEWPORT_MARGIN
+  el.style.right = 'auto'
+  el.style.left = left + 'px'
+  el.style.width = width + 'px'
+  el.style.top = Math.max(topLimit, Math.min(top, bottomLimit - el.getBoundingClientRect().height)) + 'px'
+}
+
+// keep a box of size `size` inside the viewport on the given axis
+function clamp(pos, size, vertical = false) {
+  const limit = (vertical ? innerHeight : innerWidth) - size - VIEWPORT_MARGIN
+  return Math.max(VIEWPORT_MARGIN, Math.min(pos, limit))
+}
+
 // thread context menu (#22401) — Edit name · Follow · Mute › · Mark as read · Copy/Share link ·
 // Pin to list · Delete. Opened by the "…" button on the thread view, or by right-click /
 // long-press on a thread row in the channel or chat list (then `opts.at` positions it at the pointer).
@@ -541,26 +610,12 @@ export function openThreadMenu(root, threadId, anchor, opts = {}) {
     item(THREAD_ICONS.pin, t.keptVisible ? 'Unpin from list' : 'Pin to list', 'keep') +
     (manage ? item(THREAD_ICONS.del, 'Delete', 'delete', ' msg-cmenu__item--danger') : '')
 
-  // position: under the anchor by default, or at the pointer for a right-click / long-press
-  const rootRect = root.getBoundingClientRect()
-  menu.style.position = 'absolute'
-  if (opts.at) {
-    menu.style.top = (opts.at.y - rootRect.top) + 'px'
-    menu.style.left = (opts.at.x - rootRect.left) + 'px'
-    menu.style.right = 'auto'
-  } else {
-    const rect = anchor.getBoundingClientRect()
-    menu.style.top = (rect.bottom - rootRect.top + 4) + 'px'
-    menu.style.right = (rootRect.right - rect.right) + 'px'
-    menu.style.left = 'auto'
-  }
+  // Placement is VIEWPORT-relative (position: fixed), never root-relative. `root` varies by surface
+  // — the side panel is position:relative but the main-pane .thread-view is static, so an absolute
+  // offset measured against root silently resolved against <body> and threw the menu hundreds of
+  // pixels off. Fixed coordinates remove the offsetParent question entirely.
   root.appendChild(menu)
-  // keep it inside the viewport when opened at the pointer near an edge
-  if (opts.at) {
-    const mr = menu.getBoundingClientRect()
-    if (mr.bottom > innerHeight - 8) menu.style.top = (opts.at.y - rootRect.top - mr.height) + 'px'
-    if (mr.right > innerWidth - 8) menu.style.left = (opts.at.x - rootRect.left - mr.width) + 'px'
-  }
+  placeMenu(menu, { anchor, at: opts.at, mobile })
 
   const teardown = () => {
     menu.remove(); root.querySelector('.thread-mute-menu')?.remove()
@@ -588,15 +643,8 @@ export function openThreadMenu(root, threadId, anchor, opts = {}) {
     fly.setAttribute('role', 'menu')
     fly.innerHTML = store.MUTE_INTERVALS.map(([key, label]) =>
       `<button class="msg-cmenu__item" role="menuitem" data-mute-interval="${key}"><span>${label}</span></button>`).join('')
-    const br = muteBtn.getBoundingClientRect()
-    fly.style.position = 'absolute'
-    fly.style.top = (br.top - rootRect.top) + 'px'
     root.appendChild(fly)
-    // flip to the left of the menu when there is no room on the right (it usually hugs a panel edge)
-    const mr = menu.getBoundingClientRect(), fr = fly.getBoundingClientRect()
-    const fitsRight = mr.right + fr.width + 8 < innerWidth
-    fly.style.left = ((fitsRight ? mr.right + 4 : mr.left - fr.width - 4) - rootRect.left) + 'px'
-    if (fly.getBoundingClientRect().bottom > innerHeight - 8) fly.style.top = (innerHeight - 8 - fr.height - rootRect.top) + 'px'
+    placeFlyout(fly, menu, muteBtn, mobile)
     fly.querySelectorAll('[data-mute-interval]').forEach(b => b.addEventListener('click', () => {
       const key = b.dataset.muteInterval
       teardown()
@@ -608,7 +656,7 @@ export function openThreadMenu(root, threadId, anchor, opts = {}) {
   muteBtn?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); openMuteFlyout() } })
   // hovering any other row closes the flyout
   menu.querySelectorAll('.msg-cmenu__item:not([data-act="mute-menu"])').forEach(b =>
-    b.addEventListener('mouseenter', () => root.querySelector('.thread-mute-menu')?.remove()))
+    b.addEventListener('mouseenter', () => { root.querySelector('.thread-mute-menu')?.remove(); menu.style.visibility = '' }))
 
   menu.querySelectorAll('.msg-cmenu__item').forEach(btn => btn.addEventListener('click', () => {
     if (btn.dataset.act === 'mute-menu') return      // opens the flyout, does not act

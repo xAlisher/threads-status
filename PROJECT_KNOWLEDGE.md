@@ -67,6 +67,13 @@ opens at the pointer and flips to stay in the viewport). Contents, each traced t
 (#22402) · `Copy link` desktop / `Share link` mobile (#22285) · `Pin to list` / `Unpin from list`
 (#22284) · `Delete` (#22280). No Archive — see the archived note below.
 
+- **Menus are positioned `fixed`, in viewport coordinates** — never `absolute` against the container
+  they are appended to. `root` differs per surface: `.thread-panel` is `position: relative` but
+  `.shell__center .thread-view` is **static**, so an absolute offset measured against root silently
+  resolved against `<body>` and threw the menu ~380px sideways and 68px up. Testing only the side
+  panel hid it. `placeMenu`/`placeFlyout` clamp to the viewport; on mobile they lay out as a sheet
+  inside the **phone frame** (`.shell--mobile`), because `fixed` would otherwise span the whole
+  browser window around the phone mock.
 - **Mute is a duration submenu**, not a toggle — `MuteChatMenuItem.qml` offers For 15 mins / 1 hour /
   8 hours / 24 hours / 7 days / Until I turn it back on. Once muted the row collapses to a single
   `Unmute thread`.
