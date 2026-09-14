@@ -97,6 +97,13 @@ opens at the pointer and flips to stay in the viewport). Contents, each traced t
   every thread; a DM/group has no admin, so it stays creator-only there. Test both.
 - **Opening a thread auto-clears its unread**, so "Mark as read" cannot be observed from inside an
   open thread — verify it from the row context menu instead.
+- **The in-chat thread card is a COLUMN** (#21932): title row on top with the unread badge and a
+  small thread icon pinned top-right, then avatars + count, then the last-message line, all flush to
+  the card's left edge. The **deleted-thread tombstone reuses `.thread-card`**, so it needs
+  `flex-direction: row` put back explicitly or it stacks into a tall pile.
+- **Participants are creator-first, then most recent participation** (§2.2.1), six shown then `+N`.
+  The creator is `t.createdBy`, NOT the author of the parent message — they are often different.
+- **The card count includes the starting message** (§2.1), so it reads "N messages", not "N replies".
 - **A read thread row carries NO badge.** Thread rows follow the channel-badge rule (`channelItem`):
   a count while unread, nothing once read. The roster row used to fall back to a *reply-count* badge
   when read, so "Mark as read" only changed the number and colour — the counter never went away.

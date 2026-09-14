@@ -133,14 +133,29 @@ function seed() {
   }
 }
 
+// #21932 §2.2.1 — "The first avatar is always the thread CREATOR, followed by the other participants
+// ordered by most recent participation." Note the creator is not necessarily the author of the
+// message the thread hangs off, so this cannot just take parentMsg[0] first.
 function computeParticipants(t) {
-  const seen = new Map()
-  // dedup by stable identity (sender name), NOT initial+color — two people can share both
-  const push = (id, i, c) => { const k = id || (i + '·' + c); if (!seen.has(k)) seen.set(k, { i, c }) }
-  // parent author first
-  push(t.parentMsg[0], t.parentMsg[1] || '?', t.parentMsg[2] || '#4360DF')
-  t.messages.forEach(m => push(m.name, m.initial || '?', m.color || '#4360DF'))
-  return [...seen.values()]
+  // avatar lookup by name, from every person who appears anywhere on the thread
+  const face = new Map()
+  const note = (name, i, c) => { if (name && !face.has(name)) face.set(name, { i: i || '?', c: c || '#4360DF' }) }
+  note(t.parentMsg[0], t.parentMsg[1], t.parentMsg[2])
+  t.messages.forEach(m => note(m.name, m.initial, m.color))
+  note('You', 'A', '#4360DF')     // the local user always has a known face
+
+  // most recent participation first: walk the replies backwards, then the parent author last
+  const byRecency = []
+  const seen = new Set()
+  for (let i = t.messages.length - 1; i >= 0; i--) {
+    const n = t.messages[i].name
+    if (n && !seen.has(n)) { seen.add(n); byRecency.push(n) }
+  }
+  if (t.parentMsg[0] && !seen.has(t.parentMsg[0])) { seen.add(t.parentMsg[0]); byRecency.push(t.parentMsg[0]) }
+
+  const creator = t.createdBy && face.has(t.createdBy) ? t.createdBy : byRecency[0]
+  const ordered = [creator, ...byRecency.filter(n => n !== creator)].filter(Boolean)
+  return ordered.map(n => ({ ...face.get(n), name: n }))
 }
 
 function load() {

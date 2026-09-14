@@ -122,18 +122,22 @@
 .thread-ava:first-child { margin-left: 0; }
 
 /* ---- in-chat thread card under a message (epic 4) ---- */
-.thread-card { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px 68px; padding: 8px 12px; width: 420px; max-width: calc(100% - 84px); box-sizing: border-box; border: 1px solid var(--separator); border-radius: 12px; background: var(--base-color-3); cursor: pointer; text-align: left; }
+/* #21932 (10 Sep review) — the card is a COLUMN now: title row on top (with the badge and a small
+   thread icon pinned top-right), then the rows beneath running flush to the card's left edge
+   instead of being indented past a leading icon. */
+.thread-card { display: flex; flex-direction: column; align-items: stretch; margin: 2px 0 6px 68px; padding: 8px 12px; width: 420px; max-width: calc(100% - 84px); box-sizing: border-box; border: 1px solid var(--separator); border-radius: 12px; background: var(--base-color-3); cursor: pointer; text-align: left; }
 .thread-card:hover { background: var(--base-color-2); }
-.thread-card__icon { width: 22px; height: 22px; flex-shrink: 0; color: var(--primary-color-1); }
-.thread-card__icon svg { width: 20px; height: 20px; }
-.thread-card__main { display: flex; flex-direction: column; min-width: 0; flex: 1; }   /* fill so the counter/lock pin to the card's right edge */
-.thread-card__title { font-size: var(--font-size-additional); font-weight: 600; color: var(--direct-color-1); }
+.thread-card__top { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.thread-card__tr { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+/* caybro: "smaller and in the top-right corner" — subtle, but still says thread rather than reply */
+.thread-card__icon { width: 14px; height: 14px; flex-shrink: 0; color: var(--base-color-1); display: inline-flex; }
+.thread-card__icon svg { width: 14px; height: 14px; }
+.thread-card__title { font-size: var(--font-size-additional); font-weight: 600; color: var(--direct-color-1); min-width: 0; flex: 1; }
 .thread-card__closed { color: var(--base-color-1); font-weight: 400; }
 .thread-card__meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: var(--font-size-aside); color: var(--base-color-1); }
 .thread-card__replies { color: var(--primary-color-1); font-weight: 600; }
 .thread-card__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color-1); flex-shrink: 0; margin-left: 4px; }
 /* last-message preview line (#21932 §2e) */
-.thread-card { align-items: flex-start; }
 .thread-card__last { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: var(--font-size-aside); min-width: 0; }
 .thread-card__last-ava { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: #fff; }
 .thread-card__last-name { font-weight: 600; color: var(--direct-color-1); flex-shrink: 0; }
@@ -149,6 +153,9 @@
 /* deleted tombstone showing WHO deleted it (Status delete-message pattern) — #21932 §4 */
 .thread-card__trash { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: rgba(233,84,96,.14); color: var(--danger-color-1, #E95460); }
 .thread-card__trash svg { width: 16px; height: 16px; }
+/* the tombstone reuses .thread-card but stays a single ROW — the card itself became a column for
+   #21932, which stacked the trash icon, avatar, text and time on top of each other */
+.thread-card--deleted { flex-direction: row; align-items: center; gap: 8px; }
 .thread-card--deleted { cursor: default; align-items: center; gap: 10px; }
 .thread-card--deleted:hover { background: var(--base-color-3); }
 .thread-card__del-ava { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #fff; }

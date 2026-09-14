@@ -391,8 +391,10 @@ function threadCard(t) {
       ${t.deletedAtLabel ? `<span class="thread-card__del-time">${t.deletedAtLabel}</span>` : ''}
     </div>`
   }
+  // §2.2.1 — up to SIX unique participants, creator first, then most recent participation; +N beyond
   const people = store.participants(t)
-  const stack = `<span class="thread-ava-stack">${people.slice(0, 4).map((p, i) => `<span class="thread-ava" style="background:${p.c};z-index:${people.length - i}">${p.i}</span>`).join('')}${people.length > 4 ? `<span class="thread-ava thread-ava--more">+${people.length - 4}</span>` : ''}</span>`
+  const SHOWN = 6
+  const stack = `<span class="thread-ava-stack">${people.slice(0, SHOWN).map((p, i) => `<span class="thread-ava" style="background:${p.c};z-index:${people.length - i}" title="${p.name || ''}">${p.i}</span>`).join('')}${people.length > SHOWN ? `<span class="thread-ava thread-ava--more">+${people.length - SHOWN}</span>` : ''}</span>`
   // last-message preview: sender avatar + name + text + "17h ago" (#21932 §2e)
   const lm = t.messages[t.messages.length - 1]
   const last = lm ? `
@@ -402,17 +404,23 @@ function threadCard(t) {
           <span class="thread-card__last-text">${lm.text}</span>
           <span class="thread-card__last-time">${relAgo(lm.ts)}</span>
         </span>` : ''
-  // top-right badge: unread → new-message counter. There is no archived/locked card state any more.
-  const badge = t.followed && t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : ''
+  // §2.3 — the notification badge for new messages/tags/replies. Follows the channel-badge rule
+  // (#21931 §6.3): a count whenever there is something unread, nothing once read.
+  const badge = t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : ''
+  // §2.1 — "Number of messages, INCLUDING the message that started the thread"
+  const total = t.messages.length + 1
+  // Layout per the 10 Sep review: the thread icon shrinks into the top-right corner next to the
+  // badge (caybro's suggestion, which Volo agreed to — it still marks this as a thread, not a
+  // reply), and the rows under the title run flush to the card's left edge instead of being
+  // indented past a leading icon.
   return `
     <button class="thread-card" data-open-thread="${t.id}" data-surface="${t.surface}">
-      <span class="thread-card__icon">${THREAD_GLYPH}</span>
-      <span class="thread-card__main">
+      <span class="thread-card__top">
         <span class="thread-card__title">${t.title}</span>
-        <span class="thread-card__meta">${stack}<span class="thread-card__replies">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></span>
-        ${last}
+        <span class="thread-card__tr">${badge}<span class="thread-card__icon" aria-hidden="true">${THREAD_GLYPH}</span></span>
       </span>
-      ${badge}
+      <span class="thread-card__meta">${stack}<span class="thread-card__replies">${total} ${total === 1 ? 'message' : 'messages'}</span></span>
+      ${last}
     </button>`
 }
 
