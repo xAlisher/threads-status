@@ -6,7 +6,7 @@ import * as store from '../thread-store.js'
 import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 import { SURFACES } from '../thread-store.js'
 // desktop thread side-panel reuses the thread renderers + binders (epic §1)
-import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, titleFromText, autosize, floatToast, isCopyOn, bindCopyToggle,
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, titleFromText, autosize, floatToast, isCopyOn, bindCopyToggle, openThreadSearch, bindHighlight,
          threadNameRow, bindThreadNameRow, THREAD_NAME_PLACEHOLDER } from './threads.js'
 
 export const CHANNEL_ICONS = {
@@ -541,8 +541,16 @@ function bindThreadPanel(p, cfg = {}) {
         if (copyOn) floatToast(document.querySelector(rootSel), 'Reply also posted to ' + (SURFACES[surface]?.label || 'channel'))
       })
     })
+    // #22281 — header Search opens the content search scoped to this thread
+    panel.querySelector('[data-thread-search]')?.addEventListener('click', () => {
+      const t = store.getThread(threadId); if (!t) return
+      openThreadSearch(t, (msgId) => {
+        const u = new URL(location.href); u.searchParams.set('hl', msgId); history.replaceState(null, '', u); rerender()
+      })
+    })
     panel.querySelector('[data-thread-more]')?.addEventListener('click', (e) => { e.stopPropagation(); openThreadMenu(panel, threadId, e.currentTarget) })
     bindInlineEdit(panel, threadId)
+    bindHighlight(panel)        // scroll + flash a message jumped to from search or a channel copy
     // saved state ?tmenu=1 — auto-open the "…" menu (shows Mute/Unmute, #22282)
     if (p.get('tmenu') === '1') {
       const anchor = panel.querySelector('[data-thread-more]')

@@ -69,6 +69,14 @@ title is a rename bug** — `parentPosts[].threadTitle` is a snapshot, so the "r
 Mute lives **only in the thread "…" menu**, never as a header bell. The muted *state* still has to
 read somewhere, so it is a passive glyph beside the header subtitle.
 
+### Thread composer placeholder + search
+The reply placeholder is "Reply in **[thread icon]** [name]" (#21933 §2). A native `<textarea>`
+placeholder is plain text, so it is drawn as a **ghost overlay** (`[data-ghost-placeholder]`) sitting
+on the field's text origin with `pointer-events: none`, hidden as soon as there is content; the
+textarea keeps the plain string as its `aria-label`. The header **Search** opens `openThreadSearch`
+(#22281), shaped after `StatusSearchPopup.qml` with the location row pinned to the thread; picking a
+result sets the `hl` param, so it reuses the same jump-and-flash path as a copied channel message.
+
 ### Thread context menu (#22401)
 One menu, two ways in: the **"…"** button on the thread view, and **right-click / long-press on a
 thread row** in the channel or Messages list (`bindThreadRowMenu`, which passes `opts.at` so the menu

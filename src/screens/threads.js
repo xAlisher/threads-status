@@ -103,7 +103,7 @@ export function bindThreadNameRow(root) {
 
 // editable composer — reuses .chat-input structure; NOT readonly (epic §3 post/edit).
 // mobile = the Figma DS two-row layout (text on top, outlined icon toolbar + blue send below).
-function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = false, nameRow = null } = {}) {
+function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = false, nameRow = null, placeholderName = '' } = {}) {
   // #21935 — "also send to the parent" is a TOGGLE ICON on the composer's quick-icon bar, not a
   // checkbox row. Volo asked for this explicitly; it also removes the two focus/click workarounds
   // the revealed checkbox row needed.
@@ -111,6 +111,12 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
     ? `<button class="${cls} chat-input__copy-btn${copy ? ' checked' : ''}" data-copy-toggle type="button" title="${copyLabel}" aria-label="${copyLabel}" aria-pressed="${!!copy}">${ALSO_SEND_GLYPH}</button>`
     : ''
   const copyInline = ''
+  // #21933 §2 — "Reply in [thread icon]+[thread's name]". Rendered over the field because a native
+  // placeholder is plain text; it hides as soon as there is content.
+  const ghost = placeholderName
+    ? `<span class="chat-input__ghost" data-ghost-placeholder aria-hidden="true">Reply in<span class="chat-input__ghost-icon">${THREAD_GLYPH}</span>${escAttr(placeholderName)}</span>`
+    : ''
+  const phAttr = placeholderName ? '' : ` placeholder="${placeholder}"`
   // #22274 §1.2.3.3 — in the thread-creation view the composer's thread icon is already toggled on
   const nameRowHtml = nameRow ? threadNameRow(nameRow) : ''
   const toggleOn = nameRow && nameRow.hidden === false
@@ -122,7 +128,7 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
     <div class="chat-input thread-view__composer mcomposer">
       <div class="mcomposer__handle" aria-hidden="true"></div>
       ${nameRowHtml}
-      <textarea class="chat-input__field mcomposer__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
+      <span class="chat-input__ghost-wrap">${ghost}<textarea class="chat-input__field mcomposer__field" data-thread-input${phAttr} rows="1" aria-label="${placeholder}"></textarea></span>
       ${copyInline}
       <div class="mcomposer__bar">
         <div class="mcomposer__actions">
@@ -145,7 +151,7 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
         <div class="chat-input__box">
           ${nameRowHtml}
           <div class="chat-input__input-row">
-            <textarea class="chat-input__field" data-thread-input placeholder="${placeholder}" rows="1" aria-label="${placeholder}"></textarea>
+            <span class="chat-input__ghost-wrap">${ghost}<textarea class="chat-input__field" data-thread-input${phAttr} rows="1" aria-label="${placeholder}"></textarea></span>
             <button class="chat-input__btn chat-input__btn--send" data-thread-send title="Send" aria-label="Send">${CHANNEL_ICONS.send}</button>
           </div>
           ${copyInline}
@@ -180,7 +186,7 @@ function threadHeader({ title, sub, muted, back = true, menu = false, close = fa
         <span class="thread-view__sub">${sub}${muted ? `<span class="thread-view__muted" title="Muted" aria-label="Muted">${THREAD_ICONS.bellOff}</span>` : ''}</span>
       </div>
       <div class="thread-view__actions">
-        <button class="chat-header__action-btn" title="Search" aria-label="Search thread">${CHANNEL_ICONS.search}</button>
+        <button class="chat-header__action-btn" data-thread-search title="Search" aria-label="Search thread">${CHANNEL_ICONS.search}</button>
         ${info ? `<button class="chat-header__action-btn" data-open-info="members" data-info-toggle title="Details" aria-label="Details">${INFO_ICON}</button>` : ''}
         ${menu ? `<button class="chat-header__action-btn" data-thread-more title="More" aria-label="Thread options" aria-haspopup="true">${CHANNEL_ICONS.more}</button>` : ''}
         ${close ? `<button class="chat-header__action-btn thread-view__close" data-back title="Close" aria-label="Close thread panel">${CLOSE_X}</button>` : ''}
@@ -247,7 +253,7 @@ export function renderThread(t, { copy, panel = false, mobile = false, highlight
   }
   // archiving is NOT restrictive and NOT manual — a thread just falls out of the lists after a
   // week of quiet, and replying here brings it straight back
-  const composer = threadComposer(`Reply in #${t.title}`, mobile, { copyLabel: s.copy, copy })
+  const composer = threadComposer(`Reply in ${t.title}`, mobile, { copyLabel: s.copy, copy, placeholderName: t.title })
   // the unread run sits at the end of the list; the marker goes immediately before it
   const unreadFrom = t.newCount > 0 ? Math.max(0, t.messages.length - t.newCount) : -1
   const replyRows = t.messages.map((m, i) =>
@@ -321,6 +327,8 @@ export function renderThreads(view, ver) {
   return { nav: null, left: null, center: `<div class="thread-screen">${center}</div>`, right: null }
 }
 
+const rerenderThreads = () => window.dispatchEvent(new Event('app:rerender'))
+
 export function bindThreads() {
   const root = document.querySelector('.thread-screen')
   if (!root) return
@@ -378,6 +386,15 @@ export function bindThreads() {
     }
     bindComposerSend(root, send)
 
+    // #22281 — header Search opens the content search scoped to this thread
+    root.querySelector('[data-thread-search]')?.addEventListener('click', () => {
+      const t = store.getThread(threadId); if (!t) return
+      openThreadSearch(t, (msgId) => {
+        const q = new URLSearchParams(location.search); q.set('hl', msgId)
+        history.replaceState(null, '', location.pathname + '?' + q.toString())
+        rerenderThreads()
+      })
+    })
     // more menu → follow · mute · mark-read · copy link · pin · delete (#22401)
     root.querySelector('[data-thread-more]')?.addEventListener('click', (e) => {
       e.stopPropagation(); openThreadMenu(root, threadId, e.currentTarget)
@@ -425,6 +442,62 @@ export function autosize(el) {
   return fit
 }
 
+// #22281 — the thread header's Search opens the app's standard content search with the "IN" field
+// pinned to this thread. Shape follows StatusSearchPopup.qml: a search input, a close button, the
+// search-location selector (which here reads "In <thread>" rather than "Anywhere"), grouped results
+// and a "No results" label. Searching a thread behaves like searching a channel (§1.2): it matches
+// message content, and picking a result jumps to that message.
+export function openThreadSearch(t, onPick) {
+  document.querySelector('.thread-search-overlay')?.remove()
+  const overlay = document.createElement('div')
+  overlay.className = 'share-modal-overlay thread-search-overlay'
+  overlay.innerHTML = `
+    <div class="thread-search" role="dialog" aria-modal="true" aria-label="Search in ${escAttr(t.title)}">
+      <div class="thread-search__head">
+        <span class="thread-search__icon">${CHANNEL_ICONS.search}</span>
+        <input class="thread-search__input" type="text" placeholder="Search" data-search-input aria-label="Search" />
+        <button class="share-modal__close" data-search-close title="Close" aria-label="Close">${CLOSE_X}</button>
+      </div>
+      <div class="thread-search__scope">
+        <span class="thread-search__scope-label">In</span>
+        <span class="thread-search__chip">${THREAD_ICONS.thread}<span>${escAttr(t.title)}</span></span>
+      </div>
+      <div class="thread-search__results" data-search-results></div>
+    </div>`
+  document.body.appendChild(overlay)
+
+  const results = overlay.querySelector('[data-search-results]')
+  const input = overlay.querySelector('[data-search-input]')
+  const strip = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent || '' }
+  const render = () => {
+    const q = input.value.trim().toLowerCase()
+    if (!q) { results.innerHTML = `<div class="thread-search__hint">Search messages in this thread</div>`; return }
+    const hits = t.messages.filter(m => strip(m.text).toLowerCase().includes(q))
+    if (!hits.length) { results.innerHTML = `<div class="thread-search__empty">No results</div>`; return }
+    results.innerHTML = hits.map(m => `
+      <button class="thread-search__hit" data-hit="${m.id}">
+        <span class="thread-search__hit-ava" style="background:${m.color || '#4360DF'}">${m.initial || '?'}</span>
+        <span class="thread-search__hit-body">
+          <span class="thread-search__hit-head"><span class="thread-search__hit-name">${m.name}</span><span class="thread-search__hit-time">${m.time}</span></span>
+          <span class="thread-search__hit-text">${m.text}</span>
+        </span>
+      </button>`).join('')
+    results.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => {
+      const id = b.dataset.hit
+      close()
+      onPick?.(id)
+    }))
+  }
+  const close = () => { overlay.remove(); document.removeEventListener('keydown', onKey) }
+  const onKey = (e) => { if (e.key === 'Escape') close() }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close() })
+  overlay.querySelector('[data-search-close]').addEventListener('click', close)
+  input.addEventListener('input', render)
+  render()
+  input.focus()
+  document.addEventListener('keydown', onKey)
+}
+
 // #21935 §2 — scroll the jumped-to reply into view and let the flash fade, then strip `hl` so a
 // later re-render does not flash it again.
 export function bindHighlight(root) {
@@ -455,6 +528,11 @@ export function bindComposerSend(root, send) {
   const btn = root.querySelector('[data-thread-send]')
   const input = root.querySelector('[data-thread-input]')
   autosize(input)
+  const ghost = root.querySelector('[data-ghost-placeholder]')
+  if (ghost && input) {
+    const sync = () => { ghost.style.visibility = input.value ? 'hidden' : '' }
+    input.addEventListener('input', sync); sync()
+  }
   btn?.addEventListener('click', send)
   input?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } })
 }

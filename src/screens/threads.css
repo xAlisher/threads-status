@@ -176,6 +176,14 @@
 .message__text--copied:hover { text-decoration: underline; text-underline-offset: 2px; }
 .message__text--copied:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: 2px; }
 
+/* #21933 §2 — "Reply in [thread icon]+[name]" drawn over the field, since a native placeholder is
+   plain text. Sits exactly on the textarea's text origin and never intercepts clicks. */
+.chat-input__ghost-wrap { position: relative; display: flex; flex: 1; min-width: 0; }
+.chat-input__ghost { position: absolute; left: 12px; top: 9px; display: inline-flex; align-items: center; gap: 4px; pointer-events: none; color: var(--base-color-1); font-family: var(--font-family-base); font-size: var(--font-size-primary); line-height: 1.4; white-space: nowrap; overflow: hidden; max-width: calc(100% - 16px); }
+.chat-input__ghost-icon { display: inline-flex; width: 16px; height: 16px; }
+.chat-input__ghost-icon svg { width: 16px; height: 16px; }
+.mcomposer .chat-input__ghost { left: 14px; top: 10px; }
+
 /* composer thread button — a TOGGLE (#22273 §1), so the on-state has to read as pressed, not hovered */
 .chat-input__thread-btn.checked { color: var(--primary-color-1); background: var(--primary-color-3); }
 
@@ -292,6 +300,31 @@
 .share-modal__link { flex: 1; min-width: 0; border: 1px solid var(--base-color-2); border-radius: 10px; background: var(--base-color-4); color: var(--direct-color-4); padding: 9px 12px; font-family: var(--font-family-base); font-size: var(--font-size-additional); outline: none; }
 .share-modal__copy { flex-shrink: 0; border: none; border-radius: 10px; background: var(--primary-color-1); color: #fff; font-family: var(--font-family-base); font-size: var(--font-size-additional); font-weight: 600; padding: 0 16px; cursor: pointer; }
 .share-modal__copy.done { background: var(--success-color-1, #23A26D); }
+
+/* #22281 — content search scoped to a thread, shaped like StatusSearchPopup.qml: search input +
+   close, the search-location row (here fixed to the thread rather than "Anywhere"), results, and a
+   "No results" label. */
+.thread-search-overlay { align-items: flex-start; padding-top: 10vh; }
+.thread-search { width: 560px; max-width: calc(100vw - 40px); max-height: 70vh; display: flex; flex-direction: column; background: var(--base-color-3); border: 1px solid var(--base-color-2); border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.4); overflow: hidden; }
+.thread-search__head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--separator); }
+.thread-search__icon { display: inline-flex; width: 20px; height: 20px; color: var(--base-color-1); flex-shrink: 0; }
+.thread-search__icon svg { width: 20px; height: 20px; }
+.thread-search__input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font-family: var(--font-family-base); font-size: var(--font-size-primary); color: var(--direct-color-1); }
+.thread-search__input::placeholder { color: var(--base-color-1); }
+.thread-search__scope { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--separator); font-size: var(--font-size-additional); color: var(--base-color-1); }
+.thread-search__chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 14px; border: 1px solid var(--base-color-2); color: var(--direct-color-1); font-weight: 500; max-width: 100%; }
+.thread-search__chip svg { width: 14px; height: 14px; color: var(--primary-color-1); flex-shrink: 0; }
+.thread-search__chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thread-search__results { flex: 1; min-height: 0; overflow-y: auto; padding: 6px; }
+.thread-search__hint, .thread-search__empty { padding: 28px 14px; text-align: center; color: var(--base-color-1); font-size: var(--font-size-additional); }
+.thread-search__hit { display: flex; align-items: flex-start; gap: 10px; width: 100%; box-sizing: border-box; padding: 8px 10px; border: none; border-radius: 10px; background: transparent; cursor: pointer; text-align: left; }
+.thread-search__hit:hover { background: var(--base-color-2); }
+.thread-search__hit-ava { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; }
+.thread-search__hit-body { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.thread-search__hit-head { display: flex; align-items: baseline; gap: 6px; }
+.thread-search__hit-name { font-size: var(--font-size-additional); font-weight: 600; color: var(--direct-color-1); }
+.thread-search__hit-time { font-size: var(--font-size-aside); color: var(--base-color-1); }
+.thread-search__hit-text { font-size: var(--font-size-additional); color: var(--direct-color-4, var(--direct-color-1)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* destructive-action confirmation (ConfirmationDialog.qml: body text, optional "do not show again",
    right-aligned flat Cancel + Danger confirm) */
