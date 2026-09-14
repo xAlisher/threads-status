@@ -127,13 +127,13 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
       <div class="mcomposer__bar">
         <div class="mcomposer__actions">
           ${threadToggle('mcomposer__btn')}
-          ${copyToggle('mcomposer__btn')}
           <button class="mcomposer__btn mcomposer__btn--text" title="Format" aria-label="Format text">Aa</button>
           <button class="mcomposer__btn" title="Camera" aria-label="Camera">${MCOMPOSER_ICONS.camera}</button>
           <button class="mcomposer__btn" title="Image" aria-label="Image">${MCOMPOSER_ICONS.image}</button>
           <button class="mcomposer__btn" title="Wallet" aria-label="Wallet">${MCOMPOSER_ICONS.wallet}</button>
           <button class="mcomposer__btn" title="Mention" aria-label="Mention">${MCOMPOSER_ICONS.mention}</button>
           <button class="mcomposer__btn" title="Emoji" aria-label="Emoji">${CHANNEL_ICONS.emojis}</button>
+          ${copyToggle('mcomposer__btn')}
         </div>
         <button class="mcomposer__send" data-thread-send title="Send" aria-label="Send">${MCOMPOSER_ICONS.sendUp}</button>
       </div>
@@ -151,12 +151,12 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
           ${copyInline}
           <div class="chat-input__actions chat-input__actions--below">
             ${threadToggle('chat-input__btn')}
-            ${copyToggle('chat-input__btn')}
             <button class="chat-input__btn" title="Commands" aria-label="Commands">${CHANNEL_ICONS.chatCommands}</button>
             ${formatGroup()}
             <button class="chat-input__btn" title="Emoji" aria-label="Emoji">${CHANNEL_ICONS.emojis}</button>
             <button class="chat-input__btn" title="GIF" aria-label="GIF">${CHANNEL_ICONS.gif}</button>
             <button class="chat-input__btn" title="Stickers" aria-label="Stickers">${CHANNEL_ICONS.stickers}</button>
+            ${copyToggle('chat-input__btn')}
           </div>
         </div>
       </div>

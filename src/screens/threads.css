@@ -156,7 +156,8 @@
 .thread-card__del-text strong { font-weight: 600; }
 .thread-card__del-time { font-size: var(--font-size-aside); color: var(--base-color-1); margin-left: 2px; }
 
-/* #21935 — "also send to the parent" toggle, sitting with the other composer quick icons */
+/* #21935 — "also send to the parent" toggle, pushed to the right-hand end of the composer icon row */
+.chat-input__copy-btn { margin-left: auto; }
 .chat-input__copy-btn.checked { color: var(--primary-color-1); background: var(--primary-color-3); }
 .mcomposer__btn.chat-input__copy-btn.checked { color: var(--primary-color-1); }
 
