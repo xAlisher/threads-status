@@ -169,7 +169,19 @@ const INFO_LINKS = [
   { title: 'StatusQ · QML source', url: 'github.com/status-im/StatusQ', name: 'Kai', time: '10:34' },
   { title: 'Threads epic #21090', url: 'github.com/status-im/status-app/issues/21090', name: 'Marcus', time: '10:36' },
 ]
-const INFO_TABS = [['members', 'Members'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links'], ['threads', 'Threads'], ['about', 'About']]
+// Tab icons for the Details panel (#21971 comment 3). Lifted from StatusQ assets and recoloured.
+// NOTE: Volo asked Rsttskyy for the final set and said "the Members icon needs to be changed" — this
+// group.svg stands in until that lands; swapping it is a one-line change here.
+const INFO_TAB_ICONS = {
+  members: `<svg viewBox="0 0 16 17" fill="none"><g fill="currentColor"><path d="m8 8c1.24265 0 2.25-1.00736 2.25-2.25s-1.00735-2.25-2.25-2.25c-1.24264 0-2.25 1.00736-2.25 2.25s1.00736 2.25 2.25 2.25z"/><path d="m4.12343 12.5101c.44052-1.7303 2.00909-3.0101 3.87657-3.0101 1.86749 0 3.4361 1.2798 3.8766 3.0101.1362.5352-.3243.9899-.8766.9899h-6c-.55228 0-1.01282-.4547-.87657-.9899z"/><path d="m4.5 7.75c0 .9665-.7835 1.75-1.75 1.75s-1.75-.7835-1.75-1.75.7835-1.75 1.75-1.75 1.75.7835 1.75 1.75z"/><path d="m13.25 9.5c.9665 0 1.75-.7835 1.75-1.75s-.7835-1.75-1.75-1.75-1.75.7835-1.75 1.75.7835 1.75 1.75 1.75z"/></g></svg>`,
+  threads: THREAD_GLYPH,
+  media: `<svg viewBox="0 0 24 24" fill="none"><g clip-rule="evenodd" fill="currentColor" fill-rule="evenodd"><path d="m18.5 9.5c0 1.6569-1.3431 3-3 3s-3-1.3431-3-3c0-1.65685 1.3431-3 3-3s3 1.34315 3 3zm-1.5 0c0 .8284-.6716 1.5-1.5 1.5s-1.5-.6716-1.5-1.5c0-.82843.6716-1.5 1.5-1.5s1.5.67157 1.5 1.5z"/><path d="m6 3c-2.20914 0-4 1.79086-4 4v10c0 2.2091 1.79086 4 4 4h12c2.2091 0 4-1.7909 4-4v-10c0-2.20914-1.7909-4-4-4zm12 1.5h-12c-1.38071 0-2.5 1.11929-2.5 2.5v3.2322c0 .4455.53857.6686.85355.3536l1.40901-1.40902c.68342-.68342 1.79146-.68342 2.47488 0l10.08066 10.08072c.1191.119.2913.1736.4514.1218 1.0042-.3245 1.7305-1.2671 1.7305-2.3793v-10c0-1.38071-1.1193-2.5-2.5-2.5zm-14.46967 9.0303c-.0188.0188-.03033.0439-.03033.0705v3.3992c0 1.3807 1.11929 2.5 2.5 2.5h9.2322c.4455 0 .6686-.5386.3536-.8536l-8.40902-8.409c-.09764-.0976-.25593-.0976-.35356 0z"/></g></svg>`,
+  pins: CHANNEL_ICONS.pinHeader,
+  links: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m9.03022 11.0303c1.08778-1.08778 2.85148-1.08778 3.93938 0 .2929.2929.7677.2929 1.0606 0s.2929-.7677 0-1.06062c-1.6736-1.6736-4.38703-1.67361-6.06064 0l-4 4.00002c-1.67361 1.6736-1.67361 4.387 0 6.0606s4.38705 1.6736 6.06064 0l2-2c.2929-.2929.2929-.7677 0-1.0606s-.7677-.2929-1.0606 0l-2.00004 2c-1.08782 1.0878-2.85152 1.0878-3.93934 0s-1.08782-2.8515 0-3.9394z"/><path d="m15.0302 5.03034c1.0878-1.08782 2.8515-1.08782 3.9394 0 1.0878 1.08782 1.0878 2.85152 0 3.93934l-4 4.00002c-1.0879 1.0878-2.8516 1.0878-3.9394 0-.2929-.2929-.7677-.2929-1.0606 0-.2929.2929-.2929.7677 0 1.0606 1.6736 1.6736 4.387 1.6736 6.0606 0l4-4c1.6736-1.67359 1.6736-4.38703 0-6.06063-1.6736-1.6736-4.387-1.6736-6.0606 0l-2 2c-.2929.29289-.2929.76777 0 1.06066s.7677.29289 1.0606 0z"/></g></svg>`,
+  about: INFO_ICON,
+}
+
+const INFO_TABS = [['members', 'Members'], ['threads', 'Threads'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links'], ['about', 'About']]
 // About describes a COMMUNITY, so it is only offered on the community surface — a DM or group chat
 // has no description or tags to show.
 const infoTabsFor = (surface) => INFO_TABS.filter(([k]) => k !== 'about' || surface === 'channel')
@@ -212,13 +224,11 @@ function renderInfoBody(tab, surface = 'channel') {
       </div>`
   }
   if (tab === 'threads') {
-    const list = store.threadsForSurface(surface)
+    // #21971 comment 1 — reuse the in-chat thread card here instead of a slimmer bespoke row.
+    // Body §1: sorted by latest active.
+    const list = store.threadsForSurface(surface).slice().sort((a, b) => b.lastActivityTs - a.lastActivityTs)
     if (!list.length) return `<div class="info-empty">No threads yet</div>`
-    return list.map(t => `<button class="info-item info-thread" data-info-item data-search="${t.title.toLowerCase()}" data-open-thread="${t.id}" data-surface="${t.surface}" title="Open thread">
-      <span class="info-thread__glyph">${THREAD_GLYPH}</span>
-      <span class="info-thread__body"><span class="info-thread__title">${t.title}</span><span class="info-thread__meta">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${store.isArchived(t) ? ' · archived' : ''}</span></span>
-      <span class="info-thread__count">${t.messages.length}</span>
-    </button>`).join('')
+    return list.map(t => `<div class="info-thread-card" data-info-item data-search="${t.title.toLowerCase()}">${threadCard(t)}</div>`).join('')
   }
   if (tab === 'members') {
     return `<div class="info-section">Online — ${INFO_MEMBERS.online.length}</div>${INFO_MEMBERS.online.map(m => infoMemberRow(m, true)).join('')}
@@ -228,7 +238,7 @@ function renderInfoBody(tab, surface = 'channel') {
     return `<div class="info-media">${INFO_MEDIA.map(x => `<div class="info-media__tile" data-info-item data-search="${x.label.toLowerCase()}" style="background:linear-gradient(135deg, ${x.color}, ${x.color}99)" title="${x.label}"><span class="info-media__label">${x.label}</span></div>`).join('')}</div>`
   }
   if (tab === 'pins') {
-    return INFO_PINS.map(p => `<div class="info-item info-pin" data-info-item data-search="${(p.text + ' ' + p.name).toLowerCase()}">
+    return INFO_PINS.slice().sort((a, b) => a.time.localeCompare(b.time)).map(p => `<div class="info-item info-pin" data-info-item data-search="${(p.text + ' ' + p.name).toLowerCase()}">
       <div class="message__avatar" style="background:${p.color}">${p.initial}</div>
       <div class="info-pin__body"><div class="info-pin__head"><span class="info-pin__name">${p.name}</span><span class="info-pin__time">${p.time}</span></div><div class="info-pin__text">${p.text}</div></div>
     </div>`).join('')
@@ -241,10 +251,16 @@ function renderInfoBody(tab, surface = 'channel') {
 function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   const tabs = infoTabsFor(surface)
   if (!tabs.some(([k]) => k === tab)) tab = 'members'   // e.g. a deep-linked info=about on a DM
-  const nav = tabs.map(([k, label]) => `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}">${label}</button>`).join('')
-  // About is a single profile card, not a list — there is nothing to filter
+  // #21971 comment 3b — icon-only tabs, and they live at the BOTTOM of the panel (mobile-friendly)
+  const nav = tabs.map(([k, label]) =>
+    `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}" title="${label}" aria-label="${label}" aria-selected="${k === tab}" role="tab">${INFO_TAB_ICONS[k] || label}</button>`).join('')
+  // #21971 §2.1 / comment 3a — the field is collapsed behind a search button, matching
+  // UserListPanel.qml: a checkable round search button, the box hidden until toggled, cleared on
+  // toggle, focused when shown, Escape closes it. About is a profile card with nothing to filter.
   const search = tab === 'about' ? '' :
-    `<div class="info-panel__search">${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>`
+    `<div class="info-panel__search" data-info-search-box hidden>${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>`
+  const searchBtn = tab === 'about' ? '' :
+    `<button class="info-panel__search-btn" data-info-search-toggle title="Search" aria-label="Search ${tab}" aria-pressed="false">${CHANNEL_ICONS.search}</button>`
   // mobile: same layout as the thread header (back arrow + title/subtitle); desktop: title + close (X)
   const header = mobile
     ? `<div class="thread-view__header info-panel__mheader">
@@ -253,13 +269,15 @@ function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
       </div>`
     : `<div class="info-panel__header">
         <span class="info-panel__title">Details</span>
+        ${searchBtn}
       </div>`
   return `
     <div class="info-panel">
       ${header}
-      <div class="info-panel__tabs">${nav}</div>
+      ${mobile ? `<div class="info-panel__mobile-search">${searchBtn}</div>` : ''}
       ${search}
       <div class="info-panel__body" data-info-body>${renderInfoBody(tab, surface)}</div>
+      <div class="info-panel__tabs" role="tablist">${nav}</div>
     </div>`
 }
 const infoTabOf = (p) => { const v = p.get('info'); if (INFO_TABS.some(([k]) => k === v)) return v; return v === '1' ? 'members' : null }
@@ -619,8 +637,25 @@ function bindThreadAffordances(p, view) {
   }))
   document.querySelector('[data-close-info]')?.addEventListener('click', () => setInfo('closed'))
   document.querySelectorAll('[data-info-tab]').forEach(el => el.addEventListener('click', () => setInfo(el.dataset.infoTab)))
-  // the tab row scrolls when it overflows — make sure the active tab is actually on screen
-  document.querySelector('.info-tab.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  // #21971 §2.1 — toggle the search box (UserListPanel.qml behaviour: clear on toggle, focus when
+  // shown, Escape closes)
+  const searchBox = document.querySelector('[data-info-search-box]')
+  const searchToggle = document.querySelector('[data-info-search-toggle]')
+  if (searchBox && searchToggle) {
+    const setOpen = (open) => {
+      searchBox.hidden = !open
+      searchToggle.classList.toggle('checked', open)
+      searchToggle.setAttribute('aria-pressed', String(open))
+      const inp = searchBox.querySelector('[data-info-search]')
+      inp.value = ''
+      document.querySelectorAll('.info-panel__body [data-info-item]').forEach(it => { it.style.display = '' })
+      if (open) inp.focus()
+    }
+    searchToggle.addEventListener('click', () => setOpen(searchBox.hidden))
+    searchBox.querySelector('[data-info-search]')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); setOpen(false); searchToggle.focus() }
+    })
+  }
   const infoSearch = document.querySelector('[data-info-search]')
   if (infoSearch) {
     infoSearch.addEventListener('input', () => {
@@ -782,8 +817,11 @@ function bindThreadAffordances(p, view) {
     el.addEventListener('click', go)
     el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(e) } })
   })
-  // Details → Threads tab: clicking a thread opens it (openThreadPanel closes Details)
-  document.querySelectorAll('.info-thread[data-open-thread]').forEach(el => el.addEventListener('click', () => openThread(el.dataset.openThread, el.dataset.surface)))
+  // Details → Threads tab: the rows are full thread cards now (#21971 comment 1) and they sit in the
+  // right column, outside `scope`, so they need binding explicitly
+  document.querySelectorAll('.info-panel__body [data-open-thread]').forEach(el => el.addEventListener('click', (e) => {
+    e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface)
+  }))
 
   // #22401 §1.2 — right-click (desktop) / long-press (mobile) on a thread row in the channel list or
   // the Messages chat list opens the thread context menu at the pointer. The menu is appended to the

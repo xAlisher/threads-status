@@ -119,6 +119,14 @@ fallback — otherwise the fallback reopens it instantly and the panel can never
 close X was dead for exactly this reason). The tab row **scrolls horizontally**: six tabs do not fit
 a narrow resizable panel, so the active tab is `scrollIntoView`d after every render.
 
+Tabs are **icon-only and pinned to the bottom** of the panel (#21971 comment 3b) — `INFO_TAB_ICONS`;
+Volo asked Rsttskyy for the final set and specifically for a different Members icon, so `group.svg`
+stands in there. Search is **collapsed behind a button** in the panel header, matching
+`UserListPanel.qml`: checkable button, box hidden until toggled, cleared on toggle, focused when
+shown, Escape closes. The **Threads** tab renders real in-chat thread cards (comment 1) sorted by
+latest activity — they sit in the right column, outside `bindThreadAffordances`'s `scope`, so they
+are bound explicitly or they silently stop opening.
+
 **About** (last tab, community surface only — `infoTabsFor(surface)`) is built from source:
 `ProfilePopupOverviewPanel.qml` for the description (primaryTextFontSize / directColor1 / wrap /
 16px side margins) and `StatusCommunityTag.qml` for the pills (32px high, radius height/2, 1px

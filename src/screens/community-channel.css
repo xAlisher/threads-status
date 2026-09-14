@@ -973,10 +973,34 @@
 .info-panel__title { font-size: var(--font-size-large, 17px); font-weight: 600; color: var(--direct-color-1); }
 /* six tabs no longer fit a narrow (resizable) panel, so the row scrolls horizontally and the active
    tab is scrolled into view on render — wrapping to a second row would shove the body down */
-.info-panel__tabs { display: flex; gap: 2px; padding: 0 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
-.info-panel__tabs::-webkit-scrollbar { display: none; }
-.info-tab { flex-shrink: 0; white-space: nowrap; padding: 8px 8px; border: none; background: transparent; color: var(--base-color-1); font-size: var(--font-size-additional); font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.info-tab.on { color: var(--direct-color-1); border-bottom-color: var(--primary-color-1); }
+/* #21971 comment 3b — icon-only tabs pinned to the BOTTOM of the panel (mobile-friendly), so they
+   read as a tab bar rather than a header strip. Six icons fit without scrolling. */
+.info-panel__tabs { display: flex; justify-content: space-around; align-items: center; gap: 2px; padding: 6px 8px; border-top: 1px solid var(--border); flex-shrink: 0; background: var(--base-color-4); }
+.info-tab { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; height: 36px; border: none; border-radius: 8px; background: transparent; color: var(--base-color-1); cursor: pointer; padding: 0; }
+.info-tab svg { width: 20px; height: 20px; }
+.info-tab:hover { background: var(--base-color-2); color: var(--direct-color-1); }
+.info-tab.on { color: var(--primary-color-1); background: var(--primary-color-3); }
+.info-tab:focus-visible { outline: 2px solid var(--primary-color-1); outline-offset: -2px; }
+
+/* the search button in the panel header — checkable, accent when open (UserListPanel.qml) */
+.info-panel__search-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: var(--direct-color-1); cursor: pointer; padding: 0; flex-shrink: 0; }
+.info-panel__search-btn svg { width: 18px; height: 18px; }
+.info-panel__search-btn:hover { color: var(--primary-color-1); background: var(--background-hover); }
+.info-panel__search-btn.checked { color: var(--primary-color-1); }
+.info-panel__search[hidden] { display: none; }
+.info-panel__mobile-search { display: flex; justify-content: flex-end; padding: 4px 12px 0; }
+
+/* the Threads tab reuses the in-chat thread card (#21971 comment 1). The card is sized for the wide
+   chat column, so in a ~250px panel it needs to drop its chat-only indent and reflow: title over two
+   lines, meta allowed to wrap, last-message text elided to the available width. */
+.info-thread-card { padding: 4px 6px 0; }
+.info-thread-card .thread-card { width: 100%; max-width: 100%; margin: 0; align-items: flex-start; }
+.info-thread-card .thread-card__spine { display: none; }
+.info-thread-card .thread-card__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.info-thread-card .thread-card__meta { flex-wrap: wrap; row-gap: 2px; }
+.info-thread-card .thread-card__last { flex-wrap: wrap; row-gap: 2px; }
+.info-thread-card .thread-card__last-text { max-width: 100%; }
+.info-thread-card .thread-card__main { min-width: 0; }
 .info-panel__search { display: flex; align-items: center; gap: 8px; margin: 10px 12px; padding: 7px 10px; border-radius: 10px; background: var(--base-color-3); flex-shrink: 0; }
 .info-panel__search svg { width: 16px; height: 16px; color: var(--base-color-1); flex-shrink: 0; }
 .info-panel__search-input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; color: var(--direct-color-1); font-family: var(--font-family-base); font-size: var(--font-size-additional); }
