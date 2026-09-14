@@ -36,7 +36,7 @@ export const THREAD_ICONS = {
   lock: `<svg viewBox="0 0 10 12" fill="none"><path clip-rule="evenodd" d="m2 5.5v-1.74359c0-1.78315 1.32593-3.25641 3-3.25641s3 1.47326 3 3.25641v1.74359h.5c.82843 0 1.5.67157 1.5 1.5v3c0 .8284-.67157 1.5-1.5 1.5h-7c-.828427 0-1.5-.6716-1.5-1.5v-3c0-.82843.671573-1.5 1.5-1.5zm1.38462 0h3.23076v-1.74359c0-1.04908-.74044-1.87179-1.61538-1.87179s-1.61538.82271-1.61538 1.87179z" fill="currentColor" fill-rule="evenodd"/></svg>`,
   // close-circle.svg — "close thread" action
   closeCircle: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m16.0303 7.96955c.2929.29289.2929.76776 0 1.06066l-2.6161 2.61619c-.1953.1952-.1953.5118 0 .7071l2.6161 2.6162c.2929.2929.2929.7677 0 1.0606s-.7677.2929-1.0606 0l-2.6162-2.6161c-.1953-.1953-.5119-.1953-.7071 0l-2.61607 2.616c-.29289.2929-.76777.2929-1.06066 0s-.29289-.7678 0-1.0607l2.61603-2.616c.1953-.1953.1953-.5119 0-.7071l-2.61603-2.61607c-.29289-.29289-.29289-.76777 0-1.06066s.76777-.29289 1.06066 0l2.61607 2.61603c.1952.1953.5118.1953.7071 0l2.6162-2.61615c.2929-.2929.7677-.2929 1.0606 0z"/><path clip-rule="evenodd" d="m12 22c5.5228 0 10-4.4772 10-10 0-5.52285-4.4772-10-10-10-5.52285 0-10 4.47715-10 10 0 5.5228 4.47715 10 10 10zm0-1.5c4.6944 0 8.5-3.8056 8.5-8.5 0-4.69442-3.8056-8.5-8.5-8.5-4.69442 0-8.5 3.80558-8.5 8.5 0 4.6944 3.80558 8.5 8.5 8.5z" fill-rule="evenodd"/></g></svg>`,
-  // archive box — lid bar on top, body with a pull slot (Archive / Unarchive action)
+  // archive box — passive marker on a thread that has gone quiet for a week (no manual action)
   archive: `<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" stroke="currentColor" stroke-width="1.6"/><path d="M10 12h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
   // link — Share link action
   link: `<svg viewBox="0 0 24 24" fill="none"><path d="M9.5 14.5 14.5 9.5M8 12l-2 2a3 3 0 1 0 4.24 4.24l2-2M16 12l2-2a3 3 0 1 0-4.24-4.24l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
@@ -117,7 +117,7 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
 // close (X) — desktop side-panel dismiss (net-new; the full-screen view uses the back arrow instead)
 const CLOSE_X = `<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
 
-function threadHeader({ title, sub, muted, back = true, menu = false, close = false, editable = false }) {
+function threadHeader({ title, sub, muted, back = true, menu = false, close = false }) {
   return `
     <div class="thread-view__header">
       ${back && !close ? `<button class="thread-view__back" data-back title="Back" aria-label="Back to conversation">${THREAD_ICONS.back}</button>` : ''}
@@ -125,7 +125,6 @@ function threadHeader({ title, sub, muted, back = true, menu = false, close = fa
       <div class="thread-view__titles">
         <span class="thread-view__title-row">
           <span class="thread-view__title" data-thread-title>${title}</span>
-          ${editable ? `<button class="thread-view__title-edit" data-edit-title title="Rename thread" aria-label="Rename thread">${THREAD_ICONS.edit}</button>` : ''}
         </span>
         <span class="thread-view__sub">${sub}${muted ? `<span class="thread-view__muted" title="Muted" aria-label="Muted">${THREAD_ICONS.bellOff}</span>` : ''}</span>
       </div>
@@ -179,12 +178,13 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
       <div class="thread-empty">${THREAD_ICONS.thread}<div class="thread-empty__title">This thread was deleted</div><div class="thread-empty__sub">The thread and its replies are no longer available.</div><button class="thread-empty__back" data-back>Back to ${s.label}</button></div>
     </div>`
   }
-  // archiving is NOT restrictive — an archived thread is just tucked away, still repliable
+  // archiving is NOT restrictive and NOT manual — a thread just falls out of the lists after a
+  // week of quiet, and replying here brings it straight back
   const composer = threadComposer(`Reply in #${t.title}`, mobile, { copyLabel: s.copy, copy })
   const replyRows = t.messages.map(m => msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
-      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel, editable: store.isCreator(t) })}
+      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel })}
       <div class="thread-view__messages">
         <div class="thread-view__parent">${msg(...t.parentMsg)}</div>
         <div class="thread-view__reply-sep"><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></div>
@@ -196,11 +196,12 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
 
 // ---- Threads list / index (epic §5 + §6.1 lifecycle) ----
 function threadRow(t) {
+  const archived = store.isArchived(t)   // computed from inactivity, never a stored flag
   const people = store.participants(t)
   const when = relTime(t.lastActivityTs)
   return `
-    <button class="thread-row${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}" aria-label="${t.title}, ${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.followed && t.unread ? ', unread' : ''}${t.closed ? ', archived' : ''}">
-      <span class="thread-row__icon">${t.closed ? THREAD_ICONS.archive : THREAD_ICONS.thread}</span>
+    <button class="thread-row${t.followed && t.unread ? ' unread' : ''}${archived ? ' archived' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}" aria-label="${t.title}, ${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.followed && t.unread ? ', unread' : ''}${archived ? ', archived' : ''}">
+      <span class="thread-row__icon">${archived ? THREAD_ICONS.archive : THREAD_ICONS.thread}</span>
       <span class="thread-row__body">
         <span class="thread-row__top"><span class="thread-row__title">${t.title}</span>${t.keptVisible ? `<span class="thread-row__pin" title="Kept visible">${THREAD_ICONS.pin}</span>` : ''}${t.followed ? '<span class="thread-row__followed" title="Following">·</span>' : ''}${t.followed && t.unread ? `<span class="thread-row__count" title="New messages">${t.newCount || 1}</span>` : ''}</span>
         <span class="thread-row__meta"><span class="thread-row__channel">${t.channelLabel}</span><span class="thread-row__sep">·</span><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span><span class="thread-row__sep">·</span><span class="thread-row__when">${THREAD_ICONS.clock}${when}</span></span>
@@ -210,8 +211,8 @@ function threadRow(t) {
 }
 function renderList(surface) {
   const all = surface ? store.threadsForSurface(surface) : store.allThreads()
-  const active = all.filter(t => !t.closed)
-  const past = all.filter(t => t.closed)
+  const active = all.filter(t => !store.isArchived(t))
+  const past = all.filter(t => store.isArchived(t))
   return `
     <div class="thread-list">
       <div class="thread-list__header"><button class="thread-view__back" data-back title="Back" aria-label="Back">${THREAD_ICONS.back}</button><span class="thread-list__title">Threads${surface ? ` — ${SURFACES[surface].label}` : ''}</span></div>
@@ -317,14 +318,12 @@ export function bindThreads() {
     }
     bindComposerSend(root, send)
 
-    // more menu → follow · mute · keep-visible · archive · delete (epic §18/§21/§23, #22282)
+    // more menu → follow · mute · mark-read · copy link · pin · delete (#22401)
     root.querySelector('[data-thread-more]')?.addEventListener('click', (e) => {
       e.stopPropagation(); openThreadMenu(root, threadId, e.currentTarget)
     })
     // inline edit of own thread messages (epic §16/UC2)
     bindInlineEdit(root, threadId)
-    // inline rename of the thread title, creator-only (#22275)
-    bindTitleEdit(root, threadId)
   }
 
   // back → return to the originating surface (epic §24/UC10)
@@ -378,12 +377,12 @@ export function bindComposerSend(root, send) {
 // the pencil is rendered only when store.isCreator(t), so binding is a no-op elsewhere.
 // The current value is read from the rendered `textContent`, which decodes the stored (escaped)
 // title back to plain text — writing it straight into the input would show raw entities.
-// Opens the editor. Standalone (not tied to the pencil) because the pencil is a HOVER affordance:
-// on touch there is no hover, so mobile reaches the same flow through the "…" menu's Edit name.
+// Opens the inline title editor. Reached ONLY from "Edit name" in the thread context menu — Volo
+// asked for the hover pencil to go (#22275 §1, #21933 §2), so the menu is the single route on both
+// desktop and mobile.
 export function startTitleEdit(root, threadId) {
   const titleEl = root.querySelector('[data-thread-title]')
   if (!titleEl || root.querySelector('.thread-view__title-input')) return
-  const pencil = root.querySelector('[data-edit-title]')
   const current = titleEl.textContent.trim()
   const input = document.createElement('input')
   input.className = 'thread-view__title-input'
@@ -391,11 +390,11 @@ export function startTitleEdit(root, threadId) {
   input.value = current
   input.maxLength = store.TITLE_MAX
   input.setAttribute('aria-label', 'Thread name')
-  titleEl.style.display = 'none'; if (pencil) pencil.style.display = 'none'
+  titleEl.style.display = 'none'
   titleEl.after(input)
   input.focus(); input.setSelectionRange(current.length, current.length)
   let done = false
-  const restore = () => { done = true; input.remove(); titleEl.style.display = ''; if (pencil) pencil.style.display = '' }
+  const restore = () => { done = true; input.remove(); titleEl.style.display = '' }
   const commit = () => {
     if (done) return
     const next = input.value.trim()
@@ -408,14 +407,6 @@ export function startTitleEdit(root, threadId) {
     else if (e.key === 'Escape') { e.preventDefault(); restore() }
   })
   input.addEventListener('blur', commit)
-}
-
-export function bindTitleEdit(root, threadId) {
-  const titleEl = root.querySelector('[data-thread-title]')
-  if (!titleEl) return
-  const start = () => startTitleEdit(root, threadId)
-  root.querySelector('[data-edit-title]')?.addEventListener('click', (e) => { e.stopPropagation(); start() })
-  titleEl.addEventListener('dblclick', start)
 }
 
 // inline edit: click the hover Edit quick-action on an own message → editable field
@@ -520,7 +511,7 @@ export function confirmDeleteThread(t, onConfirm) {
 }
 
 // thread context menu (#22401) — Edit name · Follow · Mute › · Mark as read · Copy/Share link ·
-// Pin to list · Archive · Delete. Opened by the "…" button on the thread view, or by right-click /
+// Pin to list · Delete. Opened by the "…" button on the thread view, or by right-click /
 // long-press on a thread row in the channel or chat list (then `opts.at` positions it at the pointer).
 export function openThreadMenu(root, threadId, anchor, opts = {}) {
   root.querySelector('.thread-more-menu')?.remove()
@@ -548,7 +539,6 @@ export function openThreadMenu(root, threadId, anchor, opts = {}) {
     (mobile ? item(THREAD_ICONS.link, 'Share link', 'share') : item(THREAD_ICONS.copy, 'Copy link', 'copy')) +
     // #22284 — the options are "Pin to list" / "Unpin from list"
     item(THREAD_ICONS.pin, t.keptVisible ? 'Unpin from list' : 'Pin to list', 'keep') +
-    (t.closed ? item(THREAD_ICONS.archive, 'Unarchive', 'reopen') : item(THREAD_ICONS.archive, 'Archive', 'close')) +
     (manage ? item(THREAD_ICONS.del, 'Delete', 'delete', ' msg-cmenu__item--danger') : '')
 
   // position: under the anchor by default, or at the pointer for a right-click / long-press
@@ -586,8 +576,6 @@ export function openThreadMenu(root, threadId, anchor, opts = {}) {
     copy: () => copyThreadLink(root, t),
     share: () => openShareModal(t),
     keep: () => store.setKeptVisible(threadId, !t.keptVisible),
-    close: () => store.closeThread(threadId),
-    reopen: () => store.reopenThread(threadId),
     delete: () => confirmDeleteThread(t, () => store.deleteThread(threadId)),
   }
 

@@ -50,7 +50,7 @@ function seed() {
           { id: 'r2', name: 'You', initial: 'A', color: '#4360DF', time: '10:33', text: 'Thinking 3 levels max. Beyond that we collapse older replies.', own: true, ts: now - 38 * min, opts: { delivery: 'delivered', alsoSent: true } },
           { id: 'r3', name: 'You', initial: 'A', color: '#4360DF', time: '10:34', text: 'Sharing the summary back to the channel too.', own: true, ts: now - 36 * min, opts: { delivery: 'delivered', alsoSent: true } },
         ],
-        followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
+        followed: true, muted: false, deleted: false, keptVisible: false,
         unread: true, newCount: 2, lastActivityTs: now - 3 * min,
       },
       {
@@ -61,7 +61,7 @@ function seed() {
           { id: 'd1', name: 'Elena', initial: 'E', color: '#D37EF4', time: '09:20', text: 'Base palette is done. Semantic layer next.', own: false, ts: now - 12 * hr, opts: {} },
           { id: 'd2', name: 'Marcus', initial: 'M', color: '#26A69A', time: '09:44', text: 'Nice — I can restyle a whole screen from one file now.', own: false, ts: now - 11 * hr, opts: {} },
         ],
-        followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
+        followed: true, muted: false, deleted: false, keptVisible: false,
         unread: false, lastActivityTs: now - 1 * hr,
       },
       {
@@ -71,7 +71,7 @@ function seed() {
         messages: [
           { id: 'q1', name: 'Dana', initial: 'D', color: '#2A799B', time: '08:15', text: 'Can we pull the activity center forward?', own: false, ts: now - 3 * hr, opts: {} },
         ],
-        followed: false, muted: false, closed: false, deleted: false, keptVisible: true,
+        followed: false, muted: false, deleted: false, keptVisible: true,
         unread: false, lastActivityTs: now - 3 * hr,
       },
       {
@@ -81,7 +81,7 @@ function seed() {
         messages: [
           { id: 'x1', name: 'Sam', initial: 'S', color: '#C4A052', time: 'Mon', text: 'Archived — see the wiki.', own: false, ts: now - 15 * day, opts: {} },
         ],
-        followed: false, muted: false, closed: true, deleted: false, keptVisible: false,
+        followed: false, muted: false, deleted: false, keptVisible: false,
         unread: false, lastActivityTs: now - 15 * day,
       },
       {
@@ -91,7 +91,7 @@ function seed() {
         messages: [
           { id: 'gr1', name: 'You', initial: 'A', color: '#4360DF', time: '11:05', text: 'Off by default — least surprise.', own: true, ts: now - 20 * min, opts: { delivery: 'delivered' } },
         ],
-        followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
+        followed: true, muted: false, deleted: false, keptVisible: false,
         unread: true, newCount: 1, lastActivityTs: now - 6 * min,
       },
       {
@@ -101,7 +101,7 @@ function seed() {
         messages: [
           { id: 'dm_r1', name: 'carmen.eth', initial: 'C', color: '#887AF9', time: '14:21', text: '32px in the member list, 24 in the channel list.', own: false, ts: now - 2 * hr, opts: {} },
         ],
-        followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
+        followed: true, muted: false, deleted: false, keptVisible: false,
         unread: false, lastActivityTs: now - 2 * hr,
       },
       {
@@ -112,12 +112,13 @@ function seed() {
         messages: [
           { id: 'del1', name: 'Kai', initial: 'K', color: '#FE8F59', time: '10:31', text: 'Does this kill the Figma handoff entirely?', own: false, ts: now - 5 * hr, opts: {} },
         ],
-        followed: false, muted: false, closed: false, deleted: true, keptVisible: false,
+        followed: false, muted: false, deleted: true, keptVisible: false,
         unread: false, lastActivityTs: now - 5 * hr,
         deletedBy: { name: 'Marcus', initial: 'M', color: '#26A69A' }, deletedAtLabel: 'Today 1:04 PM',
       },
       {
-        // closed thread — shown in-chat with a lock after the reply-count badge (no new replies)
+        // recently-active thread that used to be seeded "closed"; archiving is now purely a
+        // function of inactivity, so this one simply reads as active
         id: 't-closed-chat', surface: 'channel', channelLabel: '# general', parentMsgId: 'cc-6',
         parentMsg: ['Marcus', 'M', '#26A69A', '10:36', 'About 3 hours with two agents running — builder writes code, auditor verifies against QML. Cost maybe $25 in API tokens.', { senderId: '0x04d7e1...a92b05' }],
         title: 'Token cost breakdown', createdBy: 'Dana',
@@ -125,7 +126,7 @@ function seed() {
           { id: 'tc1', name: 'Dana', initial: 'D', color: '#2A799B', time: '10:40', text: 'Is that per run or per day?', own: false, ts: now - 4 * hr, opts: {} },
           { id: 'tc2', name: 'Marcus', initial: 'M', color: '#26A69A', time: '10:42', text: 'Per full run. Wrapping this one up.', own: false, ts: now - 4 * hr, opts: {} },
         ],
-        followed: true, muted: false, closed: true, deleted: false, keptVisible: false,
+        followed: true, muted: false, deleted: false, keptVisible: false,
         unread: false, lastActivityTs: now - 4 * hr,
       },
     ],
@@ -194,11 +195,17 @@ export function channelListThreads(surface = 'channel') {
   return ensure().threads.filter(t => {
     if (t.deleted || t.surface !== surface) return false
     if (t.keptVisible) return true            // §6.1: kept permanently visible (overrides all below)
-    if (t.closed) return false                // §6.1: closes → disappears
     if (now - t.lastActivityTs > WEEK_MS) return false // §6.1: no new messages within 1 week
     if (!t.followed) return false             // #22: the channel list shows followed threads
     return true
   })
+}
+
+// §6.1 — a thread "archives" itself after a week without new messages: it drops off the chat/channel
+// list but stays reachable from the Threads list, and any reply brings it straight back (postReply
+// refreshes lastActivityTs and follows it). There is no manual archive action and no locking.
+export function isArchived(t) {
+  return !!t && !t.keptVisible && (Date.now() - t.lastActivityTs > WEEK_MS)
 }
 
 // posts the user copied into a parent conversation (epic §3.1)
@@ -246,7 +253,7 @@ export function createThread({ surface = 'channel', parentMsgId = null, parentMs
     id: nid('t-'), surface, channelLabel: sc.label, parentMsgId, createdBy: 'You',
     parentMsg: parentMsg || ['You', 'A', '#4360DF', 'now', 'New thread', { own: true }],
     title: cleanTitle(title) || cleanTitle(firstMessage.slice(0, TITLE_MAX)) || 'New thread',
-    messages: [], followed: true, muted: false, closed: false, deleted: false, keptVisible: false,
+    messages: [], followed: true, muted: false, deleted: false, keptVisible: false,
     unread: false, lastActivityTs: now,
   }
   if (firstMessage.trim()) {
@@ -260,12 +267,9 @@ export function createThread({ surface = 'channel', parentMsgId = null, parentMs
 export function postReply(threadId, text, { copyToParent = false } = {}) {
   const t = getThread(threadId); if (!t || t.deleted) return null   // archived threads stay repliable
   const now = Date.now()
-  // posting is the un-archive gesture (epic #21090, Volo on jrainville §4) — a reply brings the
-  // thread back into the active roster instead of leaving it archived with fresh messages in it
-  const wasArchived = t.closed
-  t.closed = false
-  // ...and it auto-follows (§5: manually, or automatically if you enter the conversation), which is
-  // what actually puts it back on the left chat list
+  const wasArchived = isArchived(t)
+  // posting auto-follows the thread (§5: manually, or automatically if you enter the conversation);
+  // together with the lastActivityTs bump below that is what puts it back on the left chat list
   t.followed = true
   const m = { id: nid('r'), name: 'You', initial: 'A', color: '#4360DF', time: timeNow(), text: escapeText(text.trim()), own: true, ts: now, opts: { delivery: 'sent', alsoSent: copyToParent } }
   t.messages.push(m)
@@ -306,7 +310,7 @@ export function editMessage(threadId, msgId, text) {
 
 // simulate inbound activity on a thread (drives the notification badge — demo trigger)
 export function simulateActivity(threadId) {
-  const t = getThread(threadId); if (!t || t.closed || t.deleted) return
+  const t = getThread(threadId); if (!t || t.deleted) return
   const now = Date.now()
   t.messages.push({ id: nid('r'), name: 'Marcus', initial: 'M', color: '#26A69A', time: timeNow(), text: 'Good point — following up in the thread.', own: false, ts: now, opts: {} })
   t.lastActivityTs = now
@@ -359,20 +363,6 @@ export function markAllRead(threadId) {
 // surface only; a DM or group chat has no admin, leaving creator-only there.
 export function isCommunityAdmin(surface) { return surface === 'channel' }
 export function canManageThread(t) { return !!t && (isCreator(t) || isCommunityAdmin(t.surface)) }
-export function closeThread(threadId) {
-  const t = getThread(threadId); if (!t) return
-  t.closed = true; t.unread = false
-  ensure().toast = 'Thread archived'
-  emit()
-}
-export function reopenThread(threadId) {
-  const t = getThread(threadId); if (!t) return
-  // reopen must NOT refresh activity — only a real reply does; otherwise a long-stale thread
-  // would jump back into the active channel list (§6.1) with no new message
-  t.closed = false
-  ensure().toast = 'Thread unarchived'
-  emit()
-}
 export function deleteThread(threadId) {
   const t = getThread(threadId); if (!t) return
   t.deleted = true
@@ -407,6 +397,6 @@ function escapeText(s) {
 // expose a tiny debug handle for verification harnesses
 if (typeof window !== 'undefined') window.__threadStore = {
   getThread, allThreads, ensure, simulateActivity, unreadCount,
-  channelListThreads, threadsForSurface, setFollowed, setMuted, closeThread, deleteThread, setKeptVisible,
+  channelListThreads, threadsForSurface, setFollowed, setMuted, deleteThread, setKeptVisible, isArchived,
   renameThread, isCreator, canManageThread, createThread, markAllRead,
 }

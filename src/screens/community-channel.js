@@ -6,7 +6,7 @@ import * as store from '../thread-store.js'
 import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 import { SURFACES } from '../thread-store.js'
 // desktop thread side-panel reuses the thread renderers + binders (epic §1)
-import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, bindTitleEdit, titleFromText, autosize, floatToast } from './threads.js'
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, titleFromText, autosize, floatToast } from './threads.js'
 
 export const CHANNEL_ICONS = {
   // tiny/channel.svg (viewBox="0 0 16 17") — community channel type icon
@@ -212,8 +212,8 @@ function renderInfoBody(tab, surface = 'channel') {
     const list = store.threadsForSurface(surface)
     if (!list.length) return `<div class="info-empty">No threads yet</div>`
     return list.map(t => `<button class="info-item info-thread" data-info-item data-search="${t.title.toLowerCase()}" data-open-thread="${t.id}" data-surface="${t.surface}" title="Open thread">
-      <span class="info-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
-      <span class="info-thread__body"><span class="info-thread__title">${t.title}</span><span class="info-thread__meta">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.closed ? ' · archived' : ''}</span></span>
+      <span class="info-thread__glyph">${THREAD_GLYPH}</span>
+      <span class="info-thread__body"><span class="info-thread__title">${t.title}</span><span class="info-thread__meta">${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${store.isArchived(t) ? ' · archived' : ''}</span></span>
       <span class="info-thread__count">${t.messages.length}</span>
     </button>`).join('')
   }
@@ -308,10 +308,6 @@ export function bindCommunityChannel(view, ver) {
 const CLEAR_X = `<svg viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
 // #22273 §2.3 — shown when there is no message text to derive a name from
 const THREAD_NAME_PLACEHOLDER = 'Add thread name here'
-// lock.svg (Status asset) — closed-thread glyph, so a closed card/row reads differently from an open one
-const LOCK_GLYPH = `<svg viewBox="0 0 10 12" fill="none"><path clip-rule="evenodd" d="m2 5.5v-1.74359c0-1.78315 1.32593-3.25641 3-3.25641s3 1.47326 3 3.25641v1.74359h.5c.82843 0 1.5.67157 1.5 1.5v3c0 .8284-.67157 1.5-1.5 1.5h-7c-.828427 0-1.5-.6716-1.5-1.5v-3c0-.82843.671573-1.5 1.5-1.5zm1.38462 0h3.23076v-1.74359c0-1.04908-.74044-1.87179-1.61538-1.87179s-1.61538.82271-1.61538 1.87179z" fill="currentColor" fill-rule="evenodd"/></svg>`
-// archive box — an archived thread is tucked away but NOT locked (still repliable)
-const ARCHIVE_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.7"/><path d="M5 8.5v9.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5" stroke="currentColor" stroke-width="1.7"/><path d="M10 12.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
 // trash / bin — for the "X deleted this thread" tombstone (Status delete_message pattern)
 const TRASH_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 4h4M6 7l1 12.5A2 2 0 0 0 9 21.4h6a2 2 0 0 0 2-1.9L18 7M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // "#←" — a channel-hash with a back arrow, for the thread reply "Also sent to the channel" tag
@@ -378,7 +374,6 @@ function threadCard(t) {
   }
   const people = store.participants(t)
   const stack = `<span class="thread-ava-stack">${people.slice(0, 4).map((p, i) => `<span class="thread-ava" style="background:${p.c};z-index:${people.length - i}">${p.i}</span>`).join('')}${people.length > 4 ? `<span class="thread-ava thread-ava--more">+${people.length - 4}</span>` : ''}</span>`
-  const closed = t.closed
   // last-message preview: sender avatar + name + text + "17h ago" (#21932 §2e)
   const lm = t.messages[t.messages.length - 1]
   const last = lm ? `
@@ -388,12 +383,10 @@ function threadCard(t) {
           <span class="thread-card__last-text">${lm.text}</span>
           <span class="thread-card__last-time">${relAgo(lm.ts)}</span>
         </span>` : ''
-  // top-right badge: closed → reply count + lock icon; open+unread → new-message counter
-  const badge = closed
-    ? `<span class="thread-card__tr"><span class="thread-card__count thread-card__count--muted">${t.messages.length}</span><span class="thread-card__lock" title="Archived">${ARCHIVE_GLYPH}</span></span>`
-    : (t.followed && t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : '')
+  // top-right badge: unread → new-message counter. There is no archived/locked card state any more.
+  const badge = t.followed && t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : ''
   return `
-    <button class="thread-card${closed ? ' thread-card--closed' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}">
+    <button class="thread-card" data-open-thread="${t.id}" data-surface="${t.surface}">
       <span class="thread-card__icon">${THREAD_GLYPH}</span>
       <span class="thread-card__main">
         <span class="thread-card__title">${t.title}</span>
@@ -523,7 +516,6 @@ function bindThreadPanel(p, cfg = {}) {
     })
     panel.querySelector('[data-thread-more]')?.addEventListener('click', (e) => { e.stopPropagation(); openThreadMenu(panel, threadId, e.currentTarget) })
     bindInlineEdit(panel, threadId)
-    bindTitleEdit(panel, threadId)   // #22275 — creator renames the title in place
     // saved state ?tmenu=1 — auto-open the "…" menu (shows Mute/Unmute, #22282)
     if (p.get('tmenu') === '1') {
       const anchor = panel.querySelector('[data-thread-more]')
@@ -857,8 +849,8 @@ const setThreadsHidden = (v) => { try { v ? sessionStorage.setItem(THREADS_HIDDE
 // data-open-thread, so both lists inherit it from this one markup.
 function listThreadRow(t, surface) {
   return `
-    <button class="channel-thread${t.followed && t.unread ? ' unread' : ''}${t.closed ? ' closed' : ''}" data-open-thread="${t.id}" data-surface="${surface}" title="Open thread">
-      <span class="channel-thread__glyph">${t.closed ? LOCK_GLYPH : THREAD_GLYPH}</span>
+    <button class="channel-thread${t.followed && t.unread ? ' unread' : ''}" data-open-thread="${t.id}" data-surface="${surface}" title="Open thread">
+      <span class="channel-thread__glyph">${THREAD_GLYPH}</span>
       <span class="channel-thread__name">${t.title}</span>
       ${t.keptVisible ? `<span class="channel-thread__pin" title="Kept visible">${CHANNEL_ICONS.pinHeader}</span>` : ''}
       ${t.followed && t.unread ? `<span class="channel-thread__count channel-thread__count--unread" title="New messages">${t.newCount || 1}</span>` : `<span class="channel-thread__count">${t.messages.length}</span>`}

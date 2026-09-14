@@ -65,7 +65,7 @@ thread row** in the channel or Messages list (`bindThreadRowMenu`, which passes 
 opens at the pointer and flips to stay in the viewport). Contents, each traced to its story:
 `Edit name` (#22275) · `Follow/Unfollow` (#22283) · `Mute thread ›` (#22282) · `Mark as read`
 (#22402) · `Copy link` desktop / `Share link` mobile (#22285) · `Pin to list` / `Unpin from list`
-(#22284) · `Archive` · `Delete` (#22280).
+(#22284) · `Delete` (#22280). No Archive — see the archived note below.
 
 - **Mute is a duration submenu**, not a toggle — `MuteChatMenuItem.qml` offers For 15 mins / 1 hour /
   8 hours / 24 hours / 7 days / Until I turn it back on. Once muted the row collapses to a single
@@ -107,14 +107,18 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
 
 ## Semantics / conventions
 
-- **Replying un-archives and auto-follows.** Per Volo on the epic (#21090, answering jrainville §4
+- **Renaming is menu-only.** The hover pencil and the title dblclick are gone (#22275 §1, #21933 §2);
+  `startTitleEdit` is reached solely from **Edit name** in the context menu, on desktop and mobile.
+- **Replying revives and auto-follows.** Per Volo on the epic (#21090, answering jrainville §4
   and §5), a thread archives on inactivity and "clicking on it, you can send a new message to it and
   it reappears on the left chat list". `postReply` therefore clears `closed` and sets `followed` —
   without the follow the thread still would not show in the channel list (`channelListThreads`
   filters on it), so the two have to move together.
-- **Archived ≠ closed/locked.** The `closed` store flag means *archived*: tucked out of the active
-  roster, but **still repliable** (composer stays, no lock, no "no new replies" bar). `postReply`
-  must not block on `closed`. UI: archive-box icon, never a lock. Menu: Archive / Unarchive.
+- **There is no archived FLAG and no manual archive.** Volo dropped the closed-thread feature on the
+  epic; archiving is now purely `store.isArchived(t)` — *no messages for a week and not pinned*. It
+  only affects list visibility: an archived thread stays repliable and stays in the Threads list, and
+  a reply revives it automatically (`postReply` bumps `lastActivityTs` and follows it). Never
+  reintroduce a `closed` field, a lock glyph, or an Archive menu item.
 - **Send-copy → "replied to a thread: #name".** A reply with the send-copy checkbox posts to the
   thread AND appends a `parentPost` to the channel, grouped/stacked per thread under one header
   (`renderCopiedGroups`). The thread reply gets an "Also sent to the channel" tag (`opts.alsoSent`).
