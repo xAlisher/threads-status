@@ -789,6 +789,12 @@ function bindThreadAffordances(p, view) {
     if (p.get('tpanel')) bindThreadPanel(p)
     if (p.get('tmain')) bindThreadPanel(p, { rootSel: '.shell__center .thread-view', threadIdParam: 'tmain', closeFn: closeThreadMain })
   }
+
+  // Anything the thread binders did not drain — e.g. a context-menu action fired from a roster row
+  // while no thread view is open — would otherwise sit in the queue and pop up later over an
+  // unrelated thread. Show it over the chat instead.
+  const leftover = store.takeToast()
+  if (leftover) floatToast(scope.querySelector('.messages')?.parentElement || scope, leftover)
 }
 
 function renderNav(revamp) {
@@ -852,7 +858,7 @@ function listThreadRow(t, surface) {
     <button class="channel-thread${t.followed && t.unread ? ' unread' : ''}" data-open-thread="${t.id}" data-surface="${surface}" title="Open thread">
       <span class="channel-thread__glyph">${THREAD_GLYPH}</span>
       <span class="channel-thread__name">${t.title}</span>
-      ${t.keptVisible ? `<span class="channel-thread__pin" title="Kept visible">${CHANNEL_ICONS.pinHeader}</span>` : ''}
+      ${t.keptVisible ? `<span class="channel-thread__pin" title="Pinned to list">${CHANNEL_ICONS.pinHeader}</span>` : ''}
       ${/* #21931 §6.3 — thread badges follow the channel-badge rule (see channelItem): a count only
            while there are unread messages, and NOTHING once the thread is read. The old else-branch
            swapped in a reply-count badge, so "Mark as read" never made the counter go away. */''}

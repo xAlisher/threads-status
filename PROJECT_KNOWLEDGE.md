@@ -67,6 +67,11 @@ opens at the pointer and flips to stay in the viewport). Contents, each traced t
 (#22402) · `Copy link` desktop / `Share link` mobile (#22285) · `Pin to list` / `Unpin from list`
 (#22284) · `Delete` (#22280). No Archive — see the archived note below.
 
+- **The toast queue must be drained on EVERY screen.** `store.takeToast()` used to run only where a
+  thread view is bound, so a context-menu action fired from a roster row (no thread open) queued a
+  toast that surfaced later over an unrelated thread. `bindThreadAffordances` now drains whatever is
+  left after the thread binders. `floatToast` also makes its root `position: relative` if it is
+  static — otherwise the absolutely-positioned toast centres on the window, not the column.
 - **Menus are positioned `fixed`, in viewport coordinates** — never `absolute` against the container
   they are appended to. `root` differs per surface: `.thread-panel` is `position: relative` but
   `.shell__center .thread-view` is **static**, so an absolute offset measured against root silently

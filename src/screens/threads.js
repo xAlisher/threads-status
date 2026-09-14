@@ -221,7 +221,7 @@ function threadRow(t) {
     <button class="thread-row${t.followed && t.unread ? ' unread' : ''}${archived ? ' archived' : ''}" data-open-thread="${t.id}" data-surface="${t.surface}" aria-label="${t.title}, ${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}${t.followed && t.unread ? ', unread' : ''}${archived ? ', archived' : ''}">
       <span class="thread-row__icon">${archived ? THREAD_ICONS.archive : THREAD_ICONS.thread}</span>
       <span class="thread-row__body">
-        <span class="thread-row__top"><span class="thread-row__title">${t.title}</span>${t.keptVisible ? `<span class="thread-row__pin" title="Kept visible">${THREAD_ICONS.pin}</span>` : ''}${t.followed ? '<span class="thread-row__followed" title="Following">·</span>' : ''}${t.followed && t.unread ? `<span class="thread-row__count" title="New messages">${t.newCount || 1}</span>` : ''}</span>
+        <span class="thread-row__top"><span class="thread-row__title">${t.title}</span>${t.keptVisible ? `<span class="thread-row__pin" title="Pinned to list">${THREAD_ICONS.pin}</span>` : ''}${t.followed ? '<span class="thread-row__followed" title="Following">·</span>' : ''}${t.followed && t.unread ? `<span class="thread-row__count" title="New messages">${t.newCount || 1}</span>` : ''}</span>
         <span class="thread-row__meta"><span class="thread-row__channel">${t.channelLabel}</span><span class="thread-row__sep">·</span><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span><span class="thread-row__sep">·</span><span class="thread-row__when">${THREAD_ICONS.clock}${when}</span></span>
       </span>
       ${avatarStack(people)}
@@ -724,6 +724,9 @@ export function bindThreadRowMenu(rowSelector, resolveRoot) {
 
 export function floatToast(root, text) {
   if (!root) return
+  // .thread-toast is absolutely positioned, so the root has to BE the positioning context — a static
+  // root (e.g. .shell__center) silently centres the toast on the window instead of the column.
+  if (getComputedStyle(root).position === 'static') root.style.position = 'relative'
   root.querySelector('.thread-toast')?.remove()
   const el = document.createElement('div')
   el.className = 'thread-toast'

@@ -194,7 +194,7 @@ export function channelListThreads(surface = 'channel') {
   const now = Date.now()
   return ensure().threads.filter(t => {
     if (t.deleted || t.surface !== surface) return false
-    if (t.keptVisible) return true            // §6.1: kept permanently visible (overrides all below)
+    if (t.keptVisible) return true            // #22284 §1: pinned = permanently visible (beats every rule below)
     if (now - t.lastActivityTs > WEEK_MS) return false // §6.1: no new messages within 1 week
     if (!t.followed) return false             // #22: the channel list shows followed threads
     return true
@@ -372,7 +372,8 @@ export function deleteThread(threadId) {
 export function setKeptVisible(threadId, kept) {
   const t = getThread(threadId); if (!t) return
   t.keptVisible = kept
-  ensure().toast = kept ? 'Thread kept visible' : 'Thread no longer pinned'
+  // #22284 — the feature is named "Pin to list" / "Unpin from list" everywhere it is surfaced
+  ensure().toast = kept ? 'Thread pinned to list' : 'Thread unpinned from list'
   emit()
 }
 export function markRead(threadId, { silent = false } = {}) {
