@@ -993,7 +993,8 @@
 /* the Threads tab reuses the in-chat thread card (#21971 comment 1). The card is sized for the wide
    chat column, so in a ~250px panel it needs to drop its chat-only indent and reflow: title over two
    lines, meta allowed to wrap, last-message text elided to the available width. */
-.info-thread-card { padding: 4px 6px 0; }
+.info-thread-card { padding: 8px 6px 0; }
+.info-thread-card:last-child { padding-bottom: 8px; }
 .info-thread-card .thread-card { width: 100%; max-width: 100%; margin: 0; align-items: flex-start; }
 .info-thread-card .thread-card__spine { display: none; }
 .info-thread-card .thread-card__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
