@@ -109,7 +109,10 @@ opens at the pointer and flips to stay in the viewport). Contents, each traced t
   #22402 §2 has nothing visible to clear.
 
 ### Details panel: toggle + About
-The **(i)** header button is a *pure panel toggle* (open → close, whatever tab is showing); the
+The **(i)** lives on the chat header **and** on a thread filling the main pane, so Details is always
+toggleable from the central column (without it, #22279 §1's "thread spans centre and right when Info
+is closed" was unreachable by hand). The side panel has no room for it and the mobile thread page
+deliberately omits it. The **(i)** header button is a *pure panel toggle* (open → close, whatever tab is showing); the
 search button is tab-aware (switches to Media, closes if Media is already up). The panel has **no
 close X**. `info=closed` must be checked BEFORE the desktop "Details is the persistent right column"
 fallback — otherwise the fallback reopens it instantly and the panel can never be dismissed (the old
