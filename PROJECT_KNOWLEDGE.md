@@ -82,6 +82,13 @@ opens at the pointer and flips to stay in the viewport). Contents, each traced t
   every thread; a DM/group has no admin, so it stays creator-only there. Test both.
 - **Opening a thread auto-clears its unread**, so "Mark as read" cannot be observed from inside an
   open thread — verify it from the row context menu instead.
+- **Unread has two halves.** `unread` drives the badges (channel row, in-chat card, thread row,
+  Activity Center); `newCount` drives the **new-messages marker** inside the thread
+  (`NewMessagesMarker.qml` recreated: primaryColor1 rules either side of bold "N missed message(s)
+  since <time>", NEW badge h16/radius 4). `markRead` (silent, on open) clears BOTH but does not
+  re-render, so the marker stays on screen for the pass you are reading and is gone next visit;
+  `markAllRead` clears both and emits, so the marker disappears at once. Without `newCount`,
+  #22402 §2 has nothing visible to clear.
 
 ### Details panel: toggle + About
 The **(i)** header button is a *pure panel toggle* (open → close, whatever tab is showing); the

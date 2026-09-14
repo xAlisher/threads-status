@@ -168,6 +168,20 @@ export function renderCreate(surface, parentMsgId, { panel = false, mobile = fal
     </div>`
 }
 
+// #22402 §2 — the unread run inside a thread, so "Mark as read" has something visible to clear.
+// Recreated from NewMessagesMarker.qml: 1px primaryColor1 rules either side of bold centred
+// "%n missed message(s) since %1" (additionalTextSize), plus a 16px / radius-4 "NEW" badge at the
+// right in indirectColor1 on primaryColor1.
+function newMessagesMarker(count, sinceLabel) {
+  const n = count === 1 ? '1 missed message' : `${count} missed messages`
+  return `<div class="new-msgs-marker" role="separator" aria-label="${n} since ${sinceLabel}">
+      <span class="new-msgs-marker__rule new-msgs-marker__rule--lead"></span>
+      <span class="new-msgs-marker__text">${n} since ${sinceLabel}</span>
+      <span class="new-msgs-marker__rule"></span>
+      <span class="new-msgs-marker__badge">NEW</span>
+    </div>`
+}
+
 // ---- Thread view (parent + replies + composer + "Send copy" toggle) ----
 export function renderThread(t, { copy, panel = false, mobile = false }) {
   const s = SURFACES[t.surface] || SURFACES.channel
@@ -181,7 +195,11 @@ export function renderThread(t, { copy, panel = false, mobile = false }) {
   // archiving is NOT restrictive and NOT manual — a thread just falls out of the lists after a
   // week of quiet, and replying here brings it straight back
   const composer = threadComposer(`Reply in #${t.title}`, mobile, { copyLabel: s.copy, copy })
-  const replyRows = t.messages.map(m => msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
+  // the unread run sits at the end of the list; the marker goes immediately before it
+  const unreadFrom = t.newCount > 0 ? Math.max(0, t.messages.length - t.newCount) : -1
+  const replyRows = t.messages.map((m, i) =>
+    (i === unreadFrom ? newMessagesMarker(t.newCount, m.time) : '') +
+    msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
       ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel })}

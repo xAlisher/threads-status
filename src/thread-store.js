@@ -314,7 +314,7 @@ export function simulateActivity(threadId) {
   const now = Date.now()
   t.messages.push({ id: nid('r'), name: 'Marcus', initial: 'M', color: '#26A69A', time: timeNow(), text: 'Good point — following up in the thread.', own: false, ts: now, opts: {} })
   t.lastActivityTs = now
-  if (!t.muted) t.unread = true
+  if (!t.muted) { t.unread = true; t.newCount = (t.newCount || 0) + 1 }
   emit()
 }
 
@@ -378,6 +378,7 @@ export function setKeptVisible(threadId, kept) {
 export function markRead(threadId, { silent = false } = {}) {
   const t = getThread(threadId); if (!t || !t.unread) return
   t.unread = false
+  t.newCount = 0
   if (silent) persist(); else emit()
 }
 
