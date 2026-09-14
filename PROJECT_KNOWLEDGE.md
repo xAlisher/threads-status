@@ -125,6 +125,10 @@ property in the source, so the markup keeps real casing and CSS does `text-trans
 search, copy-paste and screen readers still get the proper name.
 
 ### Thread open surfaces (desktop)
+Closing a thread **closes the right column entirely** (`info=closed`) so the main pane expands —
+#22279 §2.1 / #21933 §3. It used to fall back to the Details panel, which meant the sidebar never
+actually went away. A main-pane thread (`tmain`) spans centre **and** right whenever Info is closed,
+so `info=closed` must beat the `|| 'members'` fallback in the tmain branch as well as the normal one.
 - **in-chat card** → right **side panel** (`tpanel`).
 - **channel-list row** → thread in the **centre column** (`tmain`) + its Details in the third column.
   `bindThreadPanel(p, cfg)` binds *either* — pass `{rootSel, threadIdParam, closeFn}`.

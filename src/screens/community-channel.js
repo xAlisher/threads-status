@@ -66,7 +66,9 @@ export function renderCommunityChannel(view, ver) {
   const tmainThread = tmain ? store.getThread(tmain) : null
   if (tmainThread && !tmainThread.deleted) {
     const centerThread = renderThread(tmainThread, { copy: p.get('copy') === '1', panel: false })
-    const infoTab = (p.get('info') === 'closed' ? null : infoTabOf(p)) || 'members'
+    // #22279 §1 — with the Info menu closed the thread takes the whole centre AND right side, so
+    // `info=closed` has to win here too (the `|| 'members'` fallback used to re-open Details).
+    const infoTab = p.get('info') === 'closed' ? null : (infoTabOf(p) || 'members')
     const right = infoTab ? renderInfoPanel(infoTab, tmainThread.surface) : null
     return { nav, left, center: `<div class="thread-main">${centerThread}</div>`, right }
   }
@@ -431,7 +433,10 @@ function openThreadPanel(spec) {
 }
 function closeThreadPanel() {
   const u = new URL(location.href)
-  ;['tpanel', 'tparent', 'copy', 'info'].forEach(k => u.searchParams.delete(k))   // → falls back to Details (Members)
+  ;['tpanel', 'tparent', 'copy'].forEach(k => u.searchParams.delete(k))
+  // #22279 §2.1 / #21933 §3 — the right sidebar closes completely and the main pane expands to the
+  // right. It used to fall back to the Details panel, so the sidebar never actually went away.
+  u.searchParams.set('info', 'closed')
   history.replaceState(null, '', u)
   rerender()
 }
@@ -439,13 +444,14 @@ function closeThreadPanel() {
 function openThreadMain(threadId, surface) {
   const u = new URL(location.href)
   u.searchParams.delete('tpanel'); u.searchParams.delete('copy')
-  u.searchParams.set('tmain', threadId); u.searchParams.set('surface', surface || 'channel'); u.searchParams.set('info', 'members')
+  u.searchParams.set('tmain', threadId); u.searchParams.set('surface', surface || 'channel')
+  if (!u.searchParams.get('info')) u.searchParams.set('info', 'members')   // keep whatever Info state the user had
   history.replaceState(null, '', u)
   rerender()
 }
 function closeThreadMain() {
   const u = new URL(location.href)
-  ;['tmain', 'copy', 'info'].forEach(k => u.searchParams.delete(k))
+  ;['tmain', 'copy'].forEach(k => u.searchParams.delete(k))   // #22279 §1.1 — back to the parent view
   history.replaceState(null, '', u)
   rerender()
 }

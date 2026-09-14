@@ -70,7 +70,7 @@ const MCOMPOSER_ICONS = {
 // reveals it) and the thread-creation view (where it is already open and pre-filled from the message
 // the thread starts from). The name is always a PLACEHOLDER, never a value, so an untouched field
 // means "no name chosen" and Send derives the title itself.
-export const THREAD_NAME_PLACEHOLDER = 'Add thread name here'
+export const THREAD_NAME_PLACEHOLDER = 'Add a thread name (optional)'
 export function threadNameRow({ hidden = true, placeholder = THREAD_NAME_PLACEHOLDER } = {}) {
   return `
           <div class="chat-thread-name" data-thread-name-row${hidden ? ' hidden' : ''}>
