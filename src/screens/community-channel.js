@@ -853,7 +853,10 @@ function listThreadRow(t, surface) {
       <span class="channel-thread__glyph">${THREAD_GLYPH}</span>
       <span class="channel-thread__name">${t.title}</span>
       ${t.keptVisible ? `<span class="channel-thread__pin" title="Kept visible">${CHANNEL_ICONS.pinHeader}</span>` : ''}
-      ${t.followed && t.unread ? `<span class="channel-thread__count channel-thread__count--unread" title="New messages">${t.newCount || 1}</span>` : `<span class="channel-thread__count">${t.messages.length}</span>`}
+      ${/* #21931 §6.3 — thread badges follow the channel-badge rule (see channelItem): a count only
+           while there are unread messages, and NOTHING once the thread is read. The old else-branch
+           swapped in a reply-count badge, so "Mark as read" never made the counter go away. */''}
+      ${t.followed && t.unread ? `<span class="channel-thread__count" title="${t.newCount || 1} new messages">${t.newCount || 1}</span>` : ''}
     </button>`
 }
 

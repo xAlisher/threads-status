@@ -82,6 +82,9 @@ opens at the pointer and flips to stay in the viewport). Contents, each traced t
   every thread; a DM/group has no admin, so it stays creator-only there. Test both.
 - **Opening a thread auto-clears its unread**, so "Mark as read" cannot be observed from inside an
   open thread — verify it from the row context menu instead.
+- **A read thread row carries NO badge.** Thread rows follow the channel-badge rule (`channelItem`):
+  a count while unread, nothing once read. The roster row used to fall back to a *reply-count* badge
+  when read, so "Mark as read" only changed the number and colour — the counter never went away.
 - **Unread has two halves.** `unread` drives the badges (channel row, in-chat card, thread row,
   Activity Center); `newCount` drives the **new-messages marker** inside the thread
   (`NewMessagesMarker.qml` recreated: primaryColor1 rules either side of bold "N missed message(s)
