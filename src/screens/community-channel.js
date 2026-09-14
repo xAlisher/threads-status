@@ -254,6 +254,8 @@ function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   // #21971 comment 3b — icon-only tabs, and they live at the BOTTOM of the panel (mobile-friendly)
   const nav = tabs.map(([k, label]) =>
     `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}" title="${label}" aria-label="${label}" aria-selected="${k === tab}" role="tab">${INFO_TAB_ICONS[k] || label}</button>`).join('')
+  // with icon-only tabs the panel title carries the label, so you can always tell which tab you are on
+  const tabLabel = (tabs.find(([k]) => k === tab) || [null, 'Details'])[1]
   // #21971 §2.1 / comment 3a — the field is collapsed behind a search button, matching
   // UserListPanel.qml: a checkable round search button, the box hidden until toggled, cleared on
   // toggle, focused when shown, Escape closes it. About is a profile card with nothing to filter.
@@ -265,10 +267,10 @@ function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   const header = mobile
     ? `<div class="thread-view__header info-panel__mheader">
         <button class="thread-view__back" data-close-info title="Back" aria-label="Back">${ARROW_LEFT}</button>
-        <div class="thread-view__titles"><span class="thread-view__title">Details</span>${sub ? `<span class="thread-view__sub">${sub}</span>` : ''}</div>
+        <div class="thread-view__titles"><span class="thread-view__title">${tabLabel}</span>${sub ? `<span class="thread-view__sub">${sub}</span>` : ''}</div>
       </div>`
     : `<div class="info-panel__header">
-        <span class="info-panel__title">Details</span>
+        <span class="info-panel__title">${tabLabel}</span>
         ${searchBtn}
       </div>`
   return `
