@@ -136,6 +136,10 @@ fallback — otherwise the fallback reopens it instantly and the panel can never
 close X was dead for exactly this reason). The tab row **scrolls horizontally**: six tabs do not fit
 a narrow resizable panel, so the active tab is `scrollIntoView`d after every render.
 
+The **Pins tab renders real chat messages** (#21971 §6): `PINNED_MESSAGES` holds msg() argument
+tuples used by BOTH the chat stream and the tab, so the pin chip, avatar, name/time/tick, text and
+reactions cannot drift apart. Adding a pinned message means adding a tuple, not editing two places.
+
 There is **no About tab** — removed on 14 Sep (#21971 §7): it described the channel/group/dm rather
 than belonging in this panel, and its (i) icon read as a duplicate of the header's Info toggle.
 Tabs are **icon-only and pinned to the bottom** of the panel (#21971 comment 3b) — `INFO_TAB_ICONS`;

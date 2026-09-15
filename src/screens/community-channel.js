@@ -160,9 +160,14 @@ const INFO_MEDIA = [
   { label: 'solarized.gif', color: '#C4A052' }, { label: 'hacker-green.png', color: '#26A69A' },
   { label: 'tokens-demo.mp4', color: '#E95460' }, { label: 'layout-holds.png', color: '#FE8F59' },
 ]
-const INFO_PINS = [
-  { name: 'Kai', initial: 'K', color: '#FE8F59', time: '10:34', text: 'How long did the full pipeline take? QML source to browser-ready with audited components?' },
-  { name: 'Marcus', initial: 'M', color: '#26A69A', time: '10:36', text: 'About 3 hours with two agents running — builder writes code, auditor verifies against QML.' },
+// #21971 §6 — "the content on the pinned message tab should be exactly the same as it is in the
+// chat". These are msg() argument tuples, rendered by the SAME renderer in both places: the chat
+// stream and the Pins tab. Defining them once is what guarantees the two cannot drift apart.
+const PINNED_MESSAGES = [
+  ['Kai', 'K', '#FE8F59', '10:34', 'How long did the full pipeline take? QML source to browser-ready with audited components?',
+    { id: 'cc-5', pinned: true, pinnedBy: 'Marcus', senderId: '0x04f3c8...7d1e02' }],
+  ['Marcus', 'M', '#26A69A', '10:36', 'About 3 hours with two agents running — builder writes code, auditor verifies against QML. Cost maybe $25 in API tokens.',
+    { id: 'cc-6', pinned: true, pinnedBy: 'Elena', reactions: ['✅ 2*', '🎉 1'], delivery: 'delivered', edited: true, senderId: '0x04d7e1...a92b05' }],
 ]
 const INFO_LINKS = [
   { title: 'Status design system', url: 'status.app/design', name: 'Elena', time: '10:23' },
@@ -207,10 +212,9 @@ function renderInfoBody(tab, surface = 'channel') {
     return `<div class="info-media">${INFO_MEDIA.map(x => `<div class="info-media__tile" data-info-item data-search="${x.label.toLowerCase()}" style="background:linear-gradient(135deg, ${x.color}, ${x.color}99)" title="${x.label}"><span class="info-media__label">${x.label}</span></div>`).join('')}</div>`
   }
   if (tab === 'pins') {
-    return INFO_PINS.slice().sort((a, b) => a.time.localeCompare(b.time)).map(p => `<div class="info-item info-pin" data-info-item data-search="${(p.text + ' ' + p.name).toLowerCase()}">
-      <div class="message__avatar" style="background:${p.color}">${p.initial}</div>
-      <div class="info-pin__body"><div class="info-pin__head"><span class="info-pin__name">${p.name}</span><span class="info-pin__time">${p.time}</span></div><div class="info-pin__text">${p.text}</div></div>
-    </div>`).join('')
+    // body §1: sorted by the pinned message's creation date
+    return PINNED_MESSAGES.slice().sort((a, b) => a[3].localeCompare(b[3]))
+      .map(t => `<div class="info-pin-msg" data-info-item data-search="${(t[4] + ' ' + t[0]).toLowerCase()}">${msg(...t)}</div>`).join('')
   }
   return INFO_LINKS.map(l => `<a class="info-item info-link" data-info-item data-search="${(l.title + ' ' + l.url).toLowerCase()}" href="#" onclick="return false">
     <span class="info-link__icon">${LINK_GLYPH}</span>
@@ -1040,8 +1044,8 @@ function communityMessages(copiedHtml) {
       ${msg('You', 'A', '#4360DF', '10:28', 'The best part is the auditor agent catches pixel mismatches before merge. No more "does this match the spec?" debates.', { id: 'cc-2', delivery: 'delivered' })}
       ${msg('Elena', 'E', '#D37EF4', '10:30', 'Exactly. The design system lives in the browser now, not in Figma. Agent-readable and human-visible at the same time.', { id: 'cc-3', delivery: 'delivered', ensName: 'elena.eth', senderId: '0x04a2b9...c3f8e1' })}
       ${msg('Elena', '', '', '', 'No export pipeline, no handoff docs. Change a token, see it everywhere instantly.', { id: 'cc-4', continued: true })}
-      ${msg('Kai', 'K', '#FE8F59', '10:34', 'How long did the full pipeline take? QML source to browser-ready with audited components?', { id: 'cc-5', pinned: true, pinnedBy: 'Marcus', senderId: '0x04f3c8...7d1e02' })}
-      ${msg('Marcus', 'M', '#26A69A', '10:36', 'About 3 hours with two agents running — builder writes code, auditor verifies against QML. Cost maybe $25 in API tokens.', { id: 'cc-6', reactions: ['✅ 2*', '🎉 1'], delivery: 'delivered', edited: true, senderId: '0x04d7e1...a92b05' })}
+      ${msg(...PINNED_MESSAGES[0])}
+      ${msg(...PINNED_MESSAGES[1])}
       ${msg('You', 'A', '#4360DF', '10:38', 'Font schemes too — switch between Inter, IBM Plex, Serif, Monospace from a dropdown. Layout holds across all of them.', { id: 'cc-7', delivery: 'sent' })}
       ${copiedHtml}`
 }
