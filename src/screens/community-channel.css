@@ -995,7 +995,10 @@
 .info-panel__search-btn:hover { color: var(--primary-color-1); background: var(--background-hover); }
 .info-panel__search-btn.checked { color: var(--primary-color-1); }
 .info-panel__search[hidden] { display: none; }
-.info-panel__mobile-search { display: flex; justify-content: flex-end; padding: 4px 12px 0; }
+/* the mobile search button sits in the nav bar's action slot, so it needs the round-button sizing
+   the thread header's actions use rather than the desktop header's smaller treatment */
+.info-panel__mheader .info-panel__search-btn { width: 36px; height: 36px; }
+.info-panel__mheader .info-panel__search-btn svg { width: 20px; height: 20px; }
 
 /* the Threads tab reuses the in-chat thread card (#21971 comment 1). The card is sized for the wide
    chat column, so in a ~250px panel it needs to drop its chat-only indent and reflow: title over two

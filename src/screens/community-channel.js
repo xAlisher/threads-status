@@ -239,10 +239,13 @@ function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   const search = `<div class="info-panel__search" data-info-search-box hidden>${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>`
   const searchBtn = `<button class="info-panel__search-btn" data-info-search-toggle title="Search" aria-label="Search ${tab}" aria-pressed="false">${CHANNEL_ICONS.search}</button>`
   // mobile: same layout as the thread header (back arrow + title/subtitle); desktop: title + close (X)
+  // On mobile the search button lives in the NAVIGATION BAR, on the right — the same place the
+  // thread view puts its own actions — rather than on a row of its own below the header.
   const header = mobile
     ? `<div class="thread-view__header info-panel__mheader">
         <button class="thread-view__back" data-close-info title="Back" aria-label="Back">${ARROW_LEFT}</button>
         <div class="thread-view__titles"><span class="thread-view__title">${tabLabel}</span>${sub ? `<span class="thread-view__sub">${sub}</span>` : ''}</div>
+        <div class="thread-view__actions">${searchBtn}</div>
       </div>`
     : `<div class="info-panel__header">
         <span class="info-panel__title">${tabLabel}</span>
@@ -251,7 +254,6 @@ function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   return `
     <div class="info-panel">
       ${header}
-      ${mobile ? `<div class="info-panel__mobile-search">${searchBtn}</div>` : ''}
       ${search}
       <div class="info-panel__body" data-info-body>${renderInfoBody(tab, surface)}</div>
       <div class="info-panel__tabs" role="tablist">${nav}</div>
