@@ -78,8 +78,11 @@ textarea keeps the plain string as its `aria-label`. The header **Search** opens
 result sets the `hl` param, so it reuses the same jump-and-flash path as a copied channel message.
 
 ### Thread context menu (#22401)
-One menu, two ways in: the **"…"** button on the thread view, and **right-click / long-press on a
-thread row** in the channel or Messages list (`bindThreadRowMenu`, which passes `opts.at` so the menu
+One menu, reachable from **every representation of a thread**: the **"…"** button on the thread
+view, and **right-click / long-press** on a channel-list row, a Messages chat-list row, the in-chat
+thread card, or a card in the Details ▸ Threads list. Because they share one menu, destructive
+actions cannot diverge — the delete confirmation fires from all of them. Add a new thread
+representation and it must go into `bindThreadRowMenu`'s selector list too (`bindThreadRowMenu`, which passes `opts.at` so the menu
 opens at the pointer and flips to stay in the viewport). Contents, each traced to its story:
 `Edit name` (#22275) · `Follow/Unfollow` (#22283) · `Mute thread ›` (#22282) · `Mark as read`
 (#22402) · `Copy link` desktop / `Share link` mobile (#22285) · `Pin to list` / `Unpin from list`

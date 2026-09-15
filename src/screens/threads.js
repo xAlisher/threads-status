@@ -857,14 +857,16 @@ export function bindThreadRowMenu(rowSelector, resolveRoot) {
       openThreadMenu(host, id, row, { at: { x, y } })
     }
     row.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); open(e.clientX, e.clientY) })
-    let timer = null, moved = false
+    let timer = null, moved = false, longPressed = false
     row.addEventListener('touchstart', (e) => {
-      moved = false
+      moved = false; longPressed = false
       const tch = e.touches[0]
-      timer = setTimeout(() => { if (!moved) open(tch.clientX, tch.clientY) }, 500)
+      timer = setTimeout(() => { if (!moved) { longPressed = true; open(tch.clientX, tch.clientY) } }, 500)
     }, { passive: true })
     row.addEventListener('touchmove', () => { moved = true; clearTimeout(timer) }, { passive: true })
     row.addEventListener('touchend', () => clearTimeout(timer))
+    // a long-press is followed by a synthetic click — without this the thread opens behind the menu
+    row.addEventListener('click', (e) => { if (longPressed) { e.preventDefault(); e.stopPropagation(); longPressed = false } }, true)
   })
 }
 

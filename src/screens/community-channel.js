@@ -827,11 +827,16 @@ function bindThreadAffordances(p, view) {
     e.stopPropagation(); openThread(el.dataset.openThread, el.dataset.surface)
   }))
 
-  // #22401 §1.2 — right-click (desktop) / long-press (mobile) on a thread row in the channel list or
-  // the Messages chat list opens the thread context menu at the pointer. The menu is appended to the
-  // left panel so it is positioned and clipped with the list it belongs to.
-  bindThreadRowMenu('.shell__left .channel-thread[data-open-thread], .shell__mobile-content .channel-thread[data-open-thread]',
-    (row) => row.closest('.shell__left, .mobile-list, .shell__mobile-content'))
+  // #22401 §1.2 — right-click (desktop) / long-press (mobile) opens the thread context menu at the
+  // pointer on EVERY representation of a thread: the channel-list and chat-list rows, the in-chat
+  // thread card ("a thread in the chat"), and the cards in the Details ▸ Threads list. That also
+  // means the delete confirmation is reachable from all of them, since they share one menu.
+  bindThreadRowMenu([
+    '.shell__left .channel-thread[data-open-thread]',
+    '.shell__mobile-content .channel-thread[data-open-thread]',
+    '.messages .thread-card[data-open-thread]',
+    '.info-panel__body .thread-card[data-open-thread]',
+  ].join(', '), (row) => row.closest('.shell__left, .shell__center, .shell__right, .mobile-list, .shell__mobile-content') || document.body)
 
   // channel-list thread rows (epic §22): desktop → thread in the CENTRE column + Details in the
   // third column; mobile → full-screen thread that returns to the mobile channel+thread list
