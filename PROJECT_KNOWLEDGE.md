@@ -105,8 +105,10 @@ opens at the pointer and flips to stay in the viewport). Contents, each traced t
   every thread; a DM/group has no admin, so it stays creator-only there. Test both.
 - **Opening a thread auto-clears its unread**, so "Mark as read" cannot be observed from inside an
   open thread — verify it from the row context menu instead.
-- **The in-chat thread card is a COLUMN** (#21932): title row on top with the unread badge and a
-  small thread icon pinned top-right, then avatars + count, then the last-message line, all flush to
+- **The in-chat thread card is a COLUMN** (#21932): title row on top — **icon, then title, then the
+  unread badge** — followed by avatars + count. The icon led the title, moved to the top-right on
+  10 Sep, and was moved back on 14 Sep ("users read left to right"); do not move it again without
+  checking the issue., then the last-message line, all flush to
   the card's left edge. The **deleted-thread tombstone reuses `.thread-card`**, so it needs
   `flex-direction: row` put back explicitly or it stacks into a tall pile.
 - **Participants are creator-first, then most recent participation** (§2.2.1), six shown then `+N`.
@@ -203,7 +205,8 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
 - **`:focus-within`-revealed rows hide mid-click.** Pressing non-focusable label text blurs the
   input on `mousedown` → the row `display:none`s before the click lands. Fix: `preventDefault` the
   row's `mousedown` to keep focus.
-- **The one thread glyph** is `src/icons/thread-glyph.js` — a leaf module with no imports, because
+- **The thread icon is the official `Thread.svg`** (supplied 2026-09-15), recoloured to
+  `currentColor`. It lives in `src/icons/thread-glyph.js` — a leaf module with no imports, because
   community-channel.js ⇄ threads.js is a **circular pair** and reading an icon across it at module-
   eval time hits a TDZ. Vadym's official icon replaces that one string.
 - **`channelListThreads` filters to followed threads**, so a seeded thread with `followed: false`

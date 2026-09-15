@@ -409,15 +409,16 @@ function threadCard(t) {
   const badge = t.unread ? `<span class="thread-card__count" title="New messages">${t.newCount || 1}</span>` : ''
   // §2.1 — "Number of messages, INCLUDING the message that started the thread"
   const total = t.messages.length + 1
-  // Layout per the 10 Sep review: the thread icon shrinks into the top-right corner next to the
-  // badge (caybro's suggestion, which Volo agreed to — it still marks this as a thread, not a
-  // reply), and the rows under the title run flush to the card's left edge instead of being
-  // indented past a leading icon.
+  // Layout per the 14 Sep review: the thread icon sits to the LEFT of the title — "users read from
+  // left to right and putting the thread icon on the left informs the user what element they are
+  // about to see", and it kept colliding with the badge in the top-right corner. The rows under the
+  // title still run flush to the card's left edge.
   return `
     <button class="thread-card" data-open-thread="${t.id}" data-surface="${t.surface}">
       <span class="thread-card__top">
+        <span class="thread-card__icon" aria-hidden="true">${THREAD_GLYPH}</span>
         <span class="thread-card__title">${t.title}</span>
-        <span class="thread-card__tr">${badge}<span class="thread-card__icon" aria-hidden="true">${THREAD_GLYPH}</span></span>
+        <span class="thread-card__tr">${badge}</span>
       </span>
       <span class="thread-card__meta">${stack}<span class="thread-card__replies">${total} ${total === 1 ? 'message' : 'messages'}</span></span>
       ${last}

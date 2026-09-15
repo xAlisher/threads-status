@@ -62,7 +62,7 @@ function seed() {
           { id: 'd2', name: 'Marcus', initial: 'M', color: '#26A69A', time: '09:44', text: 'Nice — I can restyle a whole screen from one file now.', own: false, ts: now - 11 * hr, opts: {} },
         ],
         followed: true, muted: false, deleted: false, keptVisible: false,
-        unread: false, lastActivityTs: now - 1 * hr,
+        unread: true, newCount: 1, lastActivityTs: now - 1 * hr,
       },
       {
         id: 't-roadmap', surface: 'channel', channelLabel: '# announcements', parentMsgId: 'm6',
