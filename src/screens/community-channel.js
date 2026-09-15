@@ -6,7 +6,7 @@ import * as store from '../thread-store.js'
 import { THREAD_GLYPH } from '../icons/thread-glyph.js'
 import { SURFACES } from '../thread-store.js'
 // desktop thread side-panel reuses the thread renderers + binders (epic §1)
-import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, bindInlineEdit, titleFromText, autosize, floatToast, isCopyOn, bindCopyToggle, openThreadSearch, bindHighlight,
+import { renderThread, renderCreate, resolveParent, bindComposerSend, openThreadMenu, bindThreadRowMenu, confirmDeleteThread, bindInlineEdit, titleFromText, autosize, floatToast, isCopyOn, bindCopyToggle, openThreadSearch, bindHighlight,
          threadNameRow, bindThreadNameRow, THREAD_NAME_PLACEHOLDER } from './threads.js'
 
 export const CHANNEL_ICONS = {
@@ -573,6 +573,18 @@ function openContextMenu(msgEl, surface = 'channel') {
   const menu = msgEl.querySelector('.msg-cmenu')
   // dismiss the context menu + its listeners before the panel re-render
   menu.querySelector('[data-reply-in-thread]')?.addEventListener('click', () => startThreadFromMessage(msgEl, surface, close))
+
+  // A message that started a thread carries that thread with it: deleting it deletes the thread
+  // (jrainville on #21932 — "the creator of the thread ... delete the original message"). So this
+  // Delete goes through the same confirmation as every other delete-thread action.
+  const owned = store.threadForParent(msgEl.dataset.msgId, surface)
+  if (owned) {
+    const del = [...menu.querySelectorAll('.msg-cmenu__item')].find(b => b.textContent.trim() === 'Delete')
+    del?.addEventListener('click', () => {
+      close()
+      confirmDeleteThread(owned, () => store.deleteThread(owned.id))
+    })
+  }
   menu.querySelector('.msg-cmenu__item')?.focus()
   const trigger = msgEl.querySelector('.message__qa-btn[aria-label="More"]')
   const close = () => { menu.remove(); msgEl.classList.remove('message--menu-open'); document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }

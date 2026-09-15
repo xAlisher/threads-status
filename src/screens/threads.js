@@ -103,18 +103,23 @@ export function bindThreadNameRow(root) {
 
 // editable composer — reuses .chat-input structure; NOT readonly (epic §3 post/edit).
 // mobile = the Figma DS two-row layout (text on top, outlined icon toolbar + blue send below).
-function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = false, nameRow = null, placeholderName = '' } = {}) {
+function threadComposer(placeholder, mobile = false, { copyLabel = '', copyShort = '', copy = false, nameRow = null, placeholderName = '' } = {}) {
   // #21935 — "also send to the parent" is a TOGGLE ICON on the composer's quick-icon bar, not a
   // checkbox row. Volo asked for this explicitly; it also removes the two focus/click workarounds
   // the revealed checkbox row needed.
   const copyToggle = (cls) => copyLabel
     ? `<button class="${cls} chat-input__copy-btn${copy ? ' checked' : ''}" data-copy-toggle type="button" title="${copyLabel}" aria-label="${copyLabel}" aria-pressed="${!!copy}">${ALSO_SEND_GLYPH}</button>`
     : ''
-  const copyInline = ''
   // #21933 §2 — "Reply in [thread icon]+[thread's name]". Rendered over the field because a native
   // placeholder is plain text; it hides as soon as there is content.
+  // While the copy toggle is on the composer says so in one of two places: appended to the
+  // placeholder when nothing is typed, and on its own line under the input once there is text
+  // (the placeholder is gone by then).
   const ghost = placeholderName
-    ? `<span class="chat-input__ghost" data-ghost-placeholder aria-hidden="true">Reply in<span class="chat-input__ghost-icon">${THREAD_GLYPH}</span>${escAttr(placeholderName)}</span>`
+    ? `<span class="chat-input__ghost" data-ghost-placeholder aria-hidden="true">Reply in<span class="chat-input__ghost-icon">${THREAD_GLYPH}</span>${escAttr(placeholderName)}<span class="chat-input__ghost-copy" data-ghost-copy${copy ? '' : ' hidden'}>, ${escAttr(copyShort)}</span></span>`
+    : ''
+  const copyHint = copyShort
+    ? `<span class="chat-input__copy-hint" data-copy-hint hidden><span class="chat-input__copy-hint-icon">${ALSO_SEND_GLYPH}</span>${escAttr(copyShort)}</span>`
     : ''
   const phAttr = placeholderName ? '' : ` placeholder="${placeholder}"`
   // #22274 §1.2.3.3 — in the thread-creation view the composer's thread icon is already toggled on
@@ -129,7 +134,7 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
       <div class="mcomposer__handle" aria-hidden="true"></div>
       ${nameRowHtml}
       <span class="chat-input__ghost-wrap">${ghost}<textarea class="chat-input__field mcomposer__field" data-thread-input${phAttr} rows="1" aria-label="${placeholder}"></textarea></span>
-      ${copyInline}
+      ${copyHint}
       <div class="mcomposer__bar">
         <div class="mcomposer__actions">
           ${threadToggle('mcomposer__btn')}
@@ -154,7 +159,7 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copy = fa
             <span class="chat-input__ghost-wrap">${ghost}<textarea class="chat-input__field" data-thread-input${phAttr} rows="1" aria-label="${placeholder}"></textarea></span>
             <button class="chat-input__btn chat-input__btn--send" data-thread-send title="Send" aria-label="Send">${CHANNEL_ICONS.send}</button>
           </div>
-          ${copyInline}
+          ${copyHint}
           <div class="chat-input__actions chat-input__actions--below">
             ${threadToggle('chat-input__btn')}
             <button class="chat-input__btn" title="Commands" aria-label="Commands">${CHANNEL_ICONS.chatCommands}</button>
@@ -253,7 +258,7 @@ export function renderThread(t, { copy, panel = false, mobile = false, highlight
   }
   // archiving is NOT restrictive and NOT manual — a thread just falls out of the lists after a
   // week of quiet, and replying here brings it straight back
-  const composer = threadComposer(`Reply in ${t.title}`, mobile, { copyLabel: s.copy, copy, placeholderName: t.title })
+  const composer = threadComposer(`Reply in ${t.title}`, mobile, { copyLabel: s.copy, copyShort: s.copyShort, copy, placeholderName: t.title })
   // the unread run sits at the end of the list; the marker goes immediately before it
   const unreadFrom = t.newCount > 0 ? Math.max(0, t.messages.length - t.newCount) : -1
   const replyRows = t.messages.map((m, i) =>
@@ -513,14 +518,30 @@ export function bindHighlight(root) {
 // #21935 — the "also send to the parent" toggle. State lives in the `copy` URL param (which the
 // renderer reads) so posting a reply — which re-renders — cannot silently flip it back.
 export function isCopyOn(root) { return !!root.querySelector('[data-copy-toggle]')?.classList.contains('checked') }
+
+// empty input → the note rides along on the placeholder; typed input → it moves to its own line
+// under the field, since the placeholder is no longer visible to carry it
+export function syncCopyHint(root) {
+  const on = isCopyOn(root)
+  const input = root.querySelector('[data-thread-input]')
+  const typed = !!(input && input.value)
+  const ghostCopy = root.querySelector('[data-ghost-copy]')
+  const hint = root.querySelector('[data-copy-hint]')
+  if (ghostCopy) ghostCopy.hidden = !on
+  if (hint) hint.hidden = !(on && typed)
+}
+
 export function bindCopyToggle(root) {
   const btn = root.querySelector('[data-copy-toggle]')
   btn?.addEventListener('click', () => {
     const on = !btn.classList.contains('checked')
     btn.classList.toggle('checked', on)
     btn.setAttribute('aria-pressed', String(on))
+    syncCopyHint(root)
     try { const u = new URL(location.href); on ? u.searchParams.set('copy', '1') : u.searchParams.delete('copy'); history.replaceState(null, '', u) } catch {}
   })
+  root.querySelector('[data-thread-input]')?.addEventListener('input', () => syncCopyHint(root))
+  syncCopyHint(root)
 }
 
 // wire Send button + Enter-to-send on a composer

@@ -234,6 +234,10 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
   them the tombstone falls back to a placeholder and reads "? Someone deleted this thread" with no
   timestamp — which is what shipped for weeks, because only the *seeded* deleted thread carried the
   fields and nothing exercised the real delete path.
+- **Every Delete goes through `confirmDeleteThread`** — the thread menu (from all four thread
+  representations, "…" button or right-click/long-press) and the MESSAGE context menu's Delete when
+  that message started a thread (deleting the root message deletes the thread). There is no path
+  that deletes without the confirmation.
 - **Destructive actions confirm first.** Thread delete goes through `confirmDeleteThread()`, shaped
   like `ConfirmationDialog.qml` / `DeleteMessageConfirmationPopup.qml`: title, body, "Do not show
   this again", flat Cancel + Danger confirm. Focus lands on **Cancel**, never the destructive button.

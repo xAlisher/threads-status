@@ -163,6 +163,17 @@
 .thread-card__del-text strong { font-weight: 600; }
 .thread-card__del-time { font-size: var(--font-size-aside); color: var(--base-color-1); margin-left: 2px; }
 
+/* #21935 — while the copy toggle is on, the composer says where the copy goes. Empty input: the
+   note rides on the placeholder. Typed input: it drops to its own line under the field, above the
+   button row, because the placeholder is no longer visible to carry it. */
+.chat-input__ghost-copy { color: var(--primary-color-1); }
+.chat-input__ghost-copy[hidden] { display: none; }
+.chat-input__copy-hint { display: flex; align-items: center; gap: 6px; padding: 2px 12px 4px; font-size: var(--font-size-additional); color: var(--primary-color-1); }
+.chat-input__copy-hint[hidden] { display: none; }
+.chat-input__copy-hint-icon { display: inline-flex; width: 16px; height: 12px; }
+.chat-input__copy-hint-icon svg { width: 16px; height: 12px; }
+.mcomposer .chat-input__copy-hint { padding: 2px 14px 4px; }
+
 /* #21935 — "also send to the parent" toggle: last in the composer icon row, sitting directly after
    the stickers button rather than pushed to the far right */
 .chat-input__copy-btn.checked { color: var(--primary-color-1); background: var(--primary-color-3); }
