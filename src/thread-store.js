@@ -381,6 +381,11 @@ export function canManageThread(t) { return !!t && (isCreator(t) || isCommunityA
 export function deleteThread(threadId) {
   const t = getThread(threadId); if (!t) return
   t.deleted = true
+  // #22280 — the tombstone shows WHO deleted the thread and WHEN. Without recording it here a
+  // freshly deleted thread fell back to the placeholder and rendered "? Someone deleted this
+  // thread" with no timestamp; only the seeded example ever looked right.
+  t.deletedBy = { name: 'You', initial: 'A', color: '#4360DF' }
+  t.deletedAtLabel = todayLabel()
   ensure().toast = 'Thread deleted'
   emit()
 }
@@ -404,6 +409,13 @@ export function markRead(threadId, { silent = false } = {}) {
 export const TITLE_MAX = 100
 function cleanTitle(s) { return escapeText(String(s || '').trim().replace(/\s+/g, ' ').slice(0, TITLE_MAX)) }
 
+// "Today 1:04 PM" — the stamp shown on a deleted-thread tombstone
+function todayLabel() {
+  const d = new Date()
+  const h = d.getHours()
+  const hh = h % 12 === 0 ? 12 : h % 12
+  return `Today ${hh}:${String(d.getMinutes()).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`
+}
 function timeNow() {
   const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }

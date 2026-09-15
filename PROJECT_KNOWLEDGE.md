@@ -224,6 +224,10 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
 - **The chat composer is the DESKTOP markup on mobile too** (`renderCenterPanel` is shared) and its
   icon row is wider than the phone frame — Send was clipped off-screen. `.shell--mobile` rules give
   every flex level `min-width: 0` and shrink the buttons. Adding an icon there can re-break Send.
+- **Deleting records WHO and WHEN.** `deleteThread` sets `deletedBy` and `deletedAtLabel`; without
+  them the tombstone falls back to a placeholder and reads "? Someone deleted this thread" with no
+  timestamp — which is what shipped for weeks, because only the *seeded* deleted thread carried the
+  fields and nothing exercised the real delete path.
 - **Destructive actions confirm first.** Thread delete goes through `confirmDeleteThread()`, shaped
   like `ConfirmationDialog.qml` / `DeleteMessageConfirmationPopup.qml`: title, body, "Do not show
   this again", flat Cancel + Danger confirm. Focus lands on **Cancel**, never the destructive button.

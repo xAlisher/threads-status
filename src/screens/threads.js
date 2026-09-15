@@ -640,24 +640,24 @@ export function confirmDeleteThread(t, onConfirm) {
   document.querySelector('.confirm-modal-overlay')?.remove()
   const overlay = document.createElement('div')
   overlay.className = 'share-modal-overlay confirm-modal-overlay'
-  // Layout copied from the app's delete-message popup: title + close X, divider, body, "Do not show
-  // this again", divider, a SINGLE danger Confirm on the right. There is no Cancel button — the X
+  // Copy supplied on #22280 §1. Layout from the app's delete-message popup: title + close X,
+  // divider, body, the "don't show again" checkbox, divider, a SINGLE danger button on the right. There is no Cancel button — the X
   // (and Escape / click-outside) is the way out, so focus lands there rather than on Confirm.
   overlay.innerHTML = `
     <div class="share-modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-body">
       <div class="confirm-modal__head">
-        <span class="share-modal__title" id="confirm-title">Confirm deleting this thread</span>
+        <span class="share-modal__title" id="confirm-title">Delete this thread?</span>
         <button class="share-modal__close" data-confirm-cancel title="Close" aria-label="Close">${CLOSE_X}</button>
       </div>
       <div class="confirm-modal__main">
-        <p class="confirm-modal__body" id="confirm-body">Are you sure you want to delete this thread? Be aware that other clients are not guaranteed to delete the thread as well.</p>
+        <p class="confirm-modal__body" id="confirm-body">Are you sure you want to delete this thread? It may remain visible on other participants’ devices.</p>
         <label class="confirm-modal__check">
           <input type="checkbox" data-confirm-skip />
-          <span>Do not show this again</span>
+          <span>Don’t show this again</span>
         </label>
       </div>
       <div class="confirm-modal__actions">
-        <button class="confirm-modal__btn confirm-modal__btn--danger" data-confirm-ok>Confirm</button>
+        <button class="confirm-modal__btn confirm-modal__btn--danger" data-confirm-ok>Delete</button>
       </div>
     </div>`
   document.body.appendChild(overlay)
