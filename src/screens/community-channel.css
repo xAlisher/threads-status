@@ -1020,6 +1020,8 @@
 
 /* #21971 §6 — the Pins tab renders real chat messages, so the message styles carry it. Only the
    chat's horizontal padding needs trimming for the narrower panel. */
+.info-pin-msg { padding-top: 8px; }
+.info-pin-msg:last-child { padding-bottom: 8px; }
 .info-pin-msg .message { padding-left: 10px; padding-right: 10px; }
 .info-pin-msg .message__quick-actions { display: none; }
 .info-section { padding: 8px 8px 4px; font-size: var(--font-size-aside); color: var(--base-color-1); text-transform: uppercase; letter-spacing: .03em; }
