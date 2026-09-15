@@ -376,6 +376,13 @@
 .chat-header__action-btn svg { width: 20px; height: 20px; }
 .chat-header__action-btn:hover { background: var(--background-hover); }
 
+/* #21971 §9 — the Info button is a toggle: highlighted while the panel is open, default when shut.
+   Matches the checkable-button treatment used elsewhere (composer toggles, the panel's search). */
+.chat-header__action-btn.checked,
+.chat-header__round-btn.checked { color: var(--primary-color-1); background: var(--primary-color-3); }
+.chat-header__action-btn.checked:hover,
+.chat-header__round-btn.checked:hover { background: var(--primary-color-2); }
+
 /* ---- Mobile chat header — Status portrait toolbar (source-traced) ----
    StatusToolBar (padding 8, background:null → no border) + arrow-left back (leftMargin 20)
    + ChatHeaderContentView (info button fillWidth + search/group-chat/more StatusFlatRoundButton 44/24). */
@@ -995,9 +1002,13 @@
    lines, meta allowed to wrap, last-message text elided to the available width. */
 .info-thread-card { padding: 8px 6px 0; }
 .info-thread-card:last-child { padding-bottom: 8px; }
-.info-thread-card .thread-card { width: 100%; max-width: 100%; margin: 0; align-items: flex-start; }
+/* the card is a COLUMN flex, so align-items controls horizontal sizing of its rows — flex-start made
+   the title row shrink to its content and the badge drifted inward instead of pinning right */
+.info-thread-card .thread-card { width: 100%; max-width: 100%; margin: 0; align-items: stretch; }
 .info-thread-card .thread-card__spine { display: none; }
-.info-thread-card .thread-card__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* the clamp needs the flex sizing re-asserted, otherwise the title stops growing and the badge
+   drifts inward instead of pinning to the card's right edge like it does in the chat */
+.info-thread-card .thread-card__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1 1 auto; min-width: 0; }
 .info-thread-card .thread-card__meta { flex-wrap: wrap; row-gap: 2px; }
 .info-thread-card .thread-card__last { flex-wrap: wrap; row-gap: 2px; }
 .info-thread-card .thread-card__last-text { max-width: 100%; }

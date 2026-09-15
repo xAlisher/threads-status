@@ -648,6 +648,12 @@ function bindThreadAffordances(p, view) {
   // the header buttons TOGGLE the Details panel (it no longer carries its own close X): pressing the
   // one whose tab is already showing closes the panel, anything else opens it / switches tab.
   const infoOpen = () => !!document.querySelector('.info-panel')
+  // #21971 §9 — the Info button is a toggle, so it has to LOOK toggled: highlighted while the panel
+  // is open, default when closed.
+  document.querySelectorAll('[data-info-toggle]').forEach(el => {
+    el.classList.toggle('checked', infoOpen())
+    el.setAttribute('aria-pressed', String(infoOpen()))
+  })
   const openInfoTab = () => infoOpen() ? (document.querySelector('.info-tab.on')?.dataset.infoTab || null) : null
   document.querySelectorAll('[data-open-info]').forEach(el => el.addEventListener('click', (e) => {
     e.stopPropagation()
