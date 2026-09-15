@@ -140,6 +140,11 @@ The **Pins tab renders real chat messages** (#21971 §6): `PINNED_MESSAGES` hold
 tuples used by BOTH the chat stream and the tab, so the pin chip, avatar, name/time/tick, text and
 reactions cannot drift apart. Adding a pinned message means adding a tuple, not editing two places.
 
+Tabs are **Members · Threads · Pins** — the body's §1 list. **Media and Links are hidden, not
+deleted** (#21971 §8, out of scope for the ticket): their renderers remain and `INFO_TABS_HIDDEN`
+records them, so re-enabling is moving two entries back into `INFO_TABS`. A deep link to a hidden or
+removed tab falls back to Members.
+
 There is **no About tab** — removed on 14 Sep (#21971 §7): it described the channel/group/dm rather
 than belonging in this panel, and its (i) icon read as a duplicate of the header's Info toggle.
 Tabs are **icon-only and pinned to the bottom** of the panel (#21971 comment 3b) — `INFO_TAB_ICONS`;
@@ -148,7 +153,9 @@ stands in there. Search is **collapsed behind a button** in the panel header, ma
 `UserListPanel.qml`: checkable button, box hidden until toggled, cleared on toggle, focused when
 shown, Escape closes. The **Threads** tab renders real in-chat thread cards (comment 1) sorted by
 latest activity — they sit in the right column, outside `bindThreadAffordances`'s `scope`, so they
-are bound explicitly or they silently stop opening.
+are bound explicitly or they silently stop opening. Their rule needs `.info-panel` in front:
+`.shell--mobile .thread-card` sets the chat's 48px left indent at equal specificity and wins on
+source order, which put an ~80px empty gutter beside every card on mobile (#21971 §10).
 
 ### Thread open surfaces (desktop)
 Closing a thread **closes the right column entirely** (`info=closed`) so the main pane expands —

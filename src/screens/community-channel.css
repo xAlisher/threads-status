@@ -1004,7 +1004,10 @@
 .info-thread-card:last-child { padding-bottom: 8px; }
 /* the card is a COLUMN flex, so align-items controls horizontal sizing of its rows — flex-start made
    the title row shrink to its content and the badge drifted inward instead of pinning right */
-.info-thread-card .thread-card { width: 100%; max-width: 100%; margin: 0; align-items: stretch; }
+/* #21971 §10 — the panel card must NOT inherit the chat's left indent. `.shell--mobile .thread-card`
+   sets margin-left: 48px at equal specificity, which won on source order and left an ~80px empty
+   gutter beside every card on mobile; `.info-panel` in front outranks it. */
+.info-panel .info-thread-card .thread-card { width: 100%; max-width: 100%; margin: 0; align-items: stretch; }
 .info-thread-card .thread-card__spine { display: none; }
 /* the clamp needs the flex sizing re-asserted, otherwise the title stops growing and the badge
    drifts inward instead of pinning to the card's right edge like it does in the chat */

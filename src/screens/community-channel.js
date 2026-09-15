@@ -187,7 +187,11 @@ const INFO_TAB_ICONS = {
 
 // #21971 §7 — the About tab is gone: "it is info about a channel, group, or dm" and does not belong
 // in this panel. Its (i) icon also collided visually with the header's Info toggle.
-const INFO_TABS = [['members', 'Members'], ['threads', 'Threads'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links']]
+// #21971 §8 — Media and Links are HIDDEN, not deleted: the body puts them out of scope for this
+// ticket, so their renderers stay and re-enabling them is a matter of moving them back into
+// INFO_TABS. What is left is exactly the body's §1 list: Members, Threads, Pins.
+const INFO_TABS = [['members', 'Members'], ['threads', 'Threads'], ['pins', 'Pins']]
+const INFO_TABS_HIDDEN = [['media', 'Media'], ['links', 'Links']]
 const infoTabsFor = () => INFO_TABS
 
 function infoMemberRow(m, online) {
@@ -223,7 +227,7 @@ function renderInfoBody(tab, surface = 'channel') {
 }
 function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   const tabs = infoTabsFor(surface)
-  if (!tabs.some(([k]) => k === tab)) tab = 'members'   // e.g. a stale deep link to the removed About tab
+  if (!tabs.some(([k]) => k === tab)) tab = 'members'   // stale deep link to a removed/hidden tab
   // #21971 comment 3b — icon-only tabs, and they live at the BOTTOM of the panel (mobile-friendly)
   const nav = tabs.map(([k, label]) =>
     `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}" title="${label}" aria-label="${label}" aria-selected="${k === tab}" role="tab">${INFO_TAB_ICONS[k] || label}</button>`).join('')
