@@ -178,30 +178,12 @@ const INFO_TAB_ICONS = {
   media: `<svg viewBox="0 0 24 24" fill="none"><g clip-rule="evenodd" fill="currentColor" fill-rule="evenodd"><path d="m18.5 9.5c0 1.6569-1.3431 3-3 3s-3-1.3431-3-3c0-1.65685 1.3431-3 3-3s3 1.34315 3 3zm-1.5 0c0 .8284-.6716 1.5-1.5 1.5s-1.5-.6716-1.5-1.5c0-.82843.6716-1.5 1.5-1.5s1.5.67157 1.5 1.5z"/><path d="m6 3c-2.20914 0-4 1.79086-4 4v10c0 2.2091 1.79086 4 4 4h12c2.2091 0 4-1.7909 4-4v-10c0-2.20914-1.7909-4-4-4zm12 1.5h-12c-1.38071 0-2.5 1.11929-2.5 2.5v3.2322c0 .4455.53857.6686.85355.3536l1.40901-1.40902c.68342-.68342 1.79146-.68342 2.47488 0l10.08066 10.08072c.1191.119.2913.1736.4514.1218 1.0042-.3245 1.7305-1.2671 1.7305-2.3793v-10c0-1.38071-1.1193-2.5-2.5-2.5zm-14.46967 9.0303c-.0188.0188-.03033.0439-.03033.0705v3.3992c0 1.3807 1.11929 2.5 2.5 2.5h9.2322c.4455 0 .6686-.5386.3536-.8536l-8.40902-8.409c-.09764-.0976-.25593-.0976-.35356 0z"/></g></svg>`,
   pins: CHANNEL_ICONS.pinHeader,
   links: `<svg viewBox="0 0 24 24" fill="none"><g fill="currentColor"><path d="m9.03022 11.0303c1.08778-1.08778 2.85148-1.08778 3.93938 0 .2929.2929.7677.2929 1.0606 0s.2929-.7677 0-1.06062c-1.6736-1.6736-4.38703-1.67361-6.06064 0l-4 4.00002c-1.67361 1.6736-1.67361 4.387 0 6.0606s4.38705 1.6736 6.06064 0l2-2c.2929-.2929.2929-.7677 0-1.0606s-.7677-.2929-1.0606 0l-2.00004 2c-1.08782 1.0878-2.85152 1.0878-3.93934 0s-1.08782-2.8515 0-3.9394z"/><path d="m15.0302 5.03034c1.0878-1.08782 2.8515-1.08782 3.9394 0 1.0878 1.08782 1.0878 2.85152 0 3.93934l-4 4.00002c-1.0879 1.0878-2.8516 1.0878-3.9394 0-.2929-.2929-.7677-.2929-1.0606 0-.2929.2929-.2929.7677 0 1.0606 1.6736 1.6736 4.387 1.6736 6.0606 0l4-4c1.6736-1.67359 1.6736-4.38703 0-6.06063-1.6736-1.6736-4.387-1.6736-6.0606 0l-2 2c-.2929.29289-.2929.76777 0 1.06066s.7677.29289 1.0606 0z"/></g></svg>`,
-  about: INFO_ICON,
 }
 
-const INFO_TABS = [['members', 'Members'], ['threads', 'Threads'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links'], ['about', 'About']]
-// About describes a COMMUNITY, so it is only offered on the community surface — a DM or group chat
-// has no description or tags to show.
-const infoTabsFor = (surface) => INFO_TABS.filter(([k]) => k !== 'about' || surface === 'channel')
-
-// Community profile shown in the About tab.
-// Rendering follows the source: ProfilePopupOverviewPanel.qml pins the description at
-// Theme.primaryTextFontSize / directColor1 / Text.Wrap with 16px side margins; the tags come from
-// StatusCommunityTags -> StatusCommunityTag (a 32px-high pill, radius height/2, 1px baseColor2
-// border, transparent fill, primaryColor2 on hover; inside it an 18px emoji, a 5px gap, then the
-// name in primaryTextFontSize / DemiBold / AllLowercase / primaryColor1). Flow spacing is 10.
-const COMMUNITY_ABOUT = {
-  description: 'Status is an open-source, privacy-first communication network. This community is where the people building it talk in the open — protocol work, desktop and mobile clients, the design system, and everything in between. Anyone can read; members can post.',
-  tags: [
-    { emoji: '🔐', name: 'Privacy' },
-    { emoji: '🛡️', name: 'Security' },
-    { emoji: '🌐', name: 'Web3' },
-    { emoji: '💻', name: 'Software dev' },
-    { emoji: '🎨', name: 'Design' },
-  ],
-}
+// #21971 §7 — the About tab is gone: "it is info about a channel, group, or dm" and does not belong
+// in this panel. Its (i) icon also collided visually with the header's Info toggle.
+const INFO_TABS = [['members', 'Members'], ['threads', 'Threads'], ['media', 'Media'], ['pins', 'Pins'], ['links', 'Links']]
+const infoTabsFor = () => INFO_TABS
 
 function infoMemberRow(m, online) {
   return `<div class="info-item member-item" data-info-item data-search="${m.name.toLowerCase()}">
@@ -210,19 +192,6 @@ function infoMemberRow(m, online) {
   </div>`
 }
 function renderInfoBody(tab, surface = 'channel') {
-  if (tab === 'about') {
-    // AllLowercase in the source is a FONT property, not a data change — keep the real casing in the
-    // markup (search, copy-paste and screen readers get the proper name) and lowercase it in CSS.
-    const tags = COMMUNITY_ABOUT.tags.map(t =>
-      `<span class="community-tag" data-info-item data-search="${t.name.toLowerCase()}"><span class="community-tag__emoji">${t.emoji}</span><span class="community-tag__name">${t.name}</span></span>`).join('')
-    return `
-      <div class="info-about">
-        <p class="info-about__description">${COMMUNITY_ABOUT.description}</p>
-        <div class="info-about__divider"></div>
-        <div class="info-about__label">Tags</div>
-        <div class="community-tags">${tags}</div>
-      </div>`
-  }
   if (tab === 'threads') {
     // #21971 comment 1 — reuse the in-chat thread card here instead of a slimmer bespoke row.
     // Body §1: sorted by latest active.
@@ -250,7 +219,7 @@ function renderInfoBody(tab, surface = 'channel') {
 }
 function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   const tabs = infoTabsFor(surface)
-  if (!tabs.some(([k]) => k === tab)) tab = 'members'   // e.g. a deep-linked info=about on a DM
+  if (!tabs.some(([k]) => k === tab)) tab = 'members'   // e.g. a stale deep link to the removed About tab
   // #21971 comment 3b — icon-only tabs, and they live at the BOTTOM of the panel (mobile-friendly)
   const nav = tabs.map(([k, label]) =>
     `<button class="info-tab${k === tab ? ' on' : ''}" data-info-tab="${k}" title="${label}" aria-label="${label}" aria-selected="${k === tab}" role="tab">${INFO_TAB_ICONS[k] || label}</button>`).join('')
@@ -258,11 +227,9 @@ function renderInfoPanel(tab, surface = 'channel', mobile = false, sub = '') {
   const tabLabel = (tabs.find(([k]) => k === tab) || [null, 'Details'])[1]
   // #21971 §2.1 / comment 3a — the field is collapsed behind a search button, matching
   // UserListPanel.qml: a checkable round search button, the box hidden until toggled, cleared on
-  // toggle, focused when shown, Escape closes it. About is a profile card with nothing to filter.
-  const search = tab === 'about' ? '' :
-    `<div class="info-panel__search" data-info-search-box hidden>${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>`
-  const searchBtn = tab === 'about' ? '' :
-    `<button class="info-panel__search-btn" data-info-search-toggle title="Search" aria-label="Search ${tab}" aria-pressed="false">${CHANNEL_ICONS.search}</button>`
+  // toggle, focused when shown, Escape closes it.
+  const search = `<div class="info-panel__search" data-info-search-box hidden>${CHANNEL_ICONS.search}<input class="info-panel__search-input" type="text" placeholder="Search ${tab}" data-info-search aria-label="Search ${tab}" /></div>`
+  const searchBtn = `<button class="info-panel__search-btn" data-info-search-toggle title="Search" aria-label="Search ${tab}" aria-pressed="false">${CHANNEL_ICONS.search}</button>`
   // mobile: same layout as the thread header (back arrow + title/subtitle); desktop: title + close (X)
   const header = mobile
     ? `<div class="thread-view__header info-panel__mheader">
