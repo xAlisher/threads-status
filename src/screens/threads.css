@@ -163,8 +163,8 @@
 .thread-card__del-text strong { font-weight: 600; }
 .thread-card__del-time { font-size: var(--font-size-aside); color: var(--base-color-1); margin-left: 2px; }
 
-/* #21935 — "also send to the parent" toggle, pushed to the right-hand end of the composer icon row */
-.chat-input__copy-btn { margin-left: auto; }
+/* #21935 — "also send to the parent" toggle: last in the composer icon row, sitting directly after
+   the stickers button rather than pushed to the far right */
 .chat-input__copy-btn.checked { color: var(--primary-color-1); background: var(--primary-color-3); }
 .mcomposer__btn.chat-input__copy-btn.checked { color: var(--primary-color-1); }
 
