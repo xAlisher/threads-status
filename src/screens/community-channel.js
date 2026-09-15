@@ -304,6 +304,8 @@ export function bindCommunityChannel(view, ver) {
 
 // trash / bin — for the "X deleted this thread" tombstone (Status delete_message pattern)
 const TRASH_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 4h4M6 7l1 12.5A2 2 0 0 0 9 21.4h6a2 2 0 0 0 2-1.9L18 7M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+// notification-muted.svg — a muted thread carries this on every list representation (#22282 §1)
+const MUTED_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path clip-rule="evenodd" d="m14.9386 19c-.3363 0-.5779.3279-.5466.6628.01.1075.0155.2199.0155.3372 0 1.3889-1.2063 2.75-2.75 2.75-1.5436 0-2.74998-1.3611-2.74998-2.75 0-.1173.0055-.2297.01555-.3372.0313-.3349-.21032-.6628-.54661-.6628h-2.08457l-2.01156 2.0116c-.29289.2929-.76777.2929-1.06066 0s-.29289-.7678 0-1.0607l15.90993-15.9099c.2929-.29289.7677-.29289 1.0606 0s.2929.76777 0 1.06066l-3.4017 3.40169.6699 3.85145c.13.748.4703 1.4435.981 2.0053l1.1769 1.2946c1.168 1.2847.2564 3.3453-1.4799 3.3453zm.553-9.19969-7.69971 7.69969h10.34451c.4341 0 .662-.5151.37-.8363l-1.1769-1.2946c-.7022-.7724-1.1701-1.7288-1.349-2.7573zm-7.95352 1.64099-2.07314 2.0731c.18837-.3624.32108-.7532.39175-1.1596l1.11547-6.41395c.39616-2.27792 2.37325-3.94085 4.68534-3.94085 1.4427 0 2.755.64744 3.6341 1.68774l-1.0662 1.0662c-.6006-.7696-1.5354-1.25394-2.5679-1.25394-1.5828 0-2.93632 1.13842-3.20752 2.69786zm3.16102 7.5775c.011-.0115.0266-.0188.0425-.0188h1.8319c.0159 0 .031.0068.042.0183.0029.0034.01.0119.0201.0255.023.0306.0609.0862.1011.1666.0791.1583.1708.4192.1708.7896 0 .6111-.5845 1.25-1.25 1.25s-1.25-.6389-1.25-1.25c0-.3704.0917-.6313.1708-.7896.0402-.0804.0781-.136.1011-.1666.0102-.0136.0168-.0216.0197-.025z" fill="currentColor" fill-rule="evenodd"/></svg>`
 // "#←" — a channel-hash with a back arrow, for the thread reply "Also sent to the channel" tag
 const ALSO_SENT_GLYPH = `<svg viewBox="0 0 20 12" fill="none"><path d="M4 1.5 3 10.5M8 1.5 7 10.5M1.8 4.3h7M1.2 7.7h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M19 6h-5m0 0 2.2-2.2M14 6l2.2 2.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 // extra menu icons — real Status assets (hide.svg / copy.svg / delete.svg), recoloured → currentColor
@@ -393,7 +395,7 @@ function threadCard(t) {
       <span class="thread-card__top">
         <span class="thread-card__icon" aria-hidden="true">${THREAD_GLYPH}</span>
         <span class="thread-card__title">${t.title}</span>
-        <span class="thread-card__tr">${badge}</span>
+        <span class="thread-card__tr">${t.muted ? `<span class="thread-card__muted" title="Muted">${MUTED_GLYPH}</span>` : ''}${badge}</span>
       </span>
       <span class="thread-card__meta">${stack}<span class="thread-card__replies">${total} ${total === 1 ? 'message' : 'messages'}</span></span>
       ${last}
@@ -911,6 +913,7 @@ function listThreadRow(t, surface) {
     <button class="channel-thread${t.followed && t.unread ? ' unread' : ''}" data-open-thread="${t.id}" data-surface="${surface}" title="Open thread">
       <span class="channel-thread__glyph">${THREAD_GLYPH}</span>
       <span class="channel-thread__name">${t.title}</span>
+      ${t.muted ? `<span class="channel-thread__muted" title="Muted">${MUTED_GLYPH}</span>` : ''}
       ${t.keptVisible ? `<span class="channel-thread__pin" title="Pinned to list">${CHANNEL_ICONS.pinHeader}</span>` : ''}
       ${/* #21931 §6.3 — thread badges follow the channel-badge rule (see channelItem): a count only
            while there are unread messages, and NOTHING once the thread is read. The old else-branch

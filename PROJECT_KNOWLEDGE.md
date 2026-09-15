@@ -97,6 +97,9 @@ opens at the pointer and flips to stay in the viewport). Contents, each traced t
   panel hid it. `placeMenu`/`placeFlyout` clamp to the viewport; on mobile they lay out as a sheet
   inside the **phone frame** (`.shell--mobile`), because `fixed` would otherwise span the whole
   browser window around the phone mock.
+- **A muted thread shows the muted mark on every list representation** (#22282 §1): the channel/chat
+  list row and the thread card (so the Details ▸ Threads list carries it too), alongside the glyph
+  already in the thread header.
 - **Mute is a duration submenu**, not a toggle — `MuteChatMenuItem.qml` offers For 15 mins / 1 hour /
   8 hours / 24 hours / 7 days / Until I turn it back on. Once muted the row collapses to a single
   `Unmute thread`.

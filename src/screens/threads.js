@@ -174,7 +174,7 @@ const ALSO_SEND_GLYPH = `<svg viewBox="0 0 24 24" fill="none"><path d="M9.5 4 8 
 // close (X) — desktop side-panel dismiss (net-new; the full-screen view uses the back arrow instead)
 const CLOSE_X = `<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
 
-function threadHeader({ title, sub, muted, back = true, menu = false, close = false, info = false }) {
+function threadHeader({ title, sub, muted, back = true, menu = false, close = false, info = false, search = true }) {
   return `
     <div class="thread-view__header">
       ${back && !close ? `<button class="thread-view__back" data-back title="Back" aria-label="Back to conversation">${THREAD_ICONS.back}</button>` : ''}
@@ -186,7 +186,7 @@ function threadHeader({ title, sub, muted, back = true, menu = false, close = fa
         <span class="thread-view__sub">${sub}${muted ? `<span class="thread-view__muted" title="Muted" aria-label="Muted">${THREAD_ICONS.bellOff}</span>` : ''}</span>
       </div>
       <div class="thread-view__actions">
-        <button class="chat-header__action-btn" data-thread-search title="Search" aria-label="Search thread">${CHANNEL_ICONS.search}</button>
+        ${search ? `<button class="chat-header__action-btn" data-thread-search title="Search" aria-label="Search thread">${CHANNEL_ICONS.search}</button>` : ''}
         ${info ? `<button class="chat-header__action-btn" data-open-info="members" data-info-toggle title="Details" aria-label="Details">${INFO_ICON}</button>` : ''}
         ${menu ? `<button class="chat-header__action-btn" data-thread-more title="More" aria-label="Thread options" aria-haspopup="true">${CHANNEL_ICONS.more}</button>` : ''}
         ${close ? `<button class="chat-header__action-btn thread-view__close" data-back title="Close" aria-label="Close thread panel">${CLOSE_X}</button>` : ''}
@@ -217,7 +217,7 @@ export function renderCreate(surface, parentMsgId, { panel = false, mobile = fal
   const prefillName = parent ? titleFromText(parent[4]) : ''
   return `
     <div class="thread-view thread-create">
-      ${threadHeader({ title: 'Creating Thread', sub: s.in, back: !panel, close: panel, menu: false })}
+      ${threadHeader({ title: 'Creating Thread', sub: s.in, back: !panel, close: panel, menu: false, search: false })}
       <div class="thread-view__messages">
         ${parent ? `<div class="thread-view__parent-label">Starting a thread from</div><div class="thread-view__parent">${msg(...parent)}</div>` : `<div class="thread-view__parent-label">New thread ${s.in}</div>`}
       </div>
