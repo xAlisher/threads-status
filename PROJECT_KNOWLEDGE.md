@@ -234,10 +234,11 @@ thread-style header — the (i) is *not* on the thread page). Threads tab row �
   them the tombstone falls back to a placeholder and reads "? Someone deleted this thread" with no
   timestamp — which is what shipped for weeks, because only the *seeded* deleted thread carried the
   fields and nothing exercised the real delete path.
-- **"Don't show this again" is localStorage and survives everything** — tick it once and the delete
-  confirmation never appears again on any path, which reads as "the warning is broken". `?reset=1`
-  now clears `SKIP_DELETE_WARNING_KEY` along with the seeded store. When someone reports a missing
-  confirmation, check that flag before hunting the code.
+- **The delete confirmation ALWAYS shows.** Its "Don't show this again" checkbox is rendered because
+  the story's copy specifies it, but the preference is deliberately **not persisted** — when it was,
+  ticking it once suppressed the warning on every path forever and read as a missing confirmation.
+  Every load also clears the legacy `threadsSkipDeleteWarning` key left by older builds. Do not
+  reintroduce the persistence in the prototype.
 - **Every Delete goes through `confirmDeleteThread`** — the thread menu (from all four thread
   representations, "…" button or right-click/long-press) and the MESSAGE context menu's Delete when
   that message started a thread (deleting the root message deletes the thread). There is no path

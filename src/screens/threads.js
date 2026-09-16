@@ -653,11 +653,7 @@ function openShareModal(t) {
 // an optional "Do not show this again" checkbox, and right-aligned Cancel (flat) + Danger confirm.
 // Status warns that other clients are not guaranteed to delete too — a thread deletion carries the
 // same caveat, so the copy says it rather than implying a guaranteed wipe.
-const DONT_WARN_KEY = store.SKIP_DELETE_WARNING_KEY
-const skipDeleteWarning = () => { try { return localStorage.getItem(DONT_WARN_KEY) === '1' } catch { return false } }
-
 export function confirmDeleteThread(t, onConfirm) {
-  if (skipDeleteWarning()) { onConfirm(); return }
   document.querySelector('.confirm-modal-overlay')?.remove()
   const overlay = document.createElement('div')
   overlay.className = 'share-modal-overlay confirm-modal-overlay'
@@ -687,7 +683,10 @@ export function confirmDeleteThread(t, onConfirm) {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close() })
   overlay.querySelector('[data-confirm-cancel]').addEventListener('click', close)
   overlay.querySelector('[data-confirm-ok]').addEventListener('click', () => {
-    if (overlay.querySelector('[data-confirm-skip]').checked) { try { localStorage.setItem(DONT_WARN_KEY, '1') } catch {} }
+    // The "don't show this again" preference is deliberately NOT persisted in the prototype: ticking
+    // it once used to suppress the confirmation on every delete path forever, which reads as a
+    // missing warning and cost a review round. The checkbox stays because the story's copy specifies
+    // it; remembering it is real-app business.
     close()
     onConfirm()
   })
