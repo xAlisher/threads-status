@@ -653,7 +653,7 @@ function openShareModal(t) {
 // an optional "Do not show this again" checkbox, and right-aligned Cancel (flat) + Danger confirm.
 // Status warns that other clients are not guaranteed to delete too — a thread deletion carries the
 // same caveat, so the copy says it rather than implying a guaranteed wipe.
-const DONT_WARN_KEY = 'threadsSkipDeleteWarning'
+const DONT_WARN_KEY = store.SKIP_DELETE_WARNING_KEY
 const skipDeleteWarning = () => { try { return localStorage.getItem(DONT_WARN_KEY) === '1' } catch { return false } }
 
 export function confirmDeleteThread(t, onConfirm) {

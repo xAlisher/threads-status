@@ -6,6 +6,10 @@
 // deep-link navigations (which do a full reload) within a tab.
 
 const KEY = 'threads-status-store-v4'
+// "Don't show this again" on the delete confirmation (#22280 §1). Lives in localStorage so it
+// outlives the session — which means a reviewer who ticks it once never sees the warning again and
+// reasonably concludes the confirmation is missing. `?reset=1` therefore clears it too.
+export const SKIP_DELETE_WARNING_KEY = 'threadsSkipDeleteWarning'
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 // ---- surfaces: consistent thread experience across chat types (epic: Communities/Group/DM) ----
@@ -173,6 +177,7 @@ function ensure() {
   // highest numeric id already in use, so a resumed session can't mint a colliding id
   if (typeof state.seq !== 'number') state.seq = deriveSeq(state)
   // reset is one-shot: strip it from the URL so later navigations don't reseed and wipe live state
+  if (doReset) { try { localStorage.removeItem(SKIP_DELETE_WARNING_KEY) } catch {} }
   if (doReset && typeof history !== 'undefined') {
     try { const u = new URL(location.href); u.searchParams.delete('reset'); history.replaceState(null, '', u) } catch {}
     persist()
