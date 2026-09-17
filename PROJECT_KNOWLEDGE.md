@@ -259,3 +259,9 @@ Every change is rendered and DOM-checked before commit (CDP: `javascript_tool` r
 screenshot click coordinates are in device pixels and mismatch the page viewport under
 `devicePixelRatio ≠ 1`, producing false "didn't toggle" reads. Verify interactions with
 `elementFromPoint(x,y)` hit-testing or events dispatched on the resolved element, not raw coordinates.
+
+## 17 Sep round
+- #21971: Members tab icon = Figma "Members and group chat" (16378:9147, frame "Approved member icons 24dp" 16451:163147). That frame only has member icons — Threads/Pins keep Thread.svg / StatusQ pin.
+- #21935 2.1: send-copy copy is "Also send to #general / Design Team / carmen.eth" (SURFACES.copy; `copyShort` = lower-case form for the placeholder suffix; `sent` = toast). 2.2 icon: waiting on Vadym.
+- #22281: search "In:" filter is a breadcrumb chip per Figma 16450-163146 (parent avatar+name › #channel › thread ⌄) with an × outside that drops the scope. The picker menu (Chats/community → channel → threads, "Show all") is NOT built.
+- Issues 21931–22402 were moved out of epic #21090 on 15 Sep (new epics #22426 Creation & Navigation, #22428 Views & Representation) — scan issue numbers directly, not epic sub-issues.

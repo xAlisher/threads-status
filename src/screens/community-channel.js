@@ -178,7 +178,8 @@ const INFO_LINKS = [
 // NOTE: Volo asked Rsttskyy for the final set and said "the Members icon needs to be changed" — this
 // group.svg stands in until that lands; swapping it is a one-line change here.
 const INFO_TAB_ICONS = {
-  members: `<svg viewBox="0 0 16 17" fill="none"><g fill="currentColor"><path d="m8 8c1.24265 0 2.25-1.00736 2.25-2.25s-1.00735-2.25-2.25-2.25c-1.24264 0-2.25 1.00736-2.25 2.25s1.00736 2.25 2.25 2.25z"/><path d="m4.12343 12.5101c.44052-1.7303 2.00909-3.0101 3.87657-3.0101 1.86749 0 3.4361 1.2798 3.8766 3.0101.1362.5352-.3243.9899-.8766.9899h-6c-.55228 0-1.01282-.4547-.87657-.9899z"/><path d="m4.5 7.75c0 .9665-.7835 1.75-1.75 1.75s-1.75-.7835-1.75-1.75.7835-1.75 1.75-1.75 1.75.7835 1.75 1.75z"/><path d="m13.25 9.5c.9665 0 1.75-.7835 1.75-1.75s-.7835-1.75-1.75-1.75-1.75.7835-1.75 1.75.7835 1.75 1.75 1.75z"/></g></svg>`,
+  // Figma DS "Approved member icons 24dp" → "Members and group chat" (16378:9147), per @Rsttskyy
+  members: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g stroke-width="1.5"><circle cx="12" cy="8" r="3"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="6" r="2"/></g><g stroke-width="1.4" stroke-linejoin="miter"><path d="M1 15C1.12239 12.3436 1.82711 12 5 12C7.72097 12 8.62679 12.2527 8.90681 14"/><path d="M6 19C6.18358 14.5727 7.24066 14 12 14C16.7593 14 17.8164 14.5727 18 19"/><path d="M23 15C22.8776 12.3436 22.1729 12 19 12C16.279 12 15.3732 12.2527 15.0932 14"/></g></svg>`,
   threads: THREAD_GLYPH,
   media: `<svg viewBox="0 0 24 24" fill="none"><g clip-rule="evenodd" fill="currentColor" fill-rule="evenodd"><path d="m18.5 9.5c0 1.6569-1.3431 3-3 3s-3-1.3431-3-3c0-1.65685 1.3431-3 3-3s3 1.34315 3 3zm-1.5 0c0 .8284-.6716 1.5-1.5 1.5s-1.5-.6716-1.5-1.5c0-.82843.6716-1.5 1.5-1.5s1.5.67157 1.5 1.5z"/><path d="m6 3c-2.20914 0-4 1.79086-4 4v10c0 2.2091 1.79086 4 4 4h12c2.2091 0 4-1.7909 4-4v-10c0-2.20914-1.7909-4-4-4zm12 1.5h-12c-1.38071 0-2.5 1.11929-2.5 2.5v3.2322c0 .4455.53857.6686.85355.3536l1.40901-1.40902c.68342-.68342 1.79146-.68342 2.47488 0l10.08066 10.08072c.1191.119.2913.1736.4514.1218 1.0042-.3245 1.7305-1.2671 1.7305-2.3793v-10c0-1.38071-1.1193-2.5-2.5-2.5zm-14.46967 9.0303c-.0188.0188-.03033.0439-.03033.0705v3.3992c0 1.3807 1.11929 2.5 2.5 2.5h9.2322c.4455 0 .6686-.5386.3536-.8536l-8.40902-8.409c-.09764-.0976-.25593-.0976-.35356 0z"/></g></svg>`,
   pins: CHANNEL_ICONS.pinHeader,
@@ -494,7 +495,7 @@ function bindThreadPanel(p, cfg = {}) {
   const queued = store.takeToast()
   if (queued) floatToast(panel, queued)
 
-  // "Send copy" checkbox — persist to the URL the renderer reads, so a re-render keeps the state
+  // "Also send to" toggle — persist to the URL the renderer reads, so a re-render keeps the state
   bindCopyToggle(panel)
 
   if (isCreate) {
@@ -518,7 +519,7 @@ function bindThreadPanel(p, cfg = {}) {
       store.postReply(threadId, text, { copyToParent: copyOn }) // emit → re-render updates the view
       requestAnimationFrame(() => {
         document.querySelector(rootSel + ' [data-thread-input]')?.focus()
-        if (copyOn) floatToast(document.querySelector(rootSel), 'Reply also posted to ' + (SURFACES[surface]?.label || 'channel'))
+        if (copyOn) floatToast(document.querySelector(rootSel), SURFACES[surface]?.sent || 'Also sent to the channel')
       })
     })
     // #22281 — header Search opens the content search scoped to this thread

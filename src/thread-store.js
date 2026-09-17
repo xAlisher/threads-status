@@ -13,10 +13,11 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 // ---- surfaces: consistent thread experience across chat types (epic: Communities/Group/DM) ----
 export const SURFACES = {
-  // `copy` labels the toggle; `copyShort` is the inline hint shown while the toggle is on
-  channel: { label: '# general',   in: 'in # general',            copy: 'Send copy to #general',   copyShort: 'copy to #general',    screen: 'chat' },
-  group:   { label: 'Design Team', in: 'in Design Team',          copy: 'Send copy to Design Team', copyShort: 'copy to Design Team', screen: 'group' },
-  dm:      { label: 'carmen.eth',  in: 'in chat with carmen.eth', copy: 'Send copy to carmen.eth',  copyShort: 'copy to carmen.eth',  screen: 'dm' },
+  // `copy` labels the toggle and the hint row under a typed reply; `copyShort` is the same words
+  // lower-cased, appended to the empty composer's placeholder. #21935: "Also send to # [parent name]".
+  channel: { label: '# general',   in: 'in # general',            copy: 'Also send to #general',    copyShort: 'also send to #general',    sent: 'Also sent to #general',    screen: 'chat' },
+  group:   { label: 'Design Team', in: 'in Design Team',          copy: 'Also send to Design Team', copyShort: 'also send to Design Team', sent: 'Also sent to Design Team', screen: 'group' },
+  dm:      { label: 'carmen.eth',  in: 'in chat with carmen.eth', copy: 'Also send to carmen.eth',  copyShort: 'also send to carmen.eth',  sent: 'Also sent to carmen.eth',  screen: 'dm' },
 }
 
 let listeners = []

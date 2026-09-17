@@ -1,7 +1,7 @@
 // Conversation Threads (Status epic #21090) — thread surfaces on top of the certified Community
 // Channel. Reuses the message row `msg()`, composer icons, and quick-actions from community-channel.js.
 // Fully data-driven from src/thread-store.js: create → view flow, editable composer with real send,
-// "Send copy to #channel", follow/mute, close/delete, cross-surface, threads list + lifecycle.
+// "Also send to #channel", follow/mute, close/delete, cross-surface, threads list + lifecycle.
 // Routed by ?tview=create|thread|list with ?t=<threadId> / ?parent=<msgId> / ?surface / ?from.
 
 import { msg, CHANNEL_ICONS, formatGroup, INFO_ICON } from './community-channel.js'
@@ -118,8 +118,8 @@ function threadComposer(placeholder, mobile = false, { copyLabel = '', copyShort
   const ghost = placeholderName
     ? `<span class="chat-input__ghost" data-ghost-placeholder aria-hidden="true">Reply in<span class="chat-input__ghost-icon">${THREAD_GLYPH}</span>${escAttr(placeholderName)}<span class="chat-input__ghost-copy" data-ghost-copy${copy ? '' : ' hidden'}>, ${escAttr(copyShort)}</span></span>`
     : ''
-  const copyHint = copyShort
-    ? `<span class="chat-input__copy-hint" data-copy-hint hidden><span class="chat-input__copy-hint-icon">${ALSO_SEND_GLYPH}</span>${escAttr(copyShort)}</span>`
+  const copyHint = copyLabel
+    ? `<span class="chat-input__copy-hint" data-copy-hint hidden><span class="chat-input__copy-hint-icon">${ALSO_SEND_GLYPH}</span>${escAttr(copyLabel)}</span>`
     : ''
   const phAttr = placeholderName ? '' : ` placeholder="${placeholder}"`
   // #22274 §1.2.3.3 — in the thread-creation view the composer's thread icon is already toggled on
@@ -246,7 +246,7 @@ function newMessagesMarker(count, sinceLabel) {
     </div>`
 }
 
-// ---- Thread view (parent + replies + composer + "Send copy" toggle) ----
+// ---- Thread view (parent + replies + composer + "Also send to" toggle) ----
 export function renderThread(t, { copy, panel = false, mobile = false, highlight = '' }) {
   const s = SURFACES[t.surface] || SURFACES.channel
   const title = t.title
@@ -345,7 +345,7 @@ export function bindThreads() {
   const queued = store.takeToast()
   if (queued) floatToast(root, queued)
 
-  // "Send copy to #channel" checkbox (epic §3.1).
+  // "Also send to #channel" toggle (epic §3.1).
   // Persist the choice into the `copy` URL param (which renderThread reads) so posting a reply
   // — which triggers a re-render — doesn't silently snap the checkbox back on/off.
   bindCopyToggle(root)
@@ -386,7 +386,7 @@ export function bindThreads() {
       // store.emit → main re-renders in place; focus the fresh composer + toast if copied
       requestAnimationFrame(() => {
         const el = document.querySelector('.thread-screen [data-thread-input]'); el && el.focus()
-        if (copyOn) floatToast(document.querySelector('.thread-screen'), 'Reply also posted to ' + (SURFACES[surface]?.label || 'channel'))
+        if (copyOn) floatToast(document.querySelector('.thread-screen'), SURFACES[surface]?.sent || 'Also sent to the channel')
       })
     }
     bindComposerSend(root, send)
@@ -452,6 +452,22 @@ export function autosize(el) {
 // search-location selector (which here reads "In <thread>" rather than "Anywhere"), grouped results
 // and a "No results" label. Searching a thread behaves like searching a channel (§1.2): it matches
 // message content, and picking a result jumps to that message.
+// #22281 — the "In:" filter is a breadcrumb down to the thread (Figma 16450-163146):
+// community avatar + name › #channel › thread, or chat avatar + name › thread for groups and DMs.
+const SEARCH_PARENTS = {
+  channel: { name: 'Status Community', initial: 'S', color: '#FF7D46' },
+  group:   { name: 'Design Team', initial: 'D', color: '#4E77F5' },
+  dm:      { name: 'carmen.eth', initial: 'C', color: '#887AF9' },
+}
+function searchScopeCrumbs(t) {
+  const p = SEARCH_PARENTS[t.surface] || SEARCH_PARENTS.channel
+  const sep = `<span class="thread-search__sep" aria-hidden="true">${THREAD_ICONS.chevron}</span>`
+  const crumbs = [`<span class="thread-search__crumb"><span class="thread-search__ava" style="background:${p.color}">${p.initial}</span><span>${escAttr(p.name)}</span></span>`]
+  if (t.surface === 'channel') crumbs.push(`<span class="thread-search__crumb"><span>${escAttr((t.channelLabel || '# general'))}</span></span>`)
+  crumbs.push(`<span class="thread-search__crumb thread-search__crumb--thread">${THREAD_GLYPH}<span>${escAttr(t.title)}</span></span>`)
+  return crumbs.join(sep)
+}
+
 export function openThreadSearch(t, onPick) {
   document.querySelector('.thread-search-overlay')?.remove()
   const overlay = document.createElement('div')
@@ -463,9 +479,13 @@ export function openThreadSearch(t, onPick) {
         <input class="thread-search__input" type="text" placeholder="Search" data-search-input aria-label="Search" />
         <button class="share-modal__close" data-search-close title="Close" aria-label="Close">${CLOSE_X}</button>
       </div>
-      <div class="thread-search__scope">
-        <span class="thread-search__scope-label">In</span>
-        <span class="thread-search__chip">${THREAD_ICONS.thread}<span>${escAttr(t.title)}</span></span>
+      <div class="thread-search__scope" data-search-scope>
+        <span class="thread-search__chip">
+          <span class="thread-search__scope-label">In:</span>
+          ${searchScopeCrumbs(t)}
+          <span class="thread-search__caret" aria-hidden="true">${THREAD_ICONS.chevron}</span>
+        </span>
+        <button class="thread-search__clear" data-search-scope-clear title="Clear filter" aria-label="Clear filter">${CLOSE_X}</button>
       </div>
       <div class="thread-search__results" data-search-results></div>
     </div>`
@@ -474,9 +494,10 @@ export function openThreadSearch(t, onPick) {
   const results = overlay.querySelector('[data-search-results]')
   const input = overlay.querySelector('[data-search-input]')
   const strip = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent || '' }
+  let scoped = true
   const render = () => {
     const q = input.value.trim().toLowerCase()
-    if (!q) { results.innerHTML = `<div class="thread-search__hint">Search messages in this thread</div>`; return }
+    if (!q) { results.innerHTML = `<div class="thread-search__hint">${scoped ? 'Search messages in this thread' : 'Search messages'}</div>`; return }
     const hits = t.messages.filter(m => strip(m.text).toLowerCase().includes(q))
     if (!hits.length) { results.innerHTML = `<div class="thread-search__empty">No results</div>`; return }
     results.innerHTML = hits.map(m => `
@@ -497,6 +518,13 @@ export function openThreadSearch(t, onPick) {
   const onKey = (e) => { if (e.key === 'Escape') close() }
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close() })
   overlay.querySelector('[data-search-close]').addEventListener('click', close)
+  // the × next to the filter drops the scope; the prototype only has this thread's messages to
+  // search, so results stay the same — only the filter row and the hint change
+  overlay.querySelector('[data-search-scope-clear]').addEventListener('click', () => {
+    scoped = false
+    overlay.querySelector('[data-search-scope]').remove()
+    render(); input.focus()
+  })
   input.addEventListener('input', render)
   render()
   input.focus()

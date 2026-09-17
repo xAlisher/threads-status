@@ -243,7 +243,7 @@ const USE_CASES = [
   { group: 'Threads — surfaces (Threads)', items: [
     { id: 'th-create',  label: 'Creating Thread · from a message',    screen: 'threads', params: 'version=revamp&theme=dark&tview=create&parent=cc-1&from=chat' },
     { id: 'th-view',    label: 'Thread view (parent + replies)',      screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-m1&surface=channel&from=chat' },
-    { id: 'th-copy',    label: 'Thread view · Send copy ON',          screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-m1&surface=channel&copy=1' },
+    { id: 'th-copy',    label: 'Thread view · Also send ON',          screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-m1&surface=channel&copy=1' },
     { id: 'th-closed',  label: 'Thread view · closed',                screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-release&surface=channel&from=list' },
     { id: 'th-group',   label: 'Thread view · group chat',            screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-group&surface=group&from=list' },
     { id: 'th-dm',      label: 'Thread view · DM',                    screen: 'threads', params: 'version=revamp&theme=dark&tview=thread&t=t-dm&surface=dm&from=list' },
