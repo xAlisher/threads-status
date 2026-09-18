@@ -267,7 +267,7 @@ export function renderThread(t, { copy, panel = false, mobile = false, highlight
     msg(m.name, m.initial, m.color, m.time, m.text, { ...m.opts, id: m.id, threadEditable: m.own, highlight: m.id === highlight })).join('')
   return `
     <div class="thread-view" data-thread-id="${t.id}">
-      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel, info: !panel && !mobile })}
+      ${threadHeader({ title, sub: s.in, muted: t.muted, menu: true, back: !panel, close: panel })}
       <div class="thread-view__messages">
         <div class="thread-view__parent">${msg(...t.parentMsg)}</div>
         <div class="thread-view__reply-sep"><span>${t.messages.length} ${t.messages.length === 1 ? 'reply' : 'replies'}</span></div>
