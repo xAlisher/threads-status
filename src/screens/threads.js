@@ -199,7 +199,7 @@ function threadHeader({ title, sub, muted, back = true, menu = false, close = fa
     </div>`
 }
 
-// ---- Creating Thread (Figma: parent pinned + "Thread name (optional)" + composer) ----
+// ---- New Thread (Figma: parent pinned + "Thread name (optional)" + composer) ----
 export function resolveParent(surface, parentMsgId) {
   const existing = parentMsgId ? store.threadForParent(parentMsgId, surface) : null
   if (existing) return existing.parentMsg
@@ -222,7 +222,7 @@ export function renderCreate(surface, parentMsgId, { panel = false, mobile = fal
   const prefillName = parent ? titleFromText(parent[4]) : ''
   return `
     <div class="thread-view thread-create">
-      ${threadHeader({ title: 'Creating Thread', sub: s.in, back: !panel, close: panel, menu: false, search: false })}
+      ${threadHeader({ title: 'New Thread', sub: s.in, back: !panel, close: panel, menu: false, search: false })}
       <div class="thread-view__messages">
         ${parent ? `<div class="thread-view__parent-label">Starting a thread from</div><div class="thread-view__parent">${msg(...parent)}</div>` : `<div class="thread-view__parent-label">New thread ${s.in}</div>`}
       </div>
